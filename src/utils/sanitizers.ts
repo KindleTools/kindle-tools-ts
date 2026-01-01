@@ -4,7 +4,7 @@
  * @packageDocumentation
  */
 
-import { DRM_LIMIT_MESSAGES, PATTERNS } from "../core/constants.js";
+import { DRM_LIMIT_MESSAGES, PATTERNS, TITLE_NOISE_PATTERNS } from "../core/constants.js";
 import { normalizeWhitespace } from "./normalizers.js";
 
 /**
@@ -13,6 +13,17 @@ import { normalizeWhitespace } from "./normalizers.js";
 export interface TitleAuthorResult {
   title: string;
   author: string;
+}
+
+/**
+ * Result of title sanitization.
+ */
+export interface TitleSanitizeResult {
+  /** Clean title */
+  title: string;
+
+  /** True if any cleaning was performed */
+  wasCleaned: boolean;
 }
 
 /**
@@ -25,17 +36,24 @@ export interface SanitizedContent {
 }
 
 /**
- * Clean a book title by removing extensions and suffixes.
+ * Clean a book title by removing extensions, suffixes, and edition markers.
+ *
+ * Removes patterns like:
+ * - File extensions: .pdf, .mobi, .epub
+ * - Amazon suffix: _EBOK
+ * - Edition markers: "(Spanish Edition)", "(Kindle Edition)"
+ * - E-book markers: "[eBook]", "[Print Replica]"
  *
  * @param title - Raw title from the clippings file
- * @returns Clean title
+ * @returns Clean title and whether cleaning was performed
  *
  * @example
- * sanitizeTitle("My Book.pdf") // "My Book"
- * sanitizeTitle("Another Book_EBOK") // "Another Book"
+ * sanitizeTitle("My Book (Spanish Edition).pdf")
+ * // { title: "My Book", wasCleaned: true }
  */
-export function sanitizeTitle(title: string): string {
+export function sanitizeTitle(title: string): TitleSanitizeResult {
   let clean = title;
+  const original = title;
 
   // Remove file extensions
   clean = clean.replace(PATTERNS.SIDELOAD_EXTENSIONS, "");
@@ -43,10 +61,18 @@ export function sanitizeTitle(title: string): string {
   // Remove _EBOK suffix
   clean = clean.replace(PATTERNS.EBOK_SUFFIX, "");
 
+  // Remove all noise patterns (editions, markers, etc)
+  for (const pattern of TITLE_NOISE_PATTERNS) {
+    clean = clean.replace(pattern, "");
+  }
+
   // Normalize whitespace
   clean = normalizeWhitespace(clean);
 
-  return clean;
+  return {
+    title: clean,
+    wasCleaned: clean !== normalizeWhitespace(original),
+  };
 }
 
 /**
@@ -88,7 +114,7 @@ export function extractAuthor(rawTitle: string): TitleAuthorResult {
   if (authorStart === -1) {
     // No author found in parentheses
     return {
-      title: sanitizeTitle(trimmed),
+      title: sanitizeTitle(trimmed).title,
       author: "Unknown",
     };
   }
@@ -97,7 +123,7 @@ export function extractAuthor(rawTitle: string): TitleAuthorResult {
   const author = trimmed.substring(authorStart + 1, trimmed.length - 1).trim();
 
   return {
-    title: sanitizeTitle(title),
+    title: sanitizeTitle(title).title,
     author: normalizeWhitespace(author) || "Unknown",
   };
 }

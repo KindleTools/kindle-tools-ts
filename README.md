@@ -31,11 +31,15 @@ A robust TypeScript library to parse and process Amazon Kindle `My Clippings.txt
 - 🧠 **Smart merging** — Merges overlapping highlights when you extend a selection in Kindle
 - 🔄 **Deduplication** — Removes exact duplicate clippings with deterministic IDs
 - 🔗 **Note linking** — Links notes to their associated highlights based on location
+- 🧹 **Advanced text cleaning** — De-hyphenation for PDF artifacts, space normalization, edition markers removal
+- ⚠️ **Quality flags** — Detects suspicious highlights (accidental, incomplete, fragments)
+- 📊 **Fuzzy duplicate detection** — Uses Jaccard similarity to find near-duplicates
 - 📚 **6 export formats** — JSON, CSV, Markdown, Obsidian, Joplin JEX, HTML
 - 📊 **Statistics** — Get detailed stats about your reading habits
 - 🖥️ **CLI included** — Full command-line interface for quick operations
 - 📘 **TypeScript-first** — Full type definitions with strict mode
 - 🪶 **Lightweight** — Only 2 runtime dependencies (date-fns, zod)
+- 🔒 **Non-destructive** — Always preserves original data (titleRaw, contentRaw) for user review
 
 ---
 

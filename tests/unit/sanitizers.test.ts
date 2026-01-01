@@ -13,32 +13,46 @@ import {
 describe("sanitizers", () => {
   describe("sanitizeTitle", () => {
     it("should remove .pdf extension", () => {
-      expect(sanitizeTitle("My Book.pdf")).toBe("My Book");
+      expect(sanitizeTitle("My Book.pdf").title).toBe("My Book");
     });
 
     it("should remove .epub extension", () => {
-      expect(sanitizeTitle("My Book.epub")).toBe("My Book");
+      expect(sanitizeTitle("My Book.epub").title).toBe("My Book");
     });
 
     it("should remove .mobi extension", () => {
-      expect(sanitizeTitle("My Book.mobi")).toBe("My Book");
+      expect(sanitizeTitle("My Book.mobi").title).toBe("My Book");
     });
 
     it("should remove _EBOK suffix", () => {
-      expect(sanitizeTitle("My Book_EBOK")).toBe("My Book");
+      expect(sanitizeTitle("My Book_EBOK").title).toBe("My Book");
     });
 
     it("should handle multiple extensions/suffixes", () => {
       // Extension is removed first, then _EBOK suffix
-      expect(sanitizeTitle("My Book_EBOK.pdf")).toBe("My Book");
+      expect(sanitizeTitle("My Book_EBOK.pdf").title).toBe("My Book");
     });
 
     it("should trim whitespace", () => {
-      expect(sanitizeTitle("  My Book  ")).toBe("My Book");
+      expect(sanitizeTitle("  My Book  ").title).toBe("My Book");
     });
 
     it("should preserve clean titles", () => {
-      expect(sanitizeTitle("Clean Title")).toBe("Clean Title");
+      const result = sanitizeTitle("Clean Title");
+      expect(result.title).toBe("Clean Title");
+      expect(result.wasCleaned).toBe(false);
+    });
+
+    it("should set wasCleaned flag when title was modified", () => {
+      const result = sanitizeTitle("My Book (Spanish Edition)");
+      expect(result.title).toBe("My Book");
+      expect(result.wasCleaned).toBe(true);
+    });
+
+    it("should remove edition markers", () => {
+      expect(sanitizeTitle("Book (English Edition)").title).toBe("Book");
+      expect(sanitizeTitle("Book (Kindle Edition)").title).toBe("Book");
+      expect(sanitizeTitle("Book [eBook]").title).toBe("Book");
     });
   });
 

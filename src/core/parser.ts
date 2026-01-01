@@ -14,8 +14,14 @@ import type { SupportedLanguage } from "../types/language.js";
 import { parseKindleDate } from "../utils/dates.js";
 import { generateClippingId } from "../utils/hashing.js";
 import { normalizeWhitespace, removeBOM } from "../utils/normalizers.js";
-import { extractAuthor, isSideloaded, sanitizeContent } from "../utils/sanitizers.js";
+import {
+  extractAuthor,
+  isSideloaded,
+  sanitizeContent,
+  sanitizeTitle,
+} from "../utils/sanitizers.js";
 import { calculateStats, countWords } from "../utils/stats.js";
+import { cleanText } from "../utils/text-cleaner.js";
 import { LANGUAGE_MAP } from "./constants.js";
 import { detectLanguage } from "./language-detector.js";
 import { tokenize } from "./tokenizer.js";
@@ -208,8 +214,13 @@ export function parseBlock(
     return null;
   }
 
-  // Parse title and author
-  const { title, author } = extractAuthor(titleLine);
+  // Parse title and author (extractAuthor now returns clean title)
+  const { title: extractedTitle, author } = extractAuthor(titleLine);
+
+  // Apply additional title cleaning (edition markers, etc)
+  const titleCleanResult = sanitizeTitle(extractedTitle);
+  const title = titleCleanResult.title;
+  const titleWasCleaned = titleCleanResult.wasCleaned;
 
   // Parse metadata line (type, page, location, date)
   const metadata = parseMetadataLine(metadataLine, language);
@@ -221,7 +232,12 @@ export function parseBlock(
   // Extract content (everything after line 1, joined)
   const contentLines = lines.slice(2);
   const rawContent = contentLines.join("\n");
-  const { content, isEmpty, isLimitReached } = sanitizeContent(rawContent);
+  const { content: sanitizedContent, isEmpty, isLimitReached } = sanitizeContent(rawContent);
+
+  // Apply advanced text cleaning (de-hyphenation, spacing fixes)
+  const textCleanResult = cleanText(sanitizedContent);
+  const content = textCleanResult.text;
+  const contentWasCleaned = textCleanResult.wasCleaned;
 
   // Determine source (Kindle or sideloaded)
   const source = isSideloaded(titleLine) ? "sideload" : "kindle";
@@ -236,7 +252,8 @@ export function parseBlock(
   const wordCount = countWords(content);
   const charCount = content.length;
 
-  return {
+  // Build base clipping
+  const clipping: Clipping = {
     id,
     title,
     titleRaw: titleLine,
@@ -257,6 +274,16 @@ export function parseBlock(
     charCount,
     blockIndex,
   };
+
+  // Add quality flags only when content was cleaned
+  if (titleWasCleaned) {
+    clipping.titleWasCleaned = true;
+  }
+  if (contentWasCleaned) {
+    clipping.contentWasCleaned = true;
+  }
+
+  return clipping;
 }
 
 /**

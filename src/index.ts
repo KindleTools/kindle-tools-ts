@@ -51,19 +51,33 @@ export {
   sanitizeContent,
   sanitizeTitle,
 } from "./utils/sanitizers.js";
+export { compareTexts, isSubset, jaccardSimilarity } from "./utils/similarity.js";
 export { calculateStats, countWords, groupByBook } from "./utils/stats.js";
+export { cleanText, needsCleaning } from "./utils/text-cleaner.js";
+
+// =============================================================================
+// Processor Exports (advanced processing functions)
+// =============================================================================
+
+export {
+  flagFuzzyDuplicates,
+  flagSuspiciousHighlights,
+  linkNotesToHighlights,
+  removeDuplicates,
+  smartMergeHighlights,
+} from "./core/processor.js";
 
 // =============================================================================
 // Type Exports
 // =============================================================================
 
+export type { ProcessResult } from "./core/processor.js";
 export type {
   Clipping,
   ClippingLocation,
   ClippingType,
   RawClipping,
 } from "./types/clipping.js";
-
 export type {
   ParseOptions,
   ParseResult,
@@ -76,17 +90,22 @@ export type {
   ExporterOptions,
   ExportResult,
 } from "./types/exporter.js";
-
 export type { LanguagePatterns, SupportedLanguage } from "./types/language.js";
 export type { BookStats, ClippingsStats } from "./types/stats.js";
+export type { TitleSanitizeResult } from "./utils/sanitizers.js";
+export type { SimilarityResult } from "./utils/similarity.js";
+export type { CleaningOperation, TextCleaningResult } from "./utils/text-cleaner.js";
 
 // =============================================================================
 // Constants Exports
 // =============================================================================
 
 export {
+  DEFAULT_SIMILARITY_THRESHOLD,
   DRM_LIMIT_MESSAGES,
   LANGUAGE_MAP,
   PATTERNS,
   SUPPORTED_LANGUAGES,
+  SUSPICIOUS_HIGHLIGHT_THRESHOLDS,
+  TITLE_NOISE_PATTERNS,
 } from "./core/constants.js";

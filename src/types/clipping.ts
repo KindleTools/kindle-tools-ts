@@ -127,4 +127,44 @@ export interface Clipping {
 
   /** Index of the original block in the file */
   blockIndex: number;
+
+  // ===== Quality Assessment =====
+
+  /**
+   * True if this highlight is suspected to be accidental or incomplete.
+   * The user should review these manually.
+   */
+  isSuspiciousHighlight?: boolean;
+
+  /**
+   * Reason why the highlight was flagged as suspicious.
+   * - 'too_short': Content is less than 5 characters (likely accidental selection)
+   * - 'fragment': Short content starting with lowercase (likely mid-sentence)
+   * - 'incomplete': Short content without proper ending punctuation
+   */
+  suspiciousReason?: "too_short" | "fragment" | "incomplete";
+
+  /**
+   * Similarity score with another clipping (0-1).
+   * Only present if fuzzy duplicate detection found a match.
+   */
+  similarityScore?: number;
+
+  /**
+   * ID of a clipping this one is possibly a duplicate of.
+   * Uses Jaccard similarity > 0.8 for detection.
+   */
+  possibleDuplicateOf?: string;
+
+  /**
+   * True if the title was cleaned (edition markers removed, etc).
+   * Compare 'title' vs 'titleRaw' to see what changed.
+   */
+  titleWasCleaned?: boolean;
+
+  /**
+   * True if the content was cleaned (de-hyphenation, spacing fixes, etc).
+   * Compare 'content' vs 'contentRaw' to see what changed.
+   */
+  contentWasCleaned?: boolean;
 }
