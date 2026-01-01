@@ -25,6 +25,9 @@
 | **Text Cleaner (de-hyphen)** | ✅ | ✅ **NUEVO** | ✅ Implementado |
 | **Suspicious Highlight Detection** | ✅ | ✅ **NUEVO** | ✅ Implementado |
 | **Fuzzy Duplicate Detection** | ✅ | ✅ **NUEVO** | ✅ Implementado |
+| **Page Number Formatting** | ✅ | ✅ **NUEVO** | ✅ Implementado |
+| **Smart Tag Mining** | ✅ | ✅ **NUEVO** | ✅ Implementado |
+| **Page Estimation from Location** | ✅ | ✅ **NUEVO** | ✅ Implementado |
 
 ---
 
@@ -185,9 +188,9 @@ export function isFuzzyDuplicate(clip1: Clipping, clip2: Clipping, threshold = 0
 
 ### 🟡 Prioridad MEDIA (Mejoran significativamente la experiencia)
 
-#### 5. **Page Number Formatting** (Zero-padding para ordenación)
+#### 5. **Page Number Formatting** (Zero-padding para ordenación) ✅ DONE
 **Estado actual en Python**: ✅ Usa formato `[0042]`  
-**Estado actual en TS**: ❌ Número crudo
+**Estado actual en TS**: ✅ **IMPLEMENTADO** en `page-utils.ts`
 
 **Problema del usuario**: En listados, la página 5 aparece después de la 42 si no hay zero-padding.
 
@@ -219,9 +222,9 @@ interface ParseOptions {
 
 ---
 
-#### 7. **Smart Tag Mining desde Notas**
+#### 7. **Smart Tag Mining desde Notas** ✅ DONE
 **Estado actual en Python**: ✅ En parser, split por `,;.\n`  
-**Estado actual en TS**: ❌ No implementado
+**Estado actual en TS**: ✅ **IMPLEMENTADO** en `tag-extractor.ts`
 
 **Problema del usuario**: Kindle Notes a menudo contienen tags (e.g., "productivity, psychology"). Estos deberían extraerse automáticamente.
 
@@ -238,9 +241,9 @@ export function extractTagsFromNote(noteContent: string): string[] {
 
 ---
 
-#### 8. **Calculating Heuristic Page from Location**
+#### 8. **Calculating Heuristic Page from Location** ✅ DONE
 **Estado actual en Python**: ✅ Usa location / ~16 como heurística  
-**Estado actual en TS**: ❌ No implementado
+**Estado actual en TS**: ✅ **IMPLEMENTADO** en `page-utils.ts`
 
 **Problema del usuario**: Muchos clippings no tienen número de página (especialmente ebooks). Se puede calcular heurísticamente.
 
@@ -254,9 +257,9 @@ export function estimatePageFromLocation(location: { start: number }): number {
 
 ---
 
-#### 9. **Stats: Palabras Promedio por Highlight**
+#### 9. **Stats: Palabras Promedio por Highlight** ✅ DONE
 **Estado actual en Python**: ✅ "Avg/Book" en GUI  
-**Estado actual en TS**: ⚠️ Parcial
+**Estado actual en TS**: ✅ **IMPLEMENTADO** - `avgWordsPerHighlight`, `avgHighlightsPerBook`
 
 **Añadir a stats**:
 ```typescript
@@ -368,11 +371,11 @@ export class JoplinApi {
 4. ✅ Jaccard Similarity para fuzzy dedup
 
 ### Para v1.2.0
-5. Page number formatting
+5. ✅ Page number formatting
 6. Geo-tagging support
-7. Smart tag mining
-8. Heuristic page calculation
-9. Extended stats
+7. ✅ Smart tag mining
+8. ✅ Heuristic page calculation
+9. ✅ Extended stats
 
 ### Futuro (v2.0.0)
 10. Streaming parser

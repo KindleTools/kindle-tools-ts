@@ -16,6 +16,7 @@
 import { createHash } from "node:crypto";
 import type { Clipping } from "../types/clipping.js";
 import type { ExportedFile, Exporter, ExporterOptions, ExportResult } from "../types/exporter.js";
+import { getPageInfo } from "../utils/page-utils.js";
 import { groupByBook } from "../utils/stats.js";
 
 /**
@@ -28,6 +29,12 @@ export interface JoplinExporterOptions extends ExporterOptions {
   tags?: string[];
   /** Creator name for metadata */
   creator?: string;
+  /**
+   * Estimate page numbers from Kindle locations when not available.
+   * Uses ~16 locations per page as a heuristic.
+   * Estimated pages are prefixed with ~ (default: true)
+   */
+  estimatePages?: boolean;
 }
 
 /**
@@ -179,7 +186,8 @@ export class JoplinExporter implements Exporter {
         // Create notes for each clipping
         for (const clipping of bookClippings) {
           const noteId = this.generateId("note", clipping.id);
-          const noteTitle = this.generateNoteTitle(clipping);
+          const estimatePages = options?.estimatePages ?? true;
+          const noteTitle = this.generateNoteTitle(clipping, estimatePages);
           const noteBody = this.generateNoteBody(clipping, options);
 
           const clippingDate = clipping.date?.getTime() ?? now;
@@ -258,13 +266,13 @@ export class JoplinExporter implements Exporter {
   /**
    * Generate a title for the note based on clipping type.
    */
-  private generateNoteTitle(clipping: Clipping): string {
-    const page = clipping.page ? String(clipping.page).padStart(4, "0") : "????";
+  private generateNoteTitle(clipping: Clipping, estimatePages = true): string {
+    const pageInfo = getPageInfo(clipping.page, clipping.location, estimatePages);
     const typeEmoji = clipping.type === "highlight" ? "📖" : clipping.type === "note" ? "📝" : "🔖";
     const preview = clipping.content.slice(0, 50).replace(/\n/g, " ");
     const ellipsis = clipping.content.length > 50 ? "..." : "";
 
-    return `[${page}] ${typeEmoji} ${preview}${ellipsis}`;
+    return `${pageInfo.formatted} ${typeEmoji} ${preview}${ellipsis}`;
   }
 
   /**

@@ -47,6 +47,15 @@ export {
   removeBOM,
 } from "./utils/normalizers.js";
 export {
+  estimatePageFromLocation,
+  formatPage,
+  formatPageOrPlaceholder,
+  getEffectivePage,
+  getPageInfo,
+  LOCATIONS_PER_PAGE,
+  PAGE_PADDING_LENGTH,
+} from "./utils/page-utils.js";
+export {
   extractAuthor,
   sanitizeContent,
   sanitizeTitle,
@@ -94,6 +103,7 @@ export type {
 } from "./types/exporter.js";
 export type { LanguagePatterns, SupportedLanguage } from "./types/language.js";
 export type { BookStats, ClippingsStats } from "./types/stats.js";
+export type { PageInfo } from "./utils/page-utils.js";
 export type { TitleSanitizeResult } from "./utils/sanitizers.js";
 export type { SimilarityResult } from "./utils/similarity.js";
 export type { TagExtractionResult } from "./utils/tag-extractor.js";
