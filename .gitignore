@@ -1,0 +1,70 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Diagnostic reports
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Dependency directories
+node_modules/
+
+# Build outputs
+dist/
+build/
+*.tsbuildinfo
+
+# Cache directories
+.cache/
+.turbo/
+.eslintcache
+*.tsbuildinfo
+
+# Coverage
+coverage/
+*.lcov
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Test fixtures output
+tests/fixtures/output/
+
+# Temporary files
+*.tmp
+*.temp
+.temp/
+tmp/
+
+# Package tarballs
+*.tgz
+
+# Changeset generated files (except config)
+.changeset/*.md
+!.changeset/config.json
+!.changeset/README.md

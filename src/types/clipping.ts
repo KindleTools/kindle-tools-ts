@@ -1,0 +1,130 @@
+/**
+ * Type of clipping from Kindle.
+ */
+export type ClippingType = "highlight" | "note" | "bookmark" | "clip" | "article";
+
+/**
+ * Structured location information.
+ */
+export interface ClippingLocation {
+  /** Raw location string (e.g., "105-106" or "105") */
+  raw: string;
+
+  /** Start location as number */
+  start: number;
+
+  /** End location as number (null if single location) */
+  end: number | null;
+}
+
+/**
+ * Raw clipping before processing.
+ * Contains data directly extracted from the file.
+ */
+export interface RawClipping {
+  /** Raw title line including author */
+  titleLine: string;
+
+  /** Raw metadata line (type, page, location, date) */
+  metadataLine: string;
+
+  /** Raw content lines */
+  contentLines: string[];
+
+  /** Index of this block in the original file */
+  blockIndex: number;
+}
+
+/**
+ * Processed clipping with all extracted and normalized data.
+ *
+ * This is the main data structure representing a single highlight,
+ * note, bookmark, or clip extracted from a Kindle device.
+ */
+export interface Clipping {
+  // ===== Identification =====
+
+  /** Unique deterministic ID (12 alphanumeric characters) */
+  id: string;
+
+  // ===== Book and Author =====
+
+  /** Clean, normalized book title */
+  title: string;
+
+  /** Original title as it appears in the file */
+  titleRaw: string;
+
+  /** Extracted and normalized author name */
+  author: string;
+
+  /** Original author as it appears in the file */
+  authorRaw: string;
+
+  // ===== Content =====
+
+  /** Clean, normalized content */
+  content: string;
+
+  /** Original content as it appears in the file */
+  contentRaw: string;
+
+  // ===== Type =====
+
+  /** Type of clipping */
+  type: ClippingType;
+
+  // ===== Location =====
+
+  /** Page number (null if not available) */
+  page: number | null;
+
+  /** Location in the book */
+  location: ClippingLocation;
+
+  // ===== Date =====
+
+  /** Parsed date (null if parsing failed) */
+  date: Date | null;
+
+  /** Original date string from the file */
+  dateRaw: string;
+
+  // ===== Flags =====
+
+  /** True if DRM clipping limit was reached */
+  isLimitReached: boolean;
+
+  /** True if content is empty */
+  isEmpty: boolean;
+
+  /** Detected language of this entry's metadata */
+  language: import("./language.js").SupportedLanguage;
+
+  /** Source of the book: Amazon or sideloaded */
+  source: "kindle" | "sideload";
+
+  // ===== Statistics =====
+
+  /** Number of words in content */
+  wordCount: number;
+
+  /** Number of characters in content */
+  charCount: number;
+
+  // ===== Linking =====
+
+  /** ID of associated note (if this is a highlight with a note) */
+  linkedNoteId?: string;
+
+  /** ID of associated highlight (if this is a note) */
+  linkedHighlightId?: string;
+
+  /** Content of linked note (if mergeNotes is enabled) */
+  note?: string;
+
+  // ===== Metadata =====
+
+  /** Index of the original block in the file */
+  blockIndex: number;
+}

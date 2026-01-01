@@ -1,0 +1,121 @@
+import type { Clipping, ClippingType } from "./clipping.js";
+import type { SupportedLanguage } from "./language.js";
+import type { ClippingsStats } from "./stats.js";
+
+/**
+ * Options for parsing Kindle clippings.
+ */
+export interface ParseOptions {
+  // ===== Language =====
+
+  /** Language to use for parsing. 'auto' will detect automatically. Default: 'auto' */
+  language?: SupportedLanguage | "auto";
+
+  // ===== Processing =====
+
+  /** Remove exact duplicate clippings. Default: true */
+  removeDuplicates?: boolean;
+
+  /** Link notes to their associated highlights. Default: true */
+  mergeNotes?: boolean;
+
+  /** Merge overlapping/extended highlights. Default: true */
+  mergeOverlapping?: boolean;
+
+  // ===== Normalization =====
+
+  /** Apply Unicode NFC normalization. Default: true */
+  normalizeUnicode?: boolean;
+
+  /** Clean content (trim, collapse spaces). Default: true */
+  cleanContent?: boolean;
+
+  /** Clean titles (remove extensions, suffixes). Default: true */
+  cleanTitles?: boolean;
+
+  // ===== Filtering =====
+
+  /** Types to exclude from results */
+  excludeTypes?: ClippingType[];
+
+  /** Books to exclude by title (case-insensitive) */
+  excludeBooks?: string[];
+
+  /** Only include these books (case-insensitive) */
+  onlyBooks?: string[];
+
+  /** Minimum content length to include */
+  minContentLength?: number;
+
+  // ===== Dates =====
+
+  /** Locale for date parsing (e.g., 'en-US', 'es-ES') */
+  dateLocale?: string;
+
+  // ===== Mode =====
+
+  /** If true, throw on parsing errors. If false, collect warnings. Default: false */
+  strict?: boolean;
+}
+
+/**
+ * Options for processing clippings (post-parse).
+ */
+export interface ProcessOptions extends ParseOptions {
+  /** The detected or specified language */
+  detectedLanguage: SupportedLanguage;
+}
+
+/**
+ * Warning generated during parsing.
+ */
+export interface ParseWarning {
+  /** Type of warning */
+  type:
+    | "date_parse_failed"
+    | "unknown_format"
+    | "encoding_issue"
+    | "empty_content"
+    | "unknown_type";
+
+  /** Human-readable warning message */
+  message: string;
+
+  /** Index of the block that caused the warning */
+  blockIndex: number;
+
+  /** Raw content that caused the warning (if applicable) */
+  raw?: string;
+}
+
+/**
+ * Result of parsing a Kindle clippings file.
+ */
+export interface ParseResult {
+  /** Parsed and processed clippings */
+  clippings: Clipping[];
+
+  /** Statistics about the parsed clippings */
+  stats: ClippingsStats;
+
+  /** Warnings generated during parsing */
+  warnings: ParseWarning[];
+
+  /** Metadata about the parse operation */
+  meta: {
+    /** Original file size in bytes */
+    fileSize: number;
+
+    /** Time taken to parse in milliseconds */
+    parseTime: number;
+
+    /** Detected language of the file */
+    detectedLanguage: SupportedLanguage;
+
+    /** Number of raw blocks found */
+    totalBlocks: number;
+
+    /** Number of blocks successfully parsed */
+    parsedBlocks: number;
+  };
+}
