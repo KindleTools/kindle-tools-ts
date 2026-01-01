@@ -1,9 +1,9 @@
 # kindle-tools-ts — Project Status & Implementation Guide
 
 **Last Updated:** 2026-01-01  
-**Current Phase:** Phase 5 & 7 Complete, Ready for Phase 6 & 8  
+**Current Phase:** Phase 6 Complete, Ready for Phase 8 (Publishing)  
 **Build Status:** ✅ Passing  
-**Test Status:** ✅ 141 tests passing  
+**Test Status:** ✅ 125 tests passing  
 
 ---
 
@@ -16,7 +16,7 @@
 | 🟡 3 | Core Utilities | ✅ **COMPLETE** | 100% |
 | 🟠 4 | Core Parser & Processor | ✅ **COMPLETE** | 100% |
 | 🔴 5 | Exporters | ✅ **COMPLETE** | 100% |
-| 🟣 6 | CLI Tool | 📋 **PLACEHOLDER** | 10% |
+| 🟣 6 | CLI Tool | ✅ **COMPLETE** | 100% |
 | ⚪ 7 | Testing & Documentation | ✅ **COMPLETE** | 100% |
 | ⚫ 8 | Publishing | ⏳ **PENDING** | 0% |
 
@@ -76,10 +76,17 @@
 - [x] `src/exporters/joplin.exporter.ts` — JEX format with deterministic IDs, notebooks
 - [x] `src/exporters/html.exporter.ts` — Standalone HTML with dark mode, search
 
-### Phase 6: CLI Tool (PLACEHOLDER)
+### Phase 6: CLI Tool ✅
 
-- [x] `src/cli.ts` — Structure and help text (PLACEHOLDER)
-- [ ] Actual command implementations (parse, export, stats, validate)
+- [x] `src/cli.ts` — Full CLI implementation with:
+  - [x] `parse <file>` — Parse and show summary (with --json, --verbose options)
+  - [x] `export <file> --format=<fmt>` — Export to json, csv, md, obsidian, joplin, html
+  - [x] `stats <file>` — Show detailed statistics (with --json option)
+  - [x] `validate <file>` — Validate file format
+  - [x] Colored terminal output with ANSI codes
+  - [x] JSON output mode for scripting
+  - [x] Comprehensive help with examples
+  - [x] All export formats working with file output
 
 ### Phase 7: Testing ✅
 
@@ -95,20 +102,14 @@
 
 ## 🔴 What Needs To Be Done
 
-### Priority 1: CLI Implementation (Phase 6)
+### Priority 1: Publishing (Phase 8)
 
-Implement actual functionality in `src/cli.ts`:
-- `kindle-tools parse <file>` — Parse and show summary
-- `kindle-tools export <file> --format=<fmt>` — Export to format
-- `kindle-tools stats <file>` — Show detailed stats
-- `kindle-tools validate <file>` — Validate file format
-
-### Priority 2: Publishing (Phase 8)
-
-- GitHub Actions for CI/CD
-- npm publish workflow
-- Generate CHANGELOG with changesets
-- Tag v1.0.0 release
+- [ ] GitHub Actions for CI/CD (build, test, lint)
+- [ ] npm publish workflow
+- [ ] Generate CHANGELOG with changesets
+- [ ] Tag v1.0.0 release
+- [ ] Update package.json version to 1.0.0
+- [ ] Add GitHub repository topics and description
 
 ---
 
@@ -363,9 +364,25 @@ pnpm release         # Build and publish
 - **Total: 141 tests passing** ✅
 
 **Next Session Goals:**
-1. Implement CLI commands (parse, export, stats, validate)
-2. Set up GitHub Actions CI/CD
-3. Prepare for npm publishing
+1. Set up GitHub Actions CI/CD
+2. Prepare for npm publishing
+3. Create initial CHANGELOG
+
+### 2026-01-01: CLI Implementation ✅
+- Implemented full CLI with 4 commands:
+  - `parse <file>` — Parse and show summary with colored output
+  - `export <file>` — Export to 6 formats (json, csv, md, obsidian, joplin, html)
+  - `stats <file>` — Show detailed statistics table
+  - `validate <file>` — Validate file format and structure
+- Added features:
+  - Colored terminal output with ANSI codes
+  - JSON output mode (`--json`) for scripting/automation
+  - Verbose mode (`--verbose`) for extra details
+  - Pretty print option (`--pretty`)
+  - Language forcing (`--lang=es`)
+  - Disable merging/dedup options (`--no-merge`, `--no-dedup`)
+- All export formats working with file output
+- **Phase 6: 100% Complete** ✅
 
 ---
 
