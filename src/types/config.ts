@@ -1,3 +1,4 @@
+import type { GeoLocation } from "../utils/geo-location.js";
 import type { Clipping, ClippingType } from "./clipping.js";
 import type { SupportedLanguage } from "./language.js";
 import type { ClippingsStats } from "./stats.js";
@@ -59,6 +60,15 @@ export interface ParseOptions {
 
   /** Locale for date parsing (e.g., 'en-US', 'es-ES') */
   dateLocale?: string;
+
+  // ===== Location =====
+
+  /**
+   * Geographic location where the reading took place.
+   * If provided, this will be included in exports for personal tracking.
+   * Useful for Notion/Roam/Obsidian users who want location metadata.
+   */
+  geoLocation?: GeoLocation;
 
   // ===== Mode =====
 

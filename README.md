@@ -31,11 +31,14 @@ A robust TypeScript library to parse and process Amazon Kindle `My Clippings.txt
 - 🧠 **Smart merging** — Merges overlapping highlights when you extend a selection in Kindle
 - 🔄 **Deduplication** — Removes exact duplicate clippings with deterministic IDs
 - 🔗 **Note linking** — Links notes to their associated highlights based on location
+- 🏷️ **Tag extraction** — Automatically extracts tags from notes (comma/semicolon/newline separated)
 - 🧹 **Advanced text cleaning** — De-hyphenation for PDF artifacts, space normalization, edition markers removal
 - ⚠️ **Quality flags** — Detects suspicious highlights (accidental, incomplete, fragments)
 - 📊 **Fuzzy duplicate detection** — Uses Jaccard similarity to find near-duplicates
+- 📑 **Page utilities** — Zero-padded page formatting `[0042]` and estimation from Kindle locations
+- 📍 **Geo-location support** — Optional location metadata for personal knowledge management
 - 📚 **6 export formats** — JSON, CSV, Markdown, Obsidian, Joplin JEX, HTML
-- 📊 **Statistics** — Get detailed stats about your reading habits
+- 📊 **Extended statistics** — Avg words/highlight, avg highlights/book, and more
 - 🖥️ **CLI included** — Full command-line interface for quick operations
 - 📘 **TypeScript-first** — Full type definitions with strict mode
 - 🪶 **Lightweight** — Only 2 runtime dependencies (date-fns, zod)
@@ -425,6 +428,34 @@ import { extractAuthor, sanitizeTitle, sanitizeContent } from 'kindle-tools-ts';
 
 // Date parsing
 import { parseKindleDate, parseKindleDateAuto } from 'kindle-tools-ts';
+
+// Tag extraction from notes
+import { extractTagsFromNote, looksLikeTagNote } from 'kindle-tools-ts';
+
+// Page utilities
+import { 
+  formatPage,              // "[0042]" format
+  formatPageOrPlaceholder, // with fallback
+  estimatePageFromLocation,// ~16 locations per page
+  getEffectivePage,        // actual or estimated
+  getPageInfo              // complete info with status
+} from 'kindle-tools-ts';
+
+// Geo-location utilities
+import {
+  isValidGeoLocation,
+  formatGeoLocation,
+  parseGeoLocation,
+  toGoogleMapsUrl,
+  toOpenStreetMapUrl,
+  distanceBetween
+} from 'kindle-tools-ts';
+
+// Text cleaning (PDF artifacts)
+import { cleanText, needsCleaning } from 'kindle-tools-ts';
+
+// Similarity detection
+import { jaccardSimilarity, compareTexts, isSubset } from 'kindle-tools-ts';
 ```
 
 ---

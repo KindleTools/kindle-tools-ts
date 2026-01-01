@@ -40,6 +40,14 @@ export { ObsidianExporter } from "./exporters/obsidian.exporter.js";
 // =============================================================================
 
 export { parseKindleDate, parseKindleDateAuto } from "./utils/dates.js";
+export {
+  distanceBetween,
+  formatGeoLocation,
+  isValidGeoLocation,
+  parseGeoLocation,
+  toGoogleMapsUrl,
+  toOpenStreetMapUrl,
+} from "./utils/geo-location.js";
 export { generateClippingId, generateDuplicateHash } from "./utils/hashing.js";
 export {
   normalizeText,
@@ -103,6 +111,7 @@ export type {
 } from "./types/exporter.js";
 export type { LanguagePatterns, SupportedLanguage } from "./types/language.js";
 export type { BookStats, ClippingsStats } from "./types/stats.js";
+export type { GeoLocation } from "./utils/geo-location.js";
 export type { PageInfo } from "./utils/page-utils.js";
 export type { TitleSanitizeResult } from "./utils/sanitizers.js";
 export type { SimilarityResult } from "./utils/similarity.js";
