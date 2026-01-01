@@ -13,7 +13,7 @@ import type { ParseOptions, ParseResult, ParseWarning } from "../types/config.js
 import type { SupportedLanguage } from "../types/language.js";
 import { parseKindleDate } from "../utils/dates.js";
 import { generateClippingId } from "../utils/hashing.js";
-import { normalizeText, normalizeWhitespace } from "../utils/normalizers.js";
+import { normalizeWhitespace, removeBOM } from "../utils/normalizers.js";
 import { extractAuthor, isSideloaded, sanitizeContent } from "../utils/sanitizers.js";
 import { calculateStats, countWords } from "../utils/stats.js";
 import { LANGUAGE_MAP } from "./constants.js";
@@ -78,8 +78,15 @@ export function parseString(content: string, options?: ParseOptions): ParseResul
   const startTime = performance.now();
   const warnings: ParseWarning[] = [];
 
-  // Step 1: Normalize the content
-  const normalizedContent = options?.normalizeUnicode !== false ? normalizeText(content) : content;
+  // Step 1: Normalize the content (but preserve newlines for tokenization)
+  // Note: We only do safe normalization here - BOM removal, line endings, Unicode, control chars
+  // Whitespace normalization is done later on individual content pieces
+  let normalizedContent = content;
+  if (options?.normalizeUnicode !== false) {
+    normalizedContent = removeBOM(normalizedContent);
+    normalizedContent = normalizedContent.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+    normalizedContent = normalizedContent.normalize("NFC");
+  }
 
   // Step 2: Tokenize into blocks
   const blocks = tokenize(normalizedContent);

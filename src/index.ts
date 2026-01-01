@@ -29,12 +29,11 @@ export { tokenize } from "./core/tokenizer.js";
 // =============================================================================
 
 export { CsvExporter } from "./exporters/csv.exporter.js";
+export { HtmlExporter } from "./exporters/html.exporter.js";
+export { JoplinExporter } from "./exporters/joplin.exporter.js";
 export { JsonExporter } from "./exporters/json.exporter.js";
 export { MarkdownExporter } from "./exporters/markdown.exporter.js";
-
-// export { ObsidianExporter } from './exporters/obsidian.exporter.js';
-// export { JoplinExporter } from './exporters/joplin.exporter.js';
-// export { HtmlExporter } from './exporters/html.exporter.js';
+export { ObsidianExporter } from "./exporters/obsidian.exporter.js";
 
 // =============================================================================
 // Utility Exports

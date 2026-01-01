@@ -186,8 +186,8 @@ export const PATTERNS = {
   /** Extract title and author: "Title (Author)" */
   TITLE_AUTHOR: /^(.+?)\s*\(([^)]+)\)\s*$/,
 
-  /** Sideloaded book extensions */
-  SIDELOAD_EXTENSIONS: /\.(pdf|epub|mobi|azw3?|txt|doc|docx|html|fb2|rtf)$/i,
+  /** Sideloaded book extensions (matches anywhere in title) */
+  SIDELOAD_EXTENSIONS: /\.(pdf|epub|mobi|azw3?|txt|doc|docx|html|fb2|rtf)/i,
 
   /** Amazon _EBOK suffix */
   EBOK_SUFFIX: /_EBOK$/i,
