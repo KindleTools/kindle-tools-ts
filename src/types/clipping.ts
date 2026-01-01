@@ -123,6 +123,13 @@ export interface Clipping {
   /** Content of linked note (if mergeNotes is enabled) */
   note?: string;
 
+  /**
+   * Tags extracted from the linked note.
+   * Only present if extractTags option is enabled during processing.
+   * Extracted from notes that contain comma/semicolon/newline separated words.
+   */
+  tags?: string[];
+
   // ===== Metadata =====
 
   /** Index of the original block in the file */

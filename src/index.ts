@@ -53,6 +53,7 @@ export {
 } from "./utils/sanitizers.js";
 export { compareTexts, isSubset, jaccardSimilarity } from "./utils/similarity.js";
 export { calculateStats, countWords, groupByBook } from "./utils/stats.js";
+export { extractTagsFromNote, looksLikeTagNote } from "./utils/tag-extractor.js";
 export { cleanText, needsCleaning } from "./utils/text-cleaner.js";
 
 // =============================================================================
@@ -60,6 +61,7 @@ export { cleanText, needsCleaning } from "./utils/text-cleaner.js";
 // =============================================================================
 
 export {
+  extractTagsFromLinkedNotes,
   flagFuzzyDuplicates,
   flagSuspiciousHighlights,
   linkNotesToHighlights,
@@ -94,6 +96,7 @@ export type { LanguagePatterns, SupportedLanguage } from "./types/language.js";
 export type { BookStats, ClippingsStats } from "./types/stats.js";
 export type { TitleSanitizeResult } from "./utils/sanitizers.js";
 export type { SimilarityResult } from "./utils/similarity.js";
+export type { TagExtractionResult } from "./utils/tag-extractor.js";
 export type { CleaningOperation, TextCleaningResult } from "./utils/text-cleaner.js";
 
 // =============================================================================

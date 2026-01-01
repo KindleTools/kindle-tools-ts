@@ -19,6 +19,14 @@ export interface ParseOptions {
   /** Link notes to their associated highlights. Default: true */
   mergeNotes?: boolean;
 
+  /**
+   * Extract tags from notes.
+   * When enabled, notes that look like tag lists (comma/semicolon/newline separated)
+   * will be parsed and the tags assigned to the linked highlight.
+   * Default: false
+   */
+  extractTags?: boolean;
+
   /** Merge overlapping/extended highlights. Default: true */
   mergeOverlapping?: boolean;
 

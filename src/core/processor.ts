@@ -5,6 +5,7 @@
  * - Deduplication (remove exact duplicates)
  * - Smart Merging (merge overlapping highlights)
  * - Note Linking (link notes to their parent highlights)
+ * - Tag Extraction (extract tags from notes)
  * - Suspicious Highlight Detection (flag accidental/incomplete highlights)
  * - Fuzzy Duplicate Detection (flag near-duplicates using Jaccard similarity)
  *
@@ -16,6 +17,7 @@ import type { ProcessOptions } from "../types/config.js";
 import { generateDuplicateHash } from "../utils/hashing.js";
 import { jaccardSimilarity } from "../utils/similarity.js";
 import { groupByBook } from "../utils/stats.js";
+import { extractTagsFromNote } from "../utils/tag-extractor.js";
 import { DEFAULT_SIMILARITY_THRESHOLD, SUSPICIOUS_HIGHLIGHT_THRESHOLDS } from "./constants.js";
 
 /**
@@ -42,6 +44,9 @@ export interface ProcessResult {
 
   /** Number of clippings flagged as possible fuzzy duplicates */
   fuzzyDuplicatesFlagged: number;
+
+  /** Number of highlights with tags extracted from notes */
+  tagsExtracted: number;
 }
 
 /**
@@ -77,6 +82,7 @@ export function process(clippings: Clipping[], options?: ProcessOptions): Proces
   let linkedNotes = 0;
   let suspiciousFlagged = 0;
   let fuzzyDuplicatesFlagged = 0;
+  let tagsExtracted = 0;
 
   // Step 1: Remove empty clippings
   const originalCount = result.length;
@@ -104,12 +110,19 @@ export function process(clippings: Clipping[], options?: ProcessOptions): Proces
     linkedNotes = linkResult.linkedCount;
   }
 
-  // Step 5: Flag suspicious highlights (always runs - just adds flags)
+  // Step 5: Extract tags from notes (optional, default: false)
+  if (options?.extractTags) {
+    const tagResult = extractTagsFromLinkedNotes(result);
+    result = tagResult.clippings;
+    tagsExtracted = tagResult.extractedCount;
+  }
+
+  // Step 6: Flag suspicious highlights (always runs - just adds flags)
   const suspiciousResult = flagSuspiciousHighlights(result);
   result = suspiciousResult.clippings;
   suspiciousFlagged = suspiciousResult.flaggedCount;
 
-  // Step 6: Flag fuzzy duplicates (always runs - just adds flags)
+  // Step 7: Flag fuzzy duplicates (always runs - just adds flags)
   const fuzzyResult = flagFuzzyDuplicates(result);
   result = fuzzyResult.clippings;
   fuzzyDuplicatesFlagged = fuzzyResult.flaggedCount;
@@ -122,6 +135,7 @@ export function process(clippings: Clipping[], options?: ProcessOptions): Proces
     emptyRemoved,
     suspiciousFlagged,
     fuzzyDuplicatesFlagged,
+    tagsExtracted,
   };
 }
 
@@ -529,5 +543,51 @@ export function flagFuzzyDuplicates(
   return {
     clippings: result,
     flaggedCount,
+  };
+}
+
+/**
+ * Extract tags from linked notes and assign them to highlights.
+ *
+ * This function looks for highlights that have a linked note (`note` field),
+ * parses the note content for tags (comma/semicolon/newline separated),
+ * and assigns them to the highlight's `tags` field.
+ *
+ * This is useful for users who use their Kindle notes as a tagging system:
+ * - Make a highlight
+ * - Add a note with tags: "productivity, psychology, habits"
+ *
+ * @param clippings - Clippings to process
+ * @returns Clippings with tags and extraction count
+ */
+export function extractTagsFromLinkedNotes(clippings: Clipping[]): {
+  clippings: Clipping[];
+  extractedCount: number;
+} {
+  let extractedCount = 0;
+
+  const result = clippings.map((clipping) => {
+    // Only process highlights with linked notes
+    if (clipping.type !== "highlight" || !clipping.note) {
+      return clipping;
+    }
+
+    // Extract tags from the note content
+    const extraction = extractTagsFromNote(clipping.note);
+
+    if (extraction.hasTags) {
+      extractedCount++;
+      return {
+        ...clipping,
+        tags: extraction.tags,
+      };
+    }
+
+    return clipping;
+  });
+
+  return {
+    clippings: result,
+    extractedCount,
   };
 }
