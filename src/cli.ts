@@ -14,10 +14,9 @@
  * @packageDocumentation
  */
 
-// biome-ignore lint/nursery/noConsole: CLI requires console output
-const log = console.log;
-// biome-ignore lint/nursery/noConsole: CLI requires console output
-const error = console.error;
+// CLI uses console for output - this is intentional
+const log = console.log.bind(console);
+const error = console.error.bind(console);
 
 /**
  * Main CLI entry point
