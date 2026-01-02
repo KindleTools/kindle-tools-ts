@@ -27,6 +27,16 @@ import { detectLanguage } from "./language-detector.js";
 import { tokenize } from "./tokenizer.js";
 
 /**
+ * Get byte length of a UTF-8 string (works in both Node.js and browser).
+ * @param str - String to measure
+ * @returns Byte length
+ */
+function getByteLength(str: string): number {
+  // TextEncoder is available in both Node.js (v11+) and browsers
+  return new TextEncoder().encode(str).length;
+}
+
+/**
  * Result of parsing a metadata line.
  */
 interface MetadataParseResult {
@@ -51,7 +61,7 @@ interface MetadataParseResult {
  */
 export async function parseFile(filePath: string, options?: ParseOptions): Promise<ParseResult> {
   const content = await fs.readFile(filePath, "utf-8");
-  const fileSize = Buffer.byteLength(content, "utf-8");
+  const fileSize = getByteLength(content);
 
   const startTime = performance.now();
   const result = parseString(content, options);
@@ -164,7 +174,7 @@ export function parseString(content: string, options?: ParseOptions): ParseResul
     stats,
     warnings,
     meta: {
-      fileSize: Buffer.byteLength(content, "utf-8"),
+      fileSize: getByteLength(content),
       parseTime,
       detectedLanguage,
       totalBlocks,

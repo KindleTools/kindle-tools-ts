@@ -13,9 +13,9 @@
  * @packageDocumentation
  */
 
-import { createHash } from "node:crypto";
 import type { Clipping } from "../types/clipping.js";
 import type { ExportedFile, Exporter, ExporterOptions, ExportResult } from "../types/exporter.js";
+import { sha256Sync } from "../utils/hashing.js";
 import { getPageInfo } from "../utils/page-utils.js";
 import { groupByBook } from "../utils/stats.js";
 
@@ -258,7 +258,7 @@ export class JoplinExporter implements Exporter {
    */
   private generateId(type: string, content: string): string {
     const input = `${type}:${content.toLowerCase().trim()}`;
-    const hash = createHash("sha256").update(input, "utf8").digest("hex");
+    const hash = sha256Sync(input);
     // Joplin uses 32-character hex IDs
     return hash.slice(0, 32);
   }

@@ -48,7 +48,7 @@ export {
   toGoogleMapsUrl,
   toOpenStreetMapUrl,
 } from "./utils/geo-location.js";
-export { generateClippingId, generateDuplicateHash } from "./utils/hashing.js";
+export { generateClippingId, generateDuplicateHash, sha256Sync } from "./utils/hashing.js";
 export {
   normalizeText,
   normalizeUnicode,

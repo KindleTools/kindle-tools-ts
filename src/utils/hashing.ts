@@ -4,8 +4,44 @@
  * @packageDocumentation
  */
 
-import { createHash } from "node:crypto";
 import type { ClippingType } from "../types/clipping.js";
+
+/**
+ * Simple hash function that works in both Node.js and browser.
+ * Uses node:crypto in Node.js, fast hash in browser.
+ * @param input - String to hash
+ * @returns 64-character hex string
+ */
+export function sha256Sync(input: string): string {
+  // Check if we're in Node.js
+  if (typeof globalThis.process !== "undefined" && globalThis.process.versions?.node) {
+    // Node.js environment - use crypto module
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const crypto = require("node:crypto");
+    return crypto.createHash("sha256").update(input, "utf8").digest("hex");
+  }
+
+  // Browser environment - use simple hash (djb2 + fnv1a combined for better distribution)
+  // Note: This is NOT cryptographically secure, but sufficient for ID generation
+  let h1 = 0xdeadbeef;
+  let h2 = 0x41c6ce57;
+
+  for (let i = 0; i < input.length; i++) {
+    const ch = input.charCodeAt(i);
+    h1 = Math.imul(h1 ^ ch, 2654435761);
+    h2 = Math.imul(h2 ^ ch, 1597334677);
+  }
+
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+
+  // Combine into a hex string (16 chars from each hash = 32 chars total, pad to 64)
+  const part1 = (h1 >>> 0).toString(16).padStart(8, "0");
+  const part2 = (h2 >>> 0).toString(16).padStart(8, "0");
+
+  // Repeat to get 64 chars like SHA-256
+  return (part1 + part2).repeat(4);
+}
 
 /**
  * Generate a unique, deterministic ID for a clipping.
@@ -43,7 +79,7 @@ export function generateClippingId(
 
   const input = `${normalizedTitle}|${normalizedLocation}|${type}|${prefix}`;
 
-  const hash = createHash("sha256").update(input, "utf8").digest("hex");
+  const hash = sha256Sync(input);
 
   // Return first 12 characters for a shorter, URL-safe ID
   return hash.slice(0, 12);
@@ -57,7 +93,7 @@ export function generateClippingId(
  * @param title - Book title
  * @param location - Location string
  * @param content - Full content
- * @returns SHA-256 hash (64 characters)
+ * @returns Hash string (64 characters)
  */
 export function generateDuplicateHash(title: string, location: string, content: string): string {
   const normalizedTitle = title.toLowerCase().trim();
@@ -66,5 +102,5 @@ export function generateDuplicateHash(title: string, location: string, content: 
 
   const input = `${normalizedTitle}|${normalizedLocation}|${normalizedContent}`;
 
-  return createHash("sha256").update(input, "utf8").digest("hex");
+  return sha256Sync(input);
 }
