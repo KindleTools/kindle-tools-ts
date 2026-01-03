@@ -1,638 +1,628 @@
-# ROADMAP - KindleToolsTS vs KindleClippingsToJEX (Python)
+# ROADMAP - KindleToolsTS
 
-Análisis comparativo entre el proyecto TypeScript (`kindle-tools-ts`) y el proyecto Python original (`KindleClippingsToJEX`). El objetivo es identificar funcionalidades, patrones y mejoras que se pueden aplicar al proyecto TypeScript.
-
----
-
-## 📊 Tabla Comparativa de Funcionalidades
-
-| Funcionalidad | Python 🐍 | TypeScript 📘 | Estado TS | Notas |
-|--------------|-----------|---------------|-----------|-------|
-| **Parsing** |||||
-| Multi-idioma (6 idiomas) | ✅ | ✅ (11 idiomas) | ✅ Mejor | TS soporta más idiomas |
-| Detección automática de idioma | ✅ Score-based | ✅ Score-based | ✅ Igual | Ambos usan conteo de keywords |
-| Patrones de idioma en JSON | ✅ Archivo externo | ✅ Constantes TS | ✅ Diferente | TS más type-safe |
-| Manejo de encodings múltiples | ✅ utf-8-sig, cp1252, latin-1 | ⚠️ Solo utf-8 | 🔴 Falta | Python más robusto |
-| **Deduplicación** |||||
-| Eliminación de duplicados exactos | ✅ | ✅ | ✅ Igual | SHA-256 hash |
-| Smart merge de overlapping highlights | ✅ | ✅ | ✅ Igual | Ambos detectan extensiones |
-| Flagging accidental highlights | ✅ Flags `is_duplicate` | ✅ Flags `isSuspiciousHighlight` | ✅ Igual | Diferentes nombres |
-| Umbral de fragmentos (<75 chars) | ✅ | ✅ | ✅ Igual | Mismo umbral |
-| Merge de tags durante deduplicación | ✅ `_merge_tags()` | ⚠️ No | 🔴 Falta | Python rescata tags al mergear |
-| **Linking de Notas** |||||
-| Asociación nota→highlight | ✅ Range coverage | ✅ Distancia 10 locs | ✅ Similar | Python: Start ≤ Note ≤ End |
-| Extracción de tags desde notas | ✅ | ✅ | ✅ Igual | Soporta `,`, `;`, newlines |
-| **Limpieza de Texto** |||||
-| Unicode NFC normalization | ✅ | ✅ | ✅ Igual | |
-| De-hyphenation (PDF artifacts) | ✅ | ✅ | ✅ Igual | Mismo regex pattern |
-| Espacios antes de puntuación | ✅ | ✅ | ✅ Igual | |
-| Capitalizar primera letra | ✅ | ✅ | ✅ Igual | |
-| Limpieza de títulos (ediciones) | ✅ | ✅ | ✅ Igual | Ambos limpian "(Spanish Edition)" etc |
-| **Generación de IDs** |||||
-| IDs determinísticos | ✅ SHA-256 | ✅ SHA-256 | ✅ Igual | Permite re-importar sin duplicar |
-| ID basado en contenido (no fecha) | ✅ | ✅ | ✅ Igual | |
-| **Exportadores** |||||
-| JEX (Joplin) | ✅ | ✅ | ✅ Igual | Tarball con markdown |
-| CSV | ✅ UTF-8-SIG | ✅ BOM | ✅ Igual | Excel compatible |
-| JSON | ✅ | ✅ | ✅ Igual | |
-| Markdown (Obsidian ZIP) | ✅ ZIP con YAML | ✅ Individual files | ✅ Diferente | Python genera ZIP, TS archivos sueltos |
-| HTML standalone | ❌ | ✅ | ✅ Mejor | TS tiene dark mode, search |
-| **JEX Específico** |||||
-| Notebooks jerárquicos | ✅ Root/Author/Book | ✅ Root/Book | ⚠️ Diferente | Python 3 niveles, TS 2 niveles |
-| IDs determinísticos de notebooks | ✅ MD5 | ✅ SHA-256 | ✅ Similar | Different hash algo |
-| IDs determinísticos de tags | ✅ | ✅ | ✅ Igual | |
-| Geo-location en notas | ✅ lat/lon/alt | ✅ | ✅ Igual | |
-| Página estimada desde location | ✅ `KINDLE_LOCATION_RATIO=16.69` | ✅ `~16 locs/page` | ✅ Igual | |
-| Zero-padded page `[0042]` | ✅ | ✅ | ✅ Igual | |
-| **GUI** |||||
-| Interfaz gráfica | ✅ PyQt5 "Zen" | ❌ | 🔴 N/A | TS es librería/CLI |
-| Drag & Drop | ✅ | ❌ N/A | - | |
-| Edición en línea | ✅ | ❌ N/A | - | |
-| Live stats | ✅ | ❌ N/A | - | |
-| Exportar selección | ✅ | ❌ N/A | - | |
-| **CLI** |||||
-| CLI completo | ✅ argparse | ✅ Custom | ✅ Igual | |
-| Selección de formato | ✅ | ✅ | ✅ Igual | |
-| --no-clean flag | ✅ | ✅ --no-dedup, --no-merge | ✅ Igual | |
-| Configuración JSON | ✅ config/config.json | ❌ | 🔴 Falta | Python tiene config file |
-| **Logging/Stats** |||||
-| Logging estructurado | ✅ Python logging | ⚠️ console | ⚠️ Básico | Python tiene app.log |
-| Estadísticas de parsing | ✅ failed_blocks, titles_cleaned | ✅ warnings | ✅ Similar | |
-| Stats de PDFs limpiados | ✅ pdfs_cleaned | ⚠️ contentWasCleaned | ✅ Similar | |
-| **Arquitectura** |||||
-| Separación domain/services | ✅ DDD-like | ✅ core/utils/types | ✅ Similar | |
-| Dataclasses/Interfaces | ✅ Python dataclasses | ✅ TypeScript interfaces | ✅ Igual | |
-| Base exporter abstracto | ✅ BaseExporter | ✅ Exporter interface | ✅ Igual | |
+Plan de implementación de mejoras para el proyecto TypeScript. Este documento sirve como guía para Claude Code.
 
 ---
 
-## 🔴 Funcionalidades que FALTAN en TypeScript
+## Estado Actual
 
-### 1. **Encoding Fallback Chain** ⭐⭐⭐
-El proyecto Python intenta múltiples encodings al leer el archivo:
-```python
-encodings_to_try = ["utf-8-sig", "utf-8", "cp1252", "latin-1"]
-```
-**Por qué importa:** Usuarios con Kindles antiguos o archivos de Windows pueden tener archivos en cp1252 o latin-1 que fallarían en Node.js con UTF-8.
+**Versión:** 1.x
+**Arquitectura:** Librería + CLI + GUI Browser
+**Idiomas:** 11 soportados
+**Exportadores:** 6 (JSON, CSV, Markdown, Obsidian, Joplin/JEX, HTML)
 
-**Acción:** Implementar detección de encoding o fallback chain en `parseFile()`.
+### Fortalezas
+- API bien tipada con TypeScript
+- Más idiomas que el proyecto Python original (11 vs 6)
+- HTML Exporter con dark mode y search
+- Quality flags granulares (suspicious highlights, fuzzy duplicates)
+- Funciona en Node.js y browser (isomórfico)
 
----
-
-### 2. **Merge de Tags durante Deduplicación** ⭐⭐
-Cuando Python detecta un duplicado, transfiere los tags del duplicado al "survivor":
-```python
-def _merge_tags(self, source: Clipping, target: Clipping):
-    if source.tags:
-        existing_tags = set(target.tags)
-        for tag in source.tags:
-            if tag not in existing_tags:
-                target.tags.append(tag)
-```
-**Por qué importa:** Si el usuario añade un tag a una nota que luego se mergea, el tag se pierde en TS.
-
-**Acción:** Modificar `smartMergeHighlights()` y `removeDuplicates()` para preservar tags.
+### Gaps Principales vs Python
+1. Solo soporta UTF-8 (Python tiene fallback chain de encodings)
+2. Tags no se preservan durante merge de duplicados
+3. JEX solo tiene 2 niveles de notebooks (Python tiene 3: Root > Author > Book)
+4. No hay archivo de configuración persistente
 
 ---
 
-### 3. **Jerarquía de 3 Niveles en JEX** ⭐⭐
-Python organiza los notebooks: `Root > Author (UPPERCASE) > Book`
-TypeScript solo hace: `Root > Book`
+## Plan de Implementación
 
-**Por qué importa:** Para usuarios con muchos libros, agrupar por autor mejora la organización.
-
-**Acción:** Añadir opción `groupByAuthor` en JoplinExporter.
+Las tareas están ordenadas por **dependencias lógicas** y **valor incremental**.
 
 ---
 
-### 4. **Archivo de Configuración** ⭐⭐
-Python usa `config/config.json` para defaults:
-```json
-{
-    "creator": "Your Name",
-    "notebook_title": "Kindle Imports",
-    "input_file": "data/My Clippings.txt",
-    "output_file": "my_import",
-    "language": "es"
-}
-```
-**Por qué importa:** Evita pasar argumentos repetitivos en CLI.
+## Fase 1: Robustez y Compatibilidad
 
-**Acción:** Implementar lectura de `~/.kindle-tools.json` o similar.
+### 1.1 Encoding Fallback Chain
+**Prioridad:** Alta
+**Impacto:** Usuarios con Kindles antiguos o Windows
 
----
+**Problema:** `parseFile()` solo lee UTF-8. Archivos en cp1252 o latin-1 fallan.
 
-### 5. **Logging a Archivo** ⭐
-Python escribe logs a `app.log` para debugging.
+**Archivos a modificar:**
+- [parser.ts](src/core/parser.ts) - función `parseFile()`
 
-**Por qué importa:** Útil para reportar bugs o analizar problemas.
-
-**Acción:** Añadir opción `--log-file` en CLI.
-
----
-
-### 6. **ZIP Export para Markdown** ⭐
-Python genera un `.zip` con estructura `AUTHOR/Book/Note.md`.
-TypeScript genera archivos sueltos.
-
-**Por qué importa:** Más conveniente para importar a Obsidian.
-
-**Acción:** Añadir opción `--zip` en ObsidianExporter.
-
----
-
-### 7. **Formato Clipboard para Markdown** ⭐
-Python tiene `create_clipboard_markdown()` para copiar al clipboard:
-```markdown
-> Content
-
-— *Title* by **Author** (p. 42, loc. 100)
-```
-**Por qué importa:** Útil para pegar directamente en notas.
-
-**Acción:** Añadir método en MarkdownExporter para formato conciso.
-
----
-
-## ⚠️ Funcionalidades que TypeScript hace DIFERENTE
-
-### 1. **Detección de Idioma**
-| Python | TypeScript |
-|--------|------------|
-| Busca en archivo `languages.json` | Constantes embebidas en código |
-| Fallback a español | Fallback a inglés |
-
-**Valoración:** TypeScript es más type-safe, pero Python es más configurable.
-**Recomendación:** Mantener constantes TS pero considerar soporte para idiomas custom.
-
----
-
-### 2. **Linking de Notas a Highlights**
-| Python | TypeScript |
-|--------|------------|
-| Range coverage: `H.start ≤ Note.loc ≤ H.end` | Distancia: `abs(H.start - N.start) <= 10` |
-
-**Valoración:** Python es más preciso para notas al final de highlights largos.
-**Recomendación:** Considerar cambiar a range coverage en TS.
-
----
-
-### 3. **Formato de Página en Título (JEX)**
-| Python | TypeScript |
-|--------|------------|
-| `[0042] snippet...` | `[0042] 📖 snippet...` |
-
-**Valoración:** TS usa emojis para tipo, Python no.
-**Recomendación:** Preferencia personal; mantener actual.
-
----
-
-### 4. **Body de Nota (JEX)**
-| Python | TypeScript |
-|--------|------------|
-| `clip.content` + footer con metadata | Metadata en formato bold de Markdown |
-
-Python:
-```
-contenido
-
------
-- date: ...
-- author: ...
-- book: ...
------
-```
-
-TypeScript:
-```
-**Book:** Title
-**Author:** Author
-...
----
-> contenido
-```
-
-**Valoración:** Python más limpio para lectura, TS más estructurado.
-**Recomendación:** Considerar opción de formato.
-
----
-
-## ✅ Funcionalidades SUPERIORES en TypeScript
-
-1. **Más idiomas soportados** (11 vs 6)
-2. **HTML Exporter** con dark mode y search
-3. **Fuzzy duplicate detection** con Jaccard similarity (flagging, no removal)
-4. **Quality flags** detallados (suspiciousReason: 'too_short' | 'fragment' | 'incomplete')
-5. **Geo-location utilities** completas (parsing, validation, distance calculation, URLs)
-6. **Page utilities** (formatPage, estimateFromLocation, getPageInfo)
-7. **CLI más rico** (validate command, colored output, --pretty)
-8. **TypeScript types** para mejor DX
-
----
-
-## 🚀 ROADMAP de Implementación
-
-### v1.3.0 - Paridad con Python
-- [ ] **Encoding fallback chain** en parseFile
-- [ ] **Merge tags** durante deduplicación
-- [ ] **3-level JEX notebooks** (opción groupByAuthor)
-- [ ] **Config file** (~/.kindle-tools.json)
-
-### v1.4.0 - Quality of Life
-- [ ] **ZIP export** para Obsidian
-- [ ] **Clipboard format** en MarkdownExporter
-- [ ] **Logging to file** (--log-file)
-- [ ] **Range coverage** para linking notas
-
-### v1.5.0 - Advanced Features (del roadmap Python)
-- [ ] **Direct Joplin Sync** via API (Port 41184)
-- [ ] **"New Only" filter** (desde último import)
-- [ ] **Reading Timeline** visualization
-- [ ] **Tag Cloud** sidebar
-
----
-
-## 📝 Ideas del Proyecto Python que Podemos Adoptar
-
-### Pequeñas Mejoras
-1. **Autor en UPPERCASE para carpetas** - Python lo hace para los notebooks de autor
-2. **Stats de títulos limpiados** - `titles_cleaned: 15, title_changes: [(...)]`
-3. **Fallback graceful** - Si languages.json no existe, usar defaults
-4. **Validación de config** - Verificar que config.json tiene campos válidos
-
-### Patrones de Código
-1. **Builder pattern para entidades Joplin** - `JoplinEntityBuilder.create_notebook()`
-2. **Cache de entidades** - `authors_cache`, `books_cache` para evitar duplicados
-3. **Separación de concerns** - `identity_service.py` solo para IDs
-
-### UX del CLI
-1. **Mostrar snippets de bloques fallidos** - Para debugging
-   ```python
-   snippet = raw.strip().replace("\n", " ")[:500]
-   stats["failed_blocks"].append(snippet)
-   ```
-2. **Estadísticas detalladas al final** - parsed/skipped/failed
-
----
-
-## 🔄 Comparación de Implementación: Lo Mejor de Cada Uno
-
-### Generación de IDs
-
-**Python:**
-```python
-unique_string = f"{clean_content}|{clean_title}|{clean_author}|{loc_marker}"
-return hashlib.sha256(unique_string.encode("utf-8")).hexdigest()
-```
-
-**TypeScript:**
+**Implementación:**
 ```typescript
-const input = `${normalizedTitle}|${normalizedLocation}|${type}|${prefix}`;
-return createHash("sha256").update(input, "utf8").digest("hex").slice(0, 12);
-```
-
-**Diferencias:**
-- Python incluye contenido COMPLETO en el hash
-- TypeScript usa solo primeros 50 chars de content
-- TypeScript incluye `type` en el hash
-- TypeScript trunca a 12 chars, Python usa hash completo
-
-**Recomendación:** El approach de TS es mejor (más compacto, menos colisiones potenciales por incluir type).
-
----
-
-### Deduplicación
-
-**Python:**
-- Procesa highlights y notes por separado
-- Usa `is_duplicate = True` flag
-- Ordena por location.start
-- Compara survivor vs current
-
-**TypeScript:**
-- Procesa highlights, luego otros
-- Usa múltiples flags (isSuspiciousHighlight, possibleDuplicateOf)
-- Ordena por location.start
-- Similar sliding window approach
-
-**Recomendación:** TS tiene mejor granularidad de flags (suspicious vs duplicate).
-
----
-
-### Text Cleaning
-
-**Python (TextCleaner.clean_text):**
-```python
-text = unicodedata.normalize("NFC", text)
-text = text.replace("\r\n", "\n")
-text = re.sub(r"([^\W\d_]+)-\s*\n\s*([^\W\d_]+)", r"\1\2", text)  # De-hyphenation
-text = re.sub(r" +", " ", text)  # Multiple spaces
-text = re.sub(r"\s+([.,;:!?])", r"\1", text)  # Space before punctuation
-```
-
-**TypeScript (cleanText):**
-```typescript
-result = result.replace(/pattern/g, replacement);
-appliedOperations.push("dehyphenation");  // Track what was applied
-return { text: result, wasCleaned: result !== original, appliedOperations };
-```
-
-**Diferencias:**
-- TypeScript retorna metadata sobre qué operaciones se aplicaron
-- Python usa `\W\d_` class, TS enumera caracteres explícitamente
-- TS mantiene `contentWasCleaned` flag en Clipping
-
-**Recomendación:** TS es mejor por la transparencia de operaciones.
-
----
-
----
-
-## 🏷️ Análisis Detallado: Extracción de Tags desde Notas
-
-### Estado Actual en TypeScript ✅
-
-**¿Es opcional? SÍ** - La extracción de tags es **opt-in** (desactivada por defecto):
-
-```typescript
-// src/types/config.ts
-export interface ParseOptions {
-  extractTags?: boolean;  // Default: false
-}
-
-// src/core/processor.ts
-if (options?.extractTags) {  // Solo si está habilitado
-  const tagResult = extractTagsFromLinkedNotes(result);
-}
-```
-
-### Flujo Completo de Notas → Tags
-
-1. **linkNotesToHighlights()** - Vincula notas a highlights por proximidad de location (≤10 posiciones)
-2. **extractTagsFromNote()** - Parsea el contenido de la nota buscando separadores (`,`, `;`, `\n`)
-3. **Tags se asignan** al highlight en `clipping.tags: string[]`
-
-### ¿Contempla ambos casos de uso?
-
-| Caso de Uso | Soporte | Cómo Activarlo |
-|-------------|---------|----------------|
-| **Notas como reflexiones largas** | ✅ | Default: `extractTags: false` |
-| **Notas como tags** | ✅ | `extractTags: true` |
-| **Notas mixtas (texto + tags)** | ⚠️ Parcial | Se extraen potenciales tags, pero se pierden si parecen frases |
-
-### Comparación con Python
-
-| Aspecto | Python | TypeScript |
-|---------|--------|------------|
-| **¿Es opcional?** | ❌ Siempre activo | ✅ Opcional con flag |
-| **Linking algoritmo** | Range coverage: `H.start ≤ Note ≤ H.end` | Distancia: `abs(H.start - N.start) <= 10` |
-| **Separadores** | `,`, `;`, `.`, `\n` | `,`, `;`, `\n` |
-| **Validación de tags** | Básica (strip) | Avanzada (min/max length, no sentences) |
-
-### Mejoras Identificadas
-
-1. **Range Coverage Linking** - Cambiar a algoritmo de Python para notas al final de highlights largos
-2. **Añadir `.` como separador** - Compatibilidad con Python
-3. **Tag-only note detection** - Ya implementado con `isTagOnlyNote` flag
-
----
-
-## 🔤 Análisis Detallado: Soporte de Encodings
-
-### Estado Actual
-
-**ENTRADA (Lectura):**
-```typescript
-// src/core/parser.ts
-const content = await fs.readFile(filePath, "utf-8");  // ⚠️ Solo UTF-8
-```
-
-**SALIDA (Escritura):**
-| Formato | Encoding | Estado |
-|---------|----------|--------|
-| CSV | UTF-8 con BOM (`\uFEFF`) | ✅ Excel compatible |
-| JSON | UTF-8 sin BOM | ✅ Estándar |
-| Markdown | UTF-8 | ✅ Node default |
-| HTML | UTF-8 (meta charset) | ✅ Con declaración |
-
-### Comparación con Python
-
-```python
-# Python - Fallback chain robusto
-encodings_to_try = ["utf-8-sig", "utf-8", "cp1252", "latin-1"]
-for enc in encodings_to_try:
-    try:
-        with open(file_path, "r", encoding=enc) as f:
-            content = f.read()
-        break
-    except UnicodeDecodeError:
-        continue
-```
-
-### Problema
-
-Archivos de Kindles antiguos o de Windows pueden estar en:
-- `cp1252` (Windows-1252) - Común en Windows español/europeo
-- `latin-1` (ISO-8859-1) - Fallback universal
-- `utf-8-sig` (UTF-8 con BOM) - Windows con BOM
-
-Si un usuario tiene un archivo en `cp1252`, **Node.js fallará** con `ENOENT` o caracteres corruptos.
-
-### Solución Propuesta
-
-```typescript
+// Opción A: Usar librería chardet
 import { detect } from 'chardet';
 
-async function parseFileRobust(filePath: string): Promise<string> {
+async function parseFile(filePath: string, options?: ParseOptions): Promise<ParseResult> {
   const buffer = await fs.readFile(filePath);
-  const encoding = detect(buffer) || 'utf-8';
-  return buffer.toString(encoding);
+  const detectedEncoding = detect(buffer) || 'utf-8';
+  const content = buffer.toString(detectedEncoding as BufferEncoding);
+  return parseString(content, options);
+}
+
+// Opción B: Fallback chain manual (sin dependencia externa)
+const ENCODINGS = ['utf-8', 'utf-16le', 'latin1'] as const;
+
+async function parseFile(filePath: string, options?: ParseOptions): Promise<ParseResult> {
+  const buffer = await fs.readFile(filePath);
+
+  // Detectar BOM para UTF-16
+  if (buffer[0] === 0xFF && buffer[1] === 0xFE) {
+    return parseString(buffer.toString('utf-16le'), options);
+  }
+
+  // UTF-8 con BOM
+  if (buffer[0] === 0xEF && buffer[1] === 0xBB && buffer[2] === 0xBF) {
+    return parseString(buffer.toString('utf-8'), options);
+  }
+
+  // Default UTF-8, Node maneja latin1 como fallback implícito
+  return parseString(buffer.toString('utf-8'), options);
 }
 ```
 
-**Dependencia sugerida:** `chardet` (detección de encoding) o `iconv-lite` (conversión).
+**Decisión necesaria:** ¿Añadir dependencia `chardet` (~50KB) o usar detección básica por BOM?
+
+**Tests a añadir:**
+- `tests/fixtures/` con archivos en diferentes encodings
+- Test de parseo de archivo cp1252
 
 ---
 
-## 🏗️ Análisis de Arquitectura: Importadores y Exportadores
+### 1.2 Merge de Tags durante Deduplicación
+**Prioridad:** Alta
+**Impacto:** Los tags del usuario no se pierden al mergear highlights
 
-### Exportadores - Comparación
+**Problema:** Cuando se detecta un duplicado o se hace merge, los tags del clipping eliminado se pierden.
 
-| Aspecto | Python | TypeScript |
-|---------|--------|------------|
-| **Base class** | `BaseExporter(ABC)` abstracto | `Exporter` interface |
-| **Método principal** | `export(clippings, output_file, context)` | `export(clippings, options): Promise<ExportResult>` |
-| **Output** | Escribe a archivo directamente | Retorna contenido (más flexible) |
-| **Context/Options** | `Dict[str, Any]` no tipado | `ExporterOptions` tipado |
-| **Múltiples archivos** | Manual por exporter | `ExportedFile[]` estándar |
-| **Builder pattern** | ✅ `JoplinEntityBuilder` | ❌ Inline methods |
-| **Caching** | ✅ `authors_cache`, `books_cache` | ⚠️ Solo `tagMap` |
+**Archivos a modificar:**
+- [processor.ts](src/core/processor.ts) - funciones `removeDuplicates()` y `smartMergeHighlights()`
 
-### Python - ClippingsService (Orquestador)
-
-```python
-class ClippingsService:
-    def __init__(self):
-        self.exporters_cache: Dict[str, BaseExporter] = {}  # Lazy loading
-    
-    def process_clippings(...):
-        clippings = self.parser.parse_file(input_file)
-        if enable_deduplication:
-            clippings = deduplicator.deduplicate(clippings)
-        exporter = self._get_exporter(format)
-        exporter.export(clippings, output_file, context)
-```
-
-**Ventaja:** Centraliza el flujo parse → dedupe → export.
-
-### TypeScript - Sin orquestador central
-
-El CLI maneja el flujo directamente. Para librerías, el usuario debe orquestar:
-
+**Implementación:**
 ```typescript
-const result = await parseFile(file);
-const processed = process(result.clippings, options);
-const exported = await exporter.export(processed.clippings);
+// En removeDuplicates()
+function removeDuplicates(clippings: Clipping[]): Clipping[] {
+  const seen = new Map<string, Clipping>();
+
+  for (const clipping of clippings) {
+    const hash = generateDuplicateHash(clipping);
+    const existing = seen.get(hash);
+
+    if (existing) {
+      // NUEVO: Mergear tags antes de descartar
+      if (clipping.tags?.length) {
+        existing.tags = [...new Set([...(existing.tags || []), ...clipping.tags])];
+      }
+    } else {
+      seen.set(hash, clipping);
+    }
+  }
+
+  return Array.from(seen.values());
+}
+
+// En smartMergeHighlights() - similar lógica al mergear overlapping
+function mergeClippings(survivor: Clipping, absorbed: Clipping): Clipping {
+  return {
+    ...survivor,
+    content: survivor.content.length >= absorbed.content.length
+      ? survivor.content
+      : absorbed.content,
+    tags: [...new Set([...(survivor.tags || []), ...(absorbed.tags || [])])],
+    // ... resto de propiedades
+  };
+}
 ```
 
-### Recomendaciones
-
-1. **Añadir `ExportService`** - Clase orquestadora como Python
-2. **Builder para JEX** - Separar construcción de entidades Joplin
-3. **Cache de entidades** - Evitar crear duplicados de notebooks/tags
-4. **Hooks pre/post export** - Para logging, validación, etc.
+**Tests a añadir:**
+- Test de merge que preserve tags de ambos clippings
+- Test de deduplicación con tags
 
 ---
 
-## 🎮 Control del Usuario sobre Exports (NUEVA FUNCIONALIDAD)
+### 1.3 Range Coverage para Linking de Notas
+**Prioridad:** Media
+**Impacto:** Mejor precisión al asociar notas con highlights largos
 
-### Estado Actual
+**Problema actual:** Usa distancia fija de 10 locations. Python usa range coverage (nota dentro del rango del highlight).
 
-| Control | Soportado | Dónde |
-|---------|-----------|-------|
-| Formato de salida | ✅ | `--format=json/csv/md/...` |
-| Agrupar por libro | ✅ | `groupByBook: true` |
-| Pretty print JSON | ✅ | `pretty: true` |
-| Incluir raw fields | ✅ | `includeRaw: true` |
-| Incluir stats | ✅ | `includeStats: true` |
-| **Seleccionar campos** | ❌ | - |
-| **Estructura carpetas** | ❌ | - |
-| **Templates personalizados** | ⚠️ Solo placeholder | `template?: string` |
-| **UPPERCASE en carpetas** | ❌ | - |
-| **Un MD por highlight** | ❌ | - |
+**Archivos a modificar:**
+- [processor.ts](src/core/processor.ts) - función `linkNotesToHighlights()`
 
-### Funcionalidades Necesarias
-
-#### 1. Selección de Campos para Export
+**Implementación:**
 ```typescript
-interface ExporterOptions {
-  fields?: Array<keyof Clipping>;  // ['title', 'author', 'content', 'tags']
-  // Solo estos campos se incluyen en el output
+function linkNotesToHighlights(clippings: Clipping[]): Clipping[] {
+  const highlights = clippings.filter(c => c.type === 'highlight');
+  const notes = clippings.filter(c => c.type === 'note');
+
+  for (const note of notes) {
+    if (!note.location?.start) continue;
+
+    // Buscar highlight que contenga la nota (range coverage)
+    const matchingHighlight = highlights.find(h => {
+      if (h.title !== note.title) return false;
+      if (!h.location?.start || !h.location?.end) return false;
+
+      // La nota debe estar dentro del rango del highlight
+      return h.location.start <= note.location.start &&
+             note.location.start <= h.location.end;
+    });
+
+    // Fallback: distancia de 10 si no hay match por rango
+    const fallbackHighlight = !matchingHighlight
+      ? highlights.find(h =>
+          h.title === note.title &&
+          Math.abs((h.location?.start || 0) - (note.location?.start || 0)) <= 10
+        )
+      : null;
+
+    const linkedHighlight = matchingHighlight || fallbackHighlight;
+
+    if (linkedHighlight) {
+      linkedHighlight.linkedNotes = linkedHighlight.linkedNotes || [];
+      linkedHighlight.linkedNotes.push(note);
+    }
+  }
+
+  return clippings;
 }
 ```
 
-#### 2. Estructura de Carpetas Configurable
+---
+
+## Fase 2: Mejoras en Exportadores
+
+### 2.1 Jerarquía de 3 Niveles en JEX (Joplin)
+**Prioridad:** Media
+**Impacto:** Mejor organización para usuarios con muchos libros
+
+**Problema:** TypeScript solo crea `Root > Book`. Python crea `Root > Author > Book`.
+
+**Archivos a modificar:**
+- [joplin.exporter.ts](src/exporters/joplin.exporter.ts)
+- [exporter.ts](src/types/exporter.ts) - añadir opción
+
+**Implementación:**
 ```typescript
-interface MarkdownExporterOptions {
-  // Estructura de archivos
-  structure: 'single' | 'by-book' | 'by-author' | 'by-author-book' | 'by-highlight';
-  
-  // Case de carpetas
-  authorCase: 'original' | 'uppercase' | 'lowercase';
-  bookCase: 'original' | 'uppercase' | 'lowercase';
-  
-  // Formato de nombres de archivo
-  filenameFormat: 'title' | 'date-title' | 'author-title';
+// En types/exporter.ts
+interface JoplinExporterOptions extends ExporterOptions {
+  groupByAuthor?: boolean;  // Default: false (backward compatible)
+  authorCase?: 'original' | 'uppercase' | 'lowercase';  // Default: 'uppercase'
+}
+
+// En joplin.exporter.ts
+function createNotebookHierarchy(
+  clippings: Clipping[],
+  rootName: string,
+  options: JoplinExporterOptions
+): JoplinNotebook[] {
+  const notebooks: JoplinNotebook[] = [];
+  const root = createNotebook(rootName);
+  notebooks.push(root);
+
+  if (options.groupByAuthor) {
+    // Agrupar por autor primero
+    const byAuthor = groupBy(clippings, c => c.author || 'Unknown');
+
+    for (const [author, authorClippings] of Object.entries(byAuthor)) {
+      const authorName = options.authorCase === 'uppercase'
+        ? author.toUpperCase()
+        : author;
+      const authorNotebook = createNotebook(authorName, root.id);
+      notebooks.push(authorNotebook);
+
+      // Luego por libro dentro del autor
+      const byBook = groupBy(authorClippings, c => c.title);
+      for (const [title, bookClippings] of Object.entries(byBook)) {
+        const bookNotebook = createNotebook(title, authorNotebook.id);
+        notebooks.push(bookNotebook);
+        // ... crear notas
+      }
+    }
+  } else {
+    // Comportamiento actual: solo por libro
+    // ...
+  }
+
+  return notebooks;
 }
 ```
 
-#### 3. Templates Personalizados
+---
+
+### 2.2 ZIP Export para Obsidian
+**Prioridad:** Media
+**Impacto:** Más conveniente para importar a Obsidian
+
+**Archivos a modificar:**
+- [obsidian.exporter.ts](src/exporters/obsidian.exporter.ts)
+- Añadir dependencia: `jszip` o usar `archiver`
+
+**Implementación:**
 ```typescript
-interface ExporterOptions {
-  template?: {
-    highlight?: string;  // "{{content}}\n\n— *{{title}}* by **{{author}}**"
-    note?: string;       // "📝 {{content}}"
-    header?: string;     // "# {{title}} by {{author}}\n\n"
-    footer?: string;     // "---\nExported on {{date}}"
+// Opción: Usar API nativa de Node (sin dependencia)
+import { createWriteStream } from 'fs';
+import { pipeline } from 'stream/promises';
+import archiver from 'archiver';  // o implementar con zlib
+
+interface ObsidianExporterOptions extends ExporterOptions {
+  zip?: boolean;  // Default: false
+  structure?: 'flat' | 'by-author' | 'by-author-book';
+}
+
+async function exportToZip(
+  clippings: Clipping[],
+  outputPath: string,
+  options: ObsidianExporterOptions
+): Promise<ExportResult> {
+  const archive = archiver('zip', { zlib: { level: 9 } });
+  const output = createWriteStream(outputPath);
+
+  archive.pipe(output);
+
+  const byBook = groupBy(clippings, c => c.title);
+
+  for (const [title, bookClippings] of Object.entries(byBook)) {
+    const markdown = generateMarkdown(bookClippings);
+    const filename = sanitizeFilename(title) + '.md';
+
+    if (options.structure === 'by-author-book') {
+      const author = bookClippings[0]?.author || 'Unknown';
+      archive.append(markdown, { name: `${author}/${filename}` });
+    } else {
+      archive.append(markdown, { name: filename });
+    }
+  }
+
+  await archive.finalize();
+
+  return {
+    files: [{ path: outputPath, content: '' }],
+    stats: { totalClippings: clippings.length }
+  };
+}
+```
+
+**Decisión necesaria:** ¿Usar `archiver` (más features) o implementar básico con `zlib` nativo?
+
+---
+
+### 2.3 Estructura de Carpetas Configurable (Markdown/Obsidian)
+**Prioridad:** Media
+**Impacto:** Flexibilidad para diferentes workflows
+
+**Archivos a modificar:**
+- [obsidian.exporter.ts](src/exporters/obsidian.exporter.ts)
+- [markdown.exporter.ts](src/exporters/markdown.exporter.ts)
+- [exporter.ts](src/types/exporter.ts)
+
+**Implementación:**
+```typescript
+// En types/exporter.ts
+interface MarkdownExporterOptions extends ExporterOptions {
+  structure?: 'single' | 'per-book' | 'per-author' | 'per-highlight';
+  folderCase?: 'original' | 'uppercase' | 'lowercase';
+  filenameFormat?: 'title' | 'author-title' | 'date-title';
+}
+
+// Lógica de generación de paths
+function getOutputPath(clipping: Clipping, options: MarkdownExporterOptions): string {
+  const author = applyCase(clipping.author || 'Unknown', options.folderCase);
+  const title = sanitizeFilename(clipping.title);
+
+  switch (options.structure) {
+    case 'per-author':
+      return `${author}/${title}.md`;
+    case 'per-highlight':
+      return `${author}/${title}/${clipping.id}.md`;
+    default:
+      return `${title}.md`;
   }
 }
 ```
 
-**Template variables disponibles:**
-- `{{title}}`, `{{author}}`, `{{content}}`
-- `{{page}}`, `{{location}}`, `{{date}}`
-- `{{type}}`, `{{tags}}`, `{{wordCount}}`
+---
 
-#### 4. Granularidad de Output para Markdown
+## Fase 3: Configuración y DX
 
+### 3.1 Archivo de Configuración
+**Prioridad:** Media
+**Impacto:** Evita pasar argumentos repetitivos en CLI
+
+**Archivos a crear/modificar:**
+- Crear [config-loader.ts](src/utils/config-loader.ts)
+- Modificar [cli.ts](src/cli.ts)
+- Añadir tipo en [config.ts](src/types/config.ts)
+
+**Ubicaciones a buscar (en orden):**
+1. `.kindletoolsrc` en directorio actual
+2. `.kindletoolsrc` en home del usuario
+3. `~/.config/kindle-tools/config.json`
+
+**Implementación:**
 ```typescript
-type OutputGranularity = 
-  | 'all-in-one'      // Un archivo con todo
-  | 'per-book'        // Un archivo por libro (actual)
-  | 'per-author'      // Un archivo por autor
-  | 'per-highlight';  // Un archivo por highlight (para Zettelkasten)
+// src/utils/config-loader.ts
+import { existsSync, readFileSync } from 'fs';
+import { homedir } from 'os';
+import { join } from 'path';
+import { z } from 'zod';
+
+const ConfigSchema = z.object({
+  language: z.string().optional(),
+  format: z.enum(['json', 'csv', 'md', 'obsidian', 'joplin', 'html']).optional(),
+  outputDir: z.string().optional(),
+  groupByBook: z.boolean().optional(),
+  groupByAuthor: z.boolean().optional(),
+  extractTags: z.boolean().optional(),
+  deduplication: z.boolean().optional(),
+  merge: z.boolean().optional(),
+}).strict();
+
+export type UserConfig = z.infer<typeof ConfigSchema>;
+
+const CONFIG_PATHS = [
+  '.kindletoolsrc',
+  join(homedir(), '.kindletoolsrc'),
+  join(homedir(), '.config', 'kindle-tools', 'config.json'),
+];
+
+export function loadConfig(): UserConfig {
+  for (const configPath of CONFIG_PATHS) {
+    if (existsSync(configPath)) {
+      try {
+        const content = readFileSync(configPath, 'utf-8');
+        const parsed = JSON.parse(content);
+        return ConfigSchema.parse(parsed);
+      } catch (error) {
+        console.warn(`Warning: Invalid config at ${configPath}`);
+      }
+    }
+  }
+  return {};
+}
+
+// En cli.ts - mergear config con argumentos CLI
+const userConfig = loadConfig();
+const options = { ...userConfig, ...cliArgs };  // CLI args tienen prioridad
 ```
 
 ---
 
-## 🚀 ROADMAP de Implementación (Actualizado)
+### 3.2 Logging a Archivo
+**Prioridad:** Baja
+**Impacto:** Útil para debugging y reportar bugs
 
-### v1.3.0 - Paridad con Python
-- [ ] **Encoding fallback chain** en parseFile (usar `chardet`)
-- [ ] **Merge tags** durante deduplicación
-- [ ] **3-level JEX notebooks** (Root > Author > Book)
-- [ ] **Config file** (`~/.kindle-tools.json` o `.kindletoolsrc`)
-- [ ] **Range coverage linking** (mejorar asociación nota→highlight)
+**Archivos a modificar:**
+- Crear [logger.ts](src/utils/logger.ts)
+- Modificar [cli.ts](src/cli.ts) - añadir flag `--log-file`
 
-### v1.4.0 - Control del Usuario
-- [ ] **Field selection** en exports (`fields: ['title', 'content', 'tags']`)
-- [ ] **Folder structure options** (`by-author`, `by-author-book`, `by-highlight`)
-- [ ] **Case options** para carpetas (`authorCase: 'uppercase'`)
-- [ ] **Output granularity** (`per-book`, `per-author`, `per-highlight`)
-- [ ] **ZIP export** para Obsidian
-- [ ] **Clipboard format** compacto en Markdown
+**Implementación:**
+```typescript
+// src/utils/logger.ts
+import { appendFileSync } from 'fs';
 
-### v1.5.0 - Templates & Personalización
-- [ ] **Custom templates** con variables (Mustache-like syntax)
-- [ ] **Preset templates** (Academic, Zettelkasten, Simple)
-- [ ] **Metadata format options** (footer vs header, list vs bold)
-- [ ] **Date format config** (`YYYY-MM-DD`, locale, etc.)
+type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
-### v1.6.0 - Arquitectura & DX
-- [ ] **ExportService** orquestador
-- [ ] **JoplinEntityBuilder** class (builder pattern)
-- [ ] **Entity caching** para exporters
-- [ ] **Pre/post export hooks**
-- [ ] **Logging to file** (`--log-file`)
-- [ ] **Verbose stats** (titles_cleaned, failed_blocks snippets)
+class Logger {
+  private logFile: string | null = null;
 
-### v2.0.0 - Advanced Features
-- [ ] **Direct Joplin Sync** via API (Port 41184)
-- [ ] **"New Only" filter** (desde último import)
-- [ ] **Interactive CLI** (selección de formato, preview)
-- [ ] **Watch mode** (detectar cambios en archivo)
+  setLogFile(path: string) {
+    this.logFile = path;
+  }
+
+  log(level: LogLevel, message: string, data?: unknown) {
+    const timestamp = new Date().toISOString();
+    const logLine = `[${timestamp}] [${level.toUpperCase()}] ${message}${data ? ' ' + JSON.stringify(data) : ''}\n`;
+
+    if (this.logFile) {
+      appendFileSync(this.logFile, logLine);
+    }
+
+    if (level === 'error') {
+      console.error(message);
+    }
+  }
+
+  debug(msg: string, data?: unknown) { this.log('debug', msg, data); }
+  info(msg: string, data?: unknown) { this.log('info', msg, data); }
+  warn(msg: string, data?: unknown) { this.log('warn', msg, data); }
+  error(msg: string, data?: unknown) { this.log('error', msg, data); }
+}
+
+export const logger = new Logger();
+```
 
 ---
 
-## 📌 Conclusión
+## Fase 4: Features Avanzados
 
-El proyecto TypeScript ya tiene **paridad funcional** con Python en la mayoría de áreas, e incluso es **superior** en algunos aspectos (más idiomas, HTML export, quality flags, geo-location).
+### 4.1 Templates Personalizados
+**Prioridad:** Baja
+**Impacto:** Personalización total del output
 
-**Brechas críticas a cerrar:**
-1. ⭐⭐⭐ **Encoding fallback** - Importante para compatibilidad cross-platform
-2. ⭐⭐ **Range coverage linking** - Mejora la precisión de nota→highlight
-3. ⭐⭐ **Control de usuario sobre exports** - Estructura, campos, templates
+**Archivos a crear/modificar:**
+- Crear [template-engine.ts](src/utils/template-engine.ts)
+- Modificar exportadores de Markdown
 
-**Fortalezas del proyecto TypeScript:**
-- Es **librería-first** (Python es GUI-first)
-- API bien tipada para desarrolladores
-- Más formatos de export (HTML con search)
-- Flags de calidad granulares
+**Variables disponibles:**
+- `{{title}}`, `{{author}}`, `{{content}}`
+- `{{page}}`, `{{location}}`, `{{date}}`
+- `{{type}}`, `{{tags}}`, `{{wordCount}}`
 
-**Aprendizajes del proyecto Python a adoptar:**
-1. `ClippingsService` como orquestador
-2. Builder pattern para entidades Joplin
-3. Caching de entidades para evitar duplicados
-4. Snippets de bloques fallidos para debugging
+**Implementación básica (Mustache-like):**
+```typescript
+// src/utils/template-engine.ts
+export function renderTemplate(template: string, data: Record<string, unknown>): string {
+  return template.replace(/\{\{(\w+)\}\}/g, (_, key) => {
+    const value = data[key];
+    if (value === undefined) return '';
+    if (Array.isArray(value)) return value.join(', ');
+    return String(value);
+  });
+}
 
-El proyecto TypeScript está bien posicionado como **librería y CLI**, con margen de mejora en **personalización de exports** y **compatibilidad de encodings**.
+// Uso
+const template = '> {{content}}\n\n— *{{title}}* by **{{author}}**';
+const output = renderTemplate(template, {
+  content: clipping.content,
+  title: clipping.title,
+  author: clipping.author,
+});
+```
+
+---
+
+### 4.2 Direct Joplin Sync via API
+**Prioridad:** Baja
+**Impacto:** Sincronización directa sin importar archivos
+
+**Dependencia:** Joplin Desktop con Web Clipper habilitado (puerto 41184)
+
+**Archivos a crear:**
+- [joplin-api.ts](src/integrations/joplin-api.ts)
+
+**Implementación:**
+```typescript
+// src/integrations/joplin-api.ts
+const JOPLIN_PORT = 41184;
+
+interface JoplinApiOptions {
+  token: string;
+  port?: number;
+}
+
+export class JoplinApi {
+  private baseUrl: string;
+  private token: string;
+
+  constructor(options: JoplinApiOptions) {
+    this.baseUrl = `http://localhost:${options.port || JOPLIN_PORT}`;
+    this.token = options.token;
+  }
+
+  async createNotebook(title: string, parentId?: string): Promise<string> {
+    const response = await fetch(`${this.baseUrl}/folders?token=${this.token}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title, parent_id: parentId }),
+    });
+    const data = await response.json();
+    return data.id;
+  }
+
+  async createNote(title: string, body: string, notebookId: string): Promise<string> {
+    const response = await fetch(`${this.baseUrl}/notes?token=${this.token}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title, body, parent_id: notebookId }),
+    });
+    const data = await response.json();
+    return data.id;
+  }
+
+  async syncClippings(clippings: Clipping[], rootNotebook: string): Promise<void> {
+    // Crear estructura de notebooks y notas
+  }
+}
+```
+
+---
+
+### 4.3 Filtro "New Only" (desde último import)
+**Prioridad:** Baja
+**Impacto:** Evita re-importar clippings ya procesados
+
+**Implementación:**
+```typescript
+// Guardar hash de último clipping procesado
+interface ImportState {
+  lastImportDate: string;
+  lastClippingHash: string;
+  processedHashes: string[];
+}
+
+// En processor.ts
+function filterNewOnly(
+  clippings: Clipping[],
+  state: ImportState
+): Clipping[] {
+  return clippings.filter(c =>
+    !state.processedHashes.includes(generateDuplicateHash(c))
+  );
+}
+```
+
+---
+
+## Resumen de Prioridades
+
+| Tarea | Fase | Prioridad | Complejidad | Dependencias |
+|-------|------|-----------|-------------|--------------|
+| Encoding Fallback | 1 | Alta | Baja | Ninguna |
+| Merge Tags | 1 | Alta | Baja | Ninguna |
+| Range Coverage Linking | 1 | Media | Baja | Ninguna |
+| 3-Level JEX | 2 | Media | Media | Ninguna |
+| ZIP Export Obsidian | 2 | Media | Media | Decisión: archiver vs zlib |
+| Folder Structure Config | 2 | Media | Media | Ninguna |
+| Config File | 3 | Media | Baja | Ninguna |
+| Logging | 3 | Baja | Baja | Ninguna |
+| Templates | 4 | Baja | Media | Ninguna |
+| Joplin API Sync | 4 | Baja | Alta | Token de usuario |
+| New Only Filter | 4 | Baja | Media | State persistence |
+
+---
+
+## Referencia Técnica
+
+### Archivos Principales por Área
+
+| Área | Archivos |
+|------|----------|
+| Parsing | [parser.ts](src/core/parser.ts), [tokenizer.ts](src/core/tokenizer.ts) |
+| Processing | [processor.ts](src/core/processor.ts), [similarity.ts](src/utils/similarity.ts) |
+| Exports | [src/exporters/](src/exporters/) (6 archivos) |
+| Types | [src/types/](src/types/) (6 archivos) |
+| CLI | [cli.ts](src/cli.ts) |
+| GUI | [src/gui/](src/gui/) (3 archivos) |
+
+### Comparación con Python (Referencia)
+
+| Funcionalidad | Python | TypeScript |
+|--------------|--------|------------|
+| Idiomas | 6 | 11 |
+| Encodings | utf-8-sig, cp1252, latin-1 | Solo utf-8 |
+| Tag merge on dedup | Si | No (pendiente) |
+| JEX hierarchy | 3 niveles | 2 niveles |
+| Config file | Si | No (pendiente) |
+| HTML export | No | Si |
+| Quality flags | Básico | Detallado |
+| GUI | PyQt5 Desktop | Browser |
+
+### Diferencias de Implementación
+
+**Linking de notas:**
+- Python: Range coverage (`H.start <= Note <= H.end`)
+- TypeScript: Distancia fija (`abs(H.start - N.start) <= 10`)
+
+**IDs determinísticos:**
+- Python: SHA-256 completo con contenido completo
+- TypeScript: SHA-256 truncado a 12 chars con prefijo de contenido
+
+**Deduplicación:**
+- Python: Flag `is_duplicate`
+- TypeScript: Múltiples flags (`isSuspiciousHighlight`, `possibleDuplicateOf`, `similarityScore`)
