@@ -60,6 +60,7 @@ interface ParsedArgs {
   authorCase?: AuthorCase;
   includeTags?: boolean;
   extractTags?: boolean;
+  highlightsOnly?: boolean;
 }
 
 type ExportFormat = "json" | "csv" | "md" | "markdown" | "obsidian" | "joplin" | "html";
@@ -199,6 +200,8 @@ function parseArgs(args: string[]): ParsedArgs {
       result.includeTags = false;
     } else if (arg === "--extract-tags") {
       result.extractTags = true;
+    } else if (arg === "--highlights-only" || arg === "--merged") {
+      result.highlightsOnly = true;
     }
   }
 
@@ -218,6 +221,7 @@ async function parseClippingsFile(filePath: string, args: ParsedArgs): Promise<P
     cleanContent: true,
     cleanTitles: true,
     extractTags: args.extractTags ?? false,
+    highlightsOnly: args.highlightsOnly ?? false,
   };
 
   return await parseFile(filePath, options);
@@ -579,10 +583,13 @@ ${c.bold("OPTIONS:")}
   --pretty              Pretty print JSON output
   --group-by-book       Group output by book
 
+${c.bold("PROCESSING OPTIONS:")}
+  --highlights-only     Return only highlights with embedded notes (no separate notes/bookmarks)
+  --extract-tags        Extract tags from notes during parsing
+
 ${c.bold("EXPORT OPTIONS (Obsidian/Joplin):")}
   --structure <type>    Folder structure: flat, by-book, by-author, by-author-book
   --author-case <case>  Author folder case: original, uppercase, lowercase
-  --extract-tags        Extract tags from notes during parsing
   --include-tags        Include clipping tags in export (default: true)
   --no-tags             Exclude clipping tags from export
 
@@ -600,6 +607,9 @@ ${c.bold("EXAMPLES:")}
   ${c.dim("# Export to Joplin with 3-level hierarchy (Root > Author > Book)")}
   kindle-tools export "My Clippings.txt" --format=joplin --output=./clippings.jex \\
     --structure=by-author --extract-tags
+
+  ${c.dim("# Export only highlights with embedded notes (no separate notes/bookmarks)")}
+  kindle-tools export "My Clippings.txt" --format=json --highlights-only --output=merged.json
 
   ${c.dim("# Get stats as JSON")}
   kindle-tools stats "My Clippings.txt" --json --pretty

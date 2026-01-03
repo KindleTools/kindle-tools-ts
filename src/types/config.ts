@@ -31,6 +31,19 @@ export interface ParseOptions {
   /** Merge overlapping/extended highlights. Default: true */
   mergeOverlapping?: boolean;
 
+  /**
+   * Return only highlights with embedded notes and tags.
+   * When enabled:
+   * - Notes linked to highlights become embedded (via `note` field)
+   * - Linked notes are removed as separate entries
+   * - Unlinked notes are excluded from output
+   * - Bookmarks are excluded from output
+   * This is useful when you want processed output focused on what you
+   * highlighted and your thoughts, not raw clipping data.
+   * Default: false
+   */
+  highlightsOnly?: boolean;
+
   // ===== Normalization =====
 
   /** Apply Unicode NFC normalization. Default: true */

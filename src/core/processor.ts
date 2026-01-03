@@ -47,6 +47,9 @@ export interface ProcessResult {
 
   /** Number of highlights with tags extracted from notes */
   tagsExtracted: number;
+
+  /** Number of notes/bookmarks filtered when highlightsOnly is enabled */
+  filteredForHighlightsOnly: number;
 }
 
 /**
@@ -57,10 +60,12 @@ export interface ProcessResult {
  * 2. Remove exact duplicates (optional)
  * 3. Smart merge overlapping highlights (optional)
  * 4. Link notes to highlights (optional)
- * 5. Flag suspicious highlights (always runs, just adds flags)
- * 6. Flag fuzzy duplicates (always runs, just adds flags)
+ * 5. Extract tags from notes (optional)
+ * 6. Filter to highlights only (optional) - removes notes and bookmarks
+ * 7. Flag suspicious highlights (always runs, just adds flags)
+ * 8. Flag fuzzy duplicates (always runs, just adds flags)
  *
- * Note: Steps 5-6 never remove clippings, they only add flags.
+ * Note: Steps 7-8 never remove clippings, they only add flags.
  * The user has full control to filter based on these flags.
  *
  * @param clippings - Raw parsed clippings
@@ -83,6 +88,7 @@ export function process(clippings: Clipping[], options?: ProcessOptions): Proces
   let suspiciousFlagged = 0;
   let fuzzyDuplicatesFlagged = 0;
   let tagsExtracted = 0;
+  let filteredForHighlightsOnly = 0;
 
   // Step 1: Remove empty clippings
   const originalCount = result.length;
@@ -117,12 +123,20 @@ export function process(clippings: Clipping[], options?: ProcessOptions): Proces
     tagsExtracted = tagResult.extractedCount;
   }
 
-  // Step 6: Flag suspicious highlights (always runs - just adds flags)
+  // Step 6: Filter to highlights only (optional, default: false)
+  // When enabled, returns only highlights with embedded notes (removes notes/bookmarks)
+  if (options?.highlightsOnly) {
+    const filterResult = filterToHighlightsOnly(result);
+    result = filterResult.clippings;
+    filteredForHighlightsOnly = filterResult.filteredCount;
+  }
+
+  // Step 7: Flag suspicious highlights (always runs - just adds flags)
   const suspiciousResult = flagSuspiciousHighlights(result);
   result = suspiciousResult.clippings;
   suspiciousFlagged = suspiciousResult.flaggedCount;
 
-  // Step 7: Flag fuzzy duplicates (always runs - just adds flags)
+  // Step 8: Flag fuzzy duplicates (always runs - just adds flags)
   const fuzzyResult = flagFuzzyDuplicates(result);
   result = fuzzyResult.clippings;
   fuzzyDuplicatesFlagged = fuzzyResult.flaggedCount;
@@ -136,6 +150,7 @@ export function process(clippings: Clipping[], options?: ProcessOptions): Proces
     suspiciousFlagged,
     fuzzyDuplicatesFlagged,
     tagsExtracted,
+    filteredForHighlightsOnly,
   };
 }
 
@@ -671,5 +686,34 @@ export function extractTagsFromLinkedNotes(clippings: Clipping[]): {
   return {
     clippings: result,
     extractedCount,
+  };
+}
+
+/**
+ * Filter clippings to return only highlights with embedded notes.
+ *
+ * When `highlightsOnly` mode is enabled, the output focuses on what the user
+ * highlighted and their associated thoughts, rather than raw clipping data:
+ * - Notes linked to highlights are already embedded via the `note` field
+ * - Standalone notes (linked or not) are removed from output
+ * - Bookmarks are removed from output
+ * - Only highlights remain, with their notes and tags embedded
+ *
+ * This is useful for users who want a clean, processed view:
+ * "What did I highlight, and what were my thoughts?"
+ *
+ * @param clippings - Clippings to filter
+ * @returns Filtered clippings (highlights only) and count filtered
+ */
+export function filterToHighlightsOnly(clippings: Clipping[]): {
+  clippings: Clipping[];
+  filteredCount: number;
+} {
+  const highlights = clippings.filter((c) => c.type === "highlight");
+  const filteredCount = clippings.length - highlights.length;
+
+  return {
+    clippings: highlights,
+    filteredCount,
   };
 }

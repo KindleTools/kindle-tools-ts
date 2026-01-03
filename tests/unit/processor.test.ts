@@ -6,6 +6,7 @@
 
 import { describe, expect, it } from "vitest";
 import {
+  filterToHighlightsOnly,
   linkNotesToHighlights,
   process,
   removeDuplicates,
@@ -302,6 +303,75 @@ describe("processor", () => {
     });
   });
 
+  describe("filterToHighlightsOnly", () => {
+    it("should filter out notes and bookmarks, keeping only highlights", () => {
+      const clippings = [
+        createClipping({
+          id: "highlight-1",
+          type: "highlight",
+          content: "Important highlight",
+        }),
+        createClipping({
+          id: "note-1",
+          type: "note",
+          content: "A note",
+        }),
+        createClipping({
+          id: "bookmark-1",
+          type: "bookmark",
+          content: "",
+        }),
+        createClipping({
+          id: "highlight-2",
+          type: "highlight",
+          content: "Another highlight",
+        }),
+      ];
+
+      const result = filterToHighlightsOnly(clippings);
+
+      expect(result.clippings.length).toBe(2);
+      expect(result.filteredCount).toBe(2);
+      expect(result.clippings.every((c) => c.type === "highlight")).toBe(true);
+    });
+
+    it("should preserve embedded notes on highlights", () => {
+      const clippings = [
+        createClipping({
+          id: "highlight-1",
+          type: "highlight",
+          content: "Important highlight",
+          note: "My thoughts on this",
+          linkedNoteId: "note-1",
+        }),
+        createClipping({
+          id: "note-1",
+          type: "note",
+          content: "My thoughts on this",
+          linkedHighlightId: "highlight-1",
+        }),
+      ];
+
+      const result = filterToHighlightsOnly(clippings);
+
+      expect(result.clippings.length).toBe(1);
+      expect(result.clippings[0]!.note).toBe("My thoughts on this");
+      expect(result.clippings[0]!.linkedNoteId).toBe("note-1");
+    });
+
+    it("should return empty array when no highlights exist", () => {
+      const clippings = [
+        createClipping({ type: "note", content: "A note" }),
+        createClipping({ type: "bookmark", content: "" }),
+      ];
+
+      const result = filterToHighlightsOnly(clippings);
+
+      expect(result.clippings.length).toBe(0);
+      expect(result.filteredCount).toBe(2);
+    });
+  });
+
   describe("process (full pipeline)", () => {
     it("should run all processing steps", () => {
       const clippings = [
@@ -348,6 +418,70 @@ describe("processor", () => {
       expect(result.clippings[0]!.tags).toContain("philosophy");
       expect(result.clippings[0]!.tags).toContain("important");
       expect(result.clippings[0]!.tags).toContain("to-review");
+    });
+
+    it("should filter to highlights only when highlightsOnly is enabled", () => {
+      const clippings = [
+        createClipping({
+          id: "highlight-1",
+          title: "Book A",
+          type: "highlight",
+          content: "A highlight",
+          location: { raw: "100-110", start: 100, end: 110 },
+        }),
+        createClipping({
+          id: "note-1",
+          title: "Book A",
+          type: "note",
+          content: "A note linked to highlight",
+          location: { raw: "105", start: 105, end: null },
+        }),
+        createClipping({
+          id: "bookmark-1",
+          title: "Book A",
+          type: "bookmark",
+          content: "",
+          location: { raw: "200", start: 200, end: null },
+        }),
+      ];
+
+      const result = process(clippings, {
+        detectedLanguage: "en",
+        highlightsOnly: true,
+      });
+
+      expect(result.clippings.length).toBe(1);
+      expect(result.clippings[0]!.type).toBe("highlight");
+      expect(result.clippings[0]!.note).toBe("A note linked to highlight");
+      expect(result.filteredForHighlightsOnly).toBe(2);
+    });
+
+    it("should return all types when highlightsOnly is disabled", () => {
+      const clippings = [
+        createClipping({
+          id: "highlight-1",
+          type: "highlight",
+          content: "A highlight",
+        }),
+        createClipping({
+          id: "note-1",
+          type: "note",
+          content: "A note",
+        }),
+        createClipping({
+          id: "bookmark-1",
+          type: "bookmark",
+          content: "",
+        }),
+      ];
+
+      const result = process(clippings, {
+        detectedLanguage: "en",
+        highlightsOnly: false,
+      });
+
+      expect(result.clippings.length).toBe(3);
+      expect(result.filteredForHighlightsOnly).toBe(0);
     });
   });
 });

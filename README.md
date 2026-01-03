@@ -274,6 +274,7 @@ Output:
 | `--lang <code>` | `-l` | Force language: `en`, `es`, `pt`, `de`, `fr`, `it`, `zh`, `ja`, `ko`, `nl`, `ru` |
 | `--no-merge` | | Disable smart merging of overlapping highlights |
 | `--no-dedup` | | Disable deduplication |
+| `--highlights-only` | | Return only highlights with embedded notes (no separate notes/bookmarks) |
 | `--json` | | Output as JSON (for scripting/automation) |
 | `--verbose` | | Show detailed output (top books, warnings) |
 | `--pretty` | | Pretty print JSON output |
@@ -307,6 +308,10 @@ kindle-tools export "My Clippings.txt" --format=joplin \
 kindle-tools export "My Clippings.txt" --format=json \
   --extract-tags --include-tags --output=with-tags.json
 
+# Export only highlights with embedded notes (merged output)
+kindle-tools export "My Clippings.txt" --format=json \
+  --highlights-only --output=merged.json
+
 # Get stats as JSON for scripting
 kindle-tools stats "My Clippings.txt" --json | jq '.totalBooks'
 
@@ -328,10 +333,12 @@ Parse a Kindle clippings file from disk.
 
 ```typescript
 const result = await parseFile('./My Clippings.txt', {
-  language: 'auto',           // 'auto' | 'en' | 'es' | ... 
+  language: 'auto',           // 'auto' | 'en' | 'es' | ...
   removeDuplicates: true,     // Remove exact duplicates
   mergeOverlapping: true,     // Merge extended highlights
   mergeNotes: true,           // Link notes to highlights
+  extractTags: false,         // Extract tags from notes
+  highlightsOnly: false,      // Return only highlights with embedded notes
   normalizeUnicode: true,     // NFC normalization
   cleanContent: true,         // Clean whitespace
   cleanTitles: true,          // Remove file extensions from titles
