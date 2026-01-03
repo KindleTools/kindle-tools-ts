@@ -222,27 +222,27 @@ function renderStats(): void {
         <div class="label">Total</div>
       </div>
       <div class="stat-card highlight">
-        <div class="value">${stats.highlights}</div>
+        <div class="value">${stats.totalHighlights}</div>
         <div class="label">Highlights</div>
       </div>
       <div class="stat-card note">
-        <div class="value">${stats.notes}</div>
+        <div class="value">${stats.totalNotes}</div>
         <div class="label">Notes</div>
       </div>
       <div class="stat-card bookmark">
-        <div class="value">${stats.bookmarks}</div>
+        <div class="value">${stats.totalBookmarks}</div>
         <div class="label">Bookmarks</div>
       </div>
       <div class="stat-card">
-        <div class="value">${stats.clips}</div>
+        <div class="value">${stats.totalClips}</div>
         <div class="label">Clips</div>
       </div>
       <div class="stat-card">
-        <div class="value">${stats.uniqueBooks}</div>
+        <div class="value">${stats.totalBooks}</div>
         <div class="label">Books</div>
       </div>
       <div class="stat-card">
-        <div class="value">${stats.uniqueAuthors}</div>
+        <div class="value">${stats.totalAuthors}</div>
         <div class="label">Authors</div>
       </div>
       <div class="stat-card">
@@ -273,11 +273,11 @@ function renderStats(): void {
         <span class="value">${formatBytes(meta.fileSize)}</span>
       </div>
       ${
-        stats.earliestDate && stats.latestDate
+        stats.dateRange.earliest && stats.dateRange.latest
           ? `
       <div class="meta-item">
         <span class="label">Date Range</span>
-        <span class="value">${formatDate(stats.earliestDate)} - ${formatDate(stats.latestDate)}</span>
+        <span class="value">${formatDate(stats.dateRange.earliest)} - ${formatDate(stats.dateRange.latest)}</span>
       </div>
       `
           : ""

@@ -35,16 +35,17 @@ export class JsonExporter implements Exporter {
           books[title] = this.prepareClippings(bookClippings, options);
         }
 
-        data = {
-          books,
-          meta: { totalBooks: grouped.size, totalClippings: clippings.length },
-        };
+        data =
+          options?.includeStats !== false
+            ? { books, meta: { totalBooks: grouped.size, totalClippings: clippings.length } }
+            : { books };
       } else {
         // Flat array
-        data = {
-          clippings: this.prepareClippings(clippings, options),
-          meta: { total: clippings.length },
-        };
+        const preparedClippings = this.prepareClippings(clippings, options);
+        data =
+          options?.includeStats !== false
+            ? { clippings: preparedClippings, meta: { total: clippings.length } }
+            : { clippings: preparedClippings };
       }
 
       const indent = options?.pretty ? 2 : undefined;
