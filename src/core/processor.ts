@@ -140,12 +140,40 @@ export function process(clippings: Clipping[], options?: ProcessOptions): Proces
 }
 
 /**
+ * Merge tags from source clipping into target clipping.
+ *
+ * @param target - Clipping to merge tags into
+ * @param source - Clipping to merge tags from
+ * @returns Target clipping with merged tags
+ */
+function mergeTags(target: Clipping, source: Clipping): Clipping {
+  if (!source.tags?.length) {
+    return target;
+  }
+
+  const existingTags = new Set(target.tags || []);
+  const newTags = source.tags.filter((tag) => !existingTags.has(tag));
+
+  if (newTags.length === 0) {
+    return target;
+  }
+
+  return {
+    ...target,
+    tags: [...(target.tags || []), ...newTags],
+  };
+}
+
+/**
  * Remove exact duplicate clippings based on hash.
  *
  * A duplicate is determined by:
  * - Same title (case-insensitive)
  * - Same location
  * - Same content (case-insensitive)
+ *
+ * When a duplicate is found, tags from the duplicate are merged
+ * into the surviving clipping to preserve user categorization.
  *
  * @param clippings - Clippings to deduplicate
  * @returns Deduplicated clippings and count removed
@@ -154,21 +182,23 @@ export function removeDuplicates(clippings: Clipping[]): {
   clippings: Clipping[];
   removedCount: number;
 } {
-  const seen = new Set<string>();
-  const unique: Clipping[] = [];
+  const seen = new Map<string, Clipping>();
 
   for (const clipping of clippings) {
     const hash = generateDuplicateHash(clipping.title, clipping.location.raw, clipping.content);
+    const existing = seen.get(hash);
 
-    if (!seen.has(hash)) {
-      seen.add(hash);
-      unique.push(clipping);
+    if (existing) {
+      // Merge tags from duplicate into survivor
+      seen.set(hash, mergeTags(existing, clipping));
+    } else {
+      seen.set(hash, clipping);
     }
   }
 
   return {
-    clippings: unique,
-    removedCount: clippings.length - unique.length,
+    clippings: Array.from(seen.values()),
+    removedCount: clippings.length - seen.size,
   };
 }
 
@@ -285,10 +315,18 @@ function canMerge(a: Clipping, b: Clipping): boolean {
 
 /**
  * Merge two clippings into one.
+ *
+ * Preserves:
+ * - Longer content
+ * - Combined location range
+ * - More recent date
+ * - Combined tags from both clippings
+ * - Earlier block index
  */
 function mergeClippings(a: Clipping, b: Clipping): Clipping {
   // Keep the one with longer content as base
   const base = a.content.length >= b.content.length ? a : b;
+  const other = a.content.length >= b.content.length ? b : a;
 
   // Merge location range
   const startLoc = Math.min(a.location.start, b.location.start);
@@ -296,6 +334,10 @@ function mergeClippings(a: Clipping, b: Clipping): Clipping {
 
   // Keep more recent date
   const date = a.date && b.date ? (a.date > b.date ? a.date : b.date) : (a.date ?? b.date);
+
+  // Merge tags from both clippings
+  const combinedTags =
+    a.tags || b.tags ? [...new Set([...(a.tags || []), ...(b.tags || [])])] : undefined;
 
   return {
     ...base,
@@ -308,23 +350,43 @@ function mergeClippings(a: Clipping, b: Clipping): Clipping {
     dateRaw: date === a.date ? a.dateRaw : b.dateRaw,
     // Keep earlier blockIndex (original position)
     blockIndex: Math.min(a.blockIndex, b.blockIndex),
+    // Preserve tags from both clippings
+    ...(combinedTags && { tags: combinedTags }),
+    // Preserve note if either has one
+    ...(base.note || other.note ? { note: base.note || other.note } : {}),
   };
+}
+
+/**
+ * Check if a note's location falls within a highlight's range.
+ *
+ * This is the primary matching strategy: a note at location X
+ * belongs to a highlight if X is within [highlight.start, highlight.end].
+ *
+ * @param highlight - The highlight to check
+ * @param noteLocation - The note's location start
+ * @returns True if note is within highlight's range
+ */
+function isNoteWithinHighlightRange(highlight: Clipping, noteLocation: number): boolean {
+  const start = highlight.location.start;
+  const end = highlight.location.end ?? highlight.location.start;
+  return start <= noteLocation && noteLocation <= end;
 }
 
 /**
  * Link notes to their associated highlights.
  *
- * Notes in Kindle are stored as separate entries with similar
- * location as their parent highlight.
+ * Notes in Kindle are stored as separate entries. This function
+ * links them to their parent highlights using a two-phase strategy:
  *
- * Strategy:
- * 1. Group all clippings by book
- * 2. For each note, find highlight with:
- *    - Same book
- *    - Same or nearby location
- *    - Type = 'highlight'
- * 3. Link via linkedNoteId / linkedHighlightId
- * 4. Optionally merge note content into highlight's note field
+ * **Phase 1 - Range Coverage (Primary)**:
+ * A note belongs to a highlight if the note's location falls within
+ * the highlight's location range [start, end]. This is more accurate
+ * for notes made at the end of long highlights.
+ *
+ * **Phase 2 - Proximity (Fallback)**:
+ * If no range match is found, fall back to finding the highlight
+ * with the closest location (within 10 positions).
  *
  * @param clippings - Clippings to link
  * @returns Linked clippings and count linked
@@ -347,21 +409,41 @@ export function linkNotesToHighlights(clippings: Clipping[]): {
     const bookKey = note.title.toLowerCase();
     const bookHighlights = bookGroups.get(bookKey);
 
-    if (!bookHighlights) {
+    if (!bookHighlights || !note.location.start) {
       continue;
     }
 
-    // Find the highlight with the closest location
+    const noteLocation = note.location.start;
     let bestMatch: Clipping | null = null;
-    let bestDistance = Number.POSITIVE_INFINITY;
 
+    // Phase 1: Try range coverage first (more accurate)
+    // Find highlight whose range contains the note's location
     for (const highlight of bookHighlights) {
-      const distance = Math.abs(highlight.location.start - note.location.start);
+      if (isNoteWithinHighlightRange(highlight, noteLocation)) {
+        // If multiple highlights contain this location, prefer the one
+        // with the closest start (most specific match)
+        if (
+          !bestMatch ||
+          Math.abs(highlight.location.start - noteLocation) <
+            Math.abs(bestMatch.location.start - noteLocation)
+        ) {
+          bestMatch = highlight;
+        }
+      }
+    }
 
-      // Match if within 10 locations (notes may be slightly offset)
-      if (distance < bestDistance && distance <= 10) {
-        bestDistance = distance;
-        bestMatch = highlight;
+    // Phase 2: Fall back to proximity if no range match
+    if (!bestMatch) {
+      let bestDistance = Number.POSITIVE_INFINITY;
+      const MAX_DISTANCE = 10;
+
+      for (const highlight of bookHighlights) {
+        const distance = Math.abs(highlight.location.start - noteLocation);
+
+        if (distance < bestDistance && distance <= MAX_DISTANCE) {
+          bestDistance = distance;
+          bestMatch = highlight;
+        }
       }
     }
 
