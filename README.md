@@ -278,6 +278,11 @@ Output:
 | `--verbose` | | Show detailed output (top books, warnings) |
 | `--pretty` | | Pretty print JSON output |
 | `--group-by-book` | | Group output by book |
+| `--structure <type>` | | Folder structure: `flat`, `by-book`, `by-author`, `by-author-book` |
+| `--author-case <case>` | | Author folder case: `original`, `uppercase`, `lowercase` |
+| `--extract-tags` | | Extract tags from notes (hashtag format) |
+| `--include-tags` | | Include clipping tags in exports |
+| `--no-tags` | | Exclude tags from output |
 | `--help` | `-h` | Show help message |
 | `--version` | `-v` | Show version |
 
@@ -289,6 +294,18 @@ kindle-tools parse "Mis recortes.txt" --lang=es
 
 # Export without smart merging
 kindle-tools export "My Clippings.txt" --format=json --no-merge --output=raw.json
+
+# Export to Obsidian with author folders in uppercase
+kindle-tools export "My Clippings.txt" --format=obsidian \
+  --structure=by-author --author-case=uppercase --output=./vault/
+
+# Export to Joplin with 3-level hierarchy (Root > Author > Book)
+kindle-tools export "My Clippings.txt" --format=joplin \
+  --structure=by-author-book --output=clippings.jex
+
+# Extract tags from notes and include in export
+kindle-tools export "My Clippings.txt" --format=json \
+  --extract-tags --include-tags --output=with-tags.json
 
 # Get stats as JSON for scripting
 kindle-tools stats "My Clippings.txt" --json | jq '.totalBooks'
@@ -392,11 +409,14 @@ interface Exporter {
 }
 
 interface ExporterOptions {
-  outputPath?: string;    // Output file/directory
-  groupByBook?: boolean;  // Group by book
-  includeStats?: boolean; // Include statistics
-  pretty?: boolean;       // Pretty print (JSON)
-  includeRaw?: boolean;   // Include raw fields
+  outputPath?: string;           // Output file/directory
+  groupByBook?: boolean;         // Group by book
+  includeStats?: boolean;        // Include statistics
+  pretty?: boolean;              // Pretty print (JSON)
+  includeRaw?: boolean;          // Include raw fields
+  folderStructure?: 'flat' | 'by-book' | 'by-author' | 'by-author-book';
+  authorCase?: 'original' | 'uppercase' | 'lowercase';
+  includeClippingTags?: boolean; // Include tags extracted from notes
 }
 ```
 
@@ -404,11 +424,11 @@ interface ExporterOptions {
 
 | Exporter | Format | Output |
 |----------|--------|--------|
-| `JsonExporter` | JSON | Single file, optional grouping |
-| `CsvExporter` | CSV | Single file with BOM for Excel |
+| `JsonExporter` | JSON | Single file, optional grouping, tags column |
+| `CsvExporter` | CSV | Single file with BOM for Excel, tags column |
 | `MarkdownExporter` | Markdown | Single file with blockquotes |
-| `ObsidianExporter` | Obsidian MD | Multiple files with YAML frontmatter |
-| `JoplinExporter` | JEX | Importable Joplin archive |
+| `ObsidianExporter` | Obsidian MD | Multiple files with YAML frontmatter, configurable folder structure |
+| `JoplinExporter` | JEX | Importable Joplin archive with 3-level notebook hierarchy |
 | `HtmlExporter` | HTML | Standalone page with dark mode & search |
 
 ### Utility Functions
@@ -509,27 +529,54 @@ Clean Markdown with blockquotes.
 
 ### Obsidian
 
-One file per book with YAML frontmatter and callouts.
+One file per book with YAML frontmatter and callouts. Supports configurable folder structure.
+
+**Folder structures:**
+- `flat` — All files in root folder (default)
+- `by-book` — `books/Title/Title.md`
+- `by-author` — `books/Author/Title.md`
+- `by-author-book` — `books/Author/Title/Title.md`
 
 ```markdown
 ---
 title: "The Art of War"
 author: "Sun Tzu"
-highlights: 25
-tags: [kindle, book]
+source: kindle
+type: book
+total_highlights: 25
+total_notes: 3
+date_imported: 2024-01-01
+tags:
+  - kindle
+  - highlights
+  - strategy  # clipping tags merged here
 ---
 
 # The Art of War
 
-## Highlights
+**Author:** [[Sun Tzu]]
 
-> [!quote] Page 42
+## 📊 Summary
+
+- **Highlights:** 25
+- **Notes:** 3
+- **Bookmarks:** 0
+
+## 📝 Highlights
+
+> [!quote] Page 42, Location 100-105
 > All warfare is based on deception.
 ```
 
 ### Joplin JEX
 
 Importable archive with notebooks, notes, and tags. Uses deterministic IDs for idempotent imports (won't create duplicates when re-imported).
+
+**Notebook hierarchy:**
+- `flat` — `Kindle Highlights > Book > Notes`
+- `by-author` or `by-author-book` — `Kindle Highlights > AUTHOR > Book > Notes`
+
+Author names can be transformed to UPPERCASE or lowercase via `authorCase` option.
 
 ### HTML
 
