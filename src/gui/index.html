@@ -70,6 +70,12 @@
               Min content length:
               <input type="number" id="opt-minContentLength" min="0" value="0" style="width: 60px">
             </label>
+            <label>
+              Filter books:
+              <select id="opt-bookFilter" style="width: 150px">
+                <option value="">All books</option>
+              </select>
+            </label>
           </div>
         </div>
 
@@ -123,12 +129,15 @@
           <button class="tab active" data-tab="export-json">JSON</button>
           <button class="tab" data-tab="export-csv">CSV</button>
           <button class="tab" data-tab="export-md">Markdown</button>
+          <button class="tab" data-tab="export-obsidian">Obsidian</button>
+          <button class="tab" data-tab="export-joplin">Joplin</button>
           <button class="tab" data-tab="export-html">HTML</button>
         </div>
 
         <div class="export-options">
           <label><input type="checkbox" id="export-groupByBook"> Group by book</label>
           <label><input type="checkbox" id="export-includeStats" checked> Include stats</label>
+          <button id="download-btn" class="btn btn-secondary" disabled>Download</button>
         </div>
 
         <div class="tab-content active" id="tab-export-json">
@@ -141,6 +150,14 @@
 
         <div class="tab-content" id="tab-export-md">
           <div id="export-md-content" class="export-preview placeholder">Parse a file first</div>
+        </div>
+
+        <div class="tab-content" id="tab-export-obsidian">
+          <div id="export-obsidian-content" class="export-preview placeholder">Parse a file first</div>
+        </div>
+
+        <div class="tab-content" id="tab-export-joplin">
+          <div id="export-joplin-content" class="export-preview placeholder">Parse a file first</div>
         </div>
 
         <div class="tab-content" id="tab-export-html">

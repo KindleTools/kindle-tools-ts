@@ -8,8 +8,10 @@ import {
   type ClippingType,
   CsvExporter,
   HtmlExporter,
+  JoplinExporter,
   JsonExporter,
   MarkdownExporter,
+  ObsidianExporter,
   type ParseOptions,
   type ParseResult,
   parseString,
@@ -73,7 +75,13 @@ const elements = {
   exportJsonContent: document.getElementById("export-json-content") as HTMLDivElement,
   exportCsvContent: document.getElementById("export-csv-content") as HTMLDivElement,
   exportMdContent: document.getElementById("export-md-content") as HTMLDivElement,
+  exportObsidianContent: document.getElementById("export-obsidian-content") as HTMLDivElement,
+  exportJoplinContent: document.getElementById("export-joplin-content") as HTMLDivElement,
   exportHtmlContent: document.getElementById("export-html-content") as HTMLIFrameElement,
+  downloadBtn: document.getElementById("download-btn") as HTMLButtonElement,
+
+  // Book filter
+  optBookFilter: document.getElementById("opt-bookFilter") as HTMLSelectElement,
 };
 
 // =============================================================================
@@ -161,6 +169,8 @@ function getParseOptions(): ParseOptions {
   if (elements.optExcludeNotes.checked) excludeTypes.push("note");
   if (elements.optExcludeBookmarks.checked) excludeTypes.push("bookmark");
 
+  const bookFilter = elements.optBookFilter.value;
+
   return {
     language: elements.optLanguage.value as ParseOptions["language"],
     removeDuplicates: elements.optRemoveDuplicates.checked,
@@ -172,6 +182,7 @@ function getParseOptions(): ParseOptions {
     cleanTitles: elements.optCleanTitles.checked,
     excludeTypes: excludeTypes.length > 0 ? excludeTypes : undefined,
     minContentLength: parseInt(elements.optMinContentLength.value, 10) || undefined,
+    onlyBooks: bookFilter ? [bookFilter] : undefined,
   };
 }
 
@@ -469,6 +480,9 @@ function renderRawData(): void {
 // Export Preview
 // =============================================================================
 
+// Store export results for download
+const exportResults: Record<string, { content: string; extension: string; mimeType: string }> = {};
+
 async function renderExports(): Promise<void> {
   const result = state.parseResult;
   if (!result) return;
@@ -479,23 +493,48 @@ async function renderExports(): Promise<void> {
   // JSON Export
   const jsonExporter = new JsonExporter();
   const jsonResult = await jsonExporter.export(result.clippings, { groupByBook, includeStats });
-  elements.exportJsonContent.textContent =
-    typeof jsonResult.output === "string" ? jsonResult.output : "[Binary output]";
+  const jsonContent = typeof jsonResult.output === "string" ? jsonResult.output : "[Binary output]";
+  elements.exportJsonContent.textContent = jsonContent;
   elements.exportJsonContent.classList.remove("placeholder");
+  exportResults.json = { content: jsonContent, extension: ".json", mimeType: "application/json" };
 
   // CSV Export
   const csvExporter = new CsvExporter();
   const csvResult = await csvExporter.export(result.clippings, {});
-  elements.exportCsvContent.textContent =
-    typeof csvResult.output === "string" ? csvResult.output : "[Binary output]";
+  const csvContent = typeof csvResult.output === "string" ? csvResult.output : "[Binary output]";
+  elements.exportCsvContent.textContent = csvContent;
   elements.exportCsvContent.classList.remove("placeholder");
+  exportResults.csv = { content: csvContent, extension: ".csv", mimeType: "text/csv" };
 
   // Markdown Export
   const mdExporter = new MarkdownExporter();
-  const mdResult = await mdExporter.export(result.clippings, { groupByBook: false });
-  elements.exportMdContent.textContent =
-    typeof mdResult.output === "string" ? mdResult.output : "[Binary output]";
+  const mdResult = await mdExporter.export(result.clippings, { groupByBook });
+  const mdContent = typeof mdResult.output === "string" ? mdResult.output : "[Binary output]";
+  elements.exportMdContent.textContent = mdContent;
   elements.exportMdContent.classList.remove("placeholder");
+  exportResults.md = { content: mdContent, extension: ".md", mimeType: "text/markdown" };
+
+  // Obsidian Export
+  const obsidianExporter = new ObsidianExporter();
+  const obsidianResult = await obsidianExporter.export(result.clippings, { groupByBook });
+  const obsidianContent =
+    typeof obsidianResult.output === "string" ? obsidianResult.output : "[Binary output]";
+  elements.exportObsidianContent.textContent = obsidianContent;
+  elements.exportObsidianContent.classList.remove("placeholder");
+  exportResults.obsidian = {
+    content: obsidianContent,
+    extension: ".md",
+    mimeType: "text/markdown",
+  };
+
+  // Joplin Export
+  const joplinExporter = new JoplinExporter();
+  const joplinResult = await joplinExporter.export(result.clippings, { groupByBook });
+  const joplinContent =
+    typeof joplinResult.output === "string" ? joplinResult.output : "[Binary output]";
+  elements.exportJoplinContent.textContent = joplinContent;
+  elements.exportJoplinContent.classList.remove("placeholder");
+  exportResults.joplin = { content: joplinContent, extension: ".md", mimeType: "text/markdown" };
 
   // HTML Export
   const htmlExporter = new HtmlExporter();
@@ -503,7 +542,11 @@ async function renderExports(): Promise<void> {
   if (typeof htmlResult.output === "string") {
     const blob = new Blob([htmlResult.output], { type: "text/html" });
     elements.exportHtmlContent.src = URL.createObjectURL(blob);
+    exportResults.html = { content: htmlResult.output, extension: ".html", mimeType: "text/html" };
   }
+
+  // Enable download button
+  elements.downloadBtn.disabled = false;
 }
 
 // =============================================================================
@@ -516,10 +559,44 @@ function populateBookFilter(): void {
 
   const books = [...new Set(result.clippings.map((c) => c.title))].sort();
 
-  elements.clippingsFilterBook.innerHTML = `
+  const optionsHtml = `
     <option value="">All books (${books.length})</option>
     ${books.map((b) => `<option value="${escapeHtml(b)}">${truncate(b, 40)}</option>`).join("")}
   `;
+
+  // Update both book filters
+  elements.clippingsFilterBook.innerHTML = optionsHtml;
+  elements.optBookFilter.innerHTML = optionsHtml;
+}
+
+// Get currently active export tab
+function getActiveExportTab(): string {
+  const activeTab = document.querySelector("#export-section .tab.active");
+  const tabName = activeTab?.getAttribute("data-tab")?.replace("export-", "") || "json";
+  return tabName;
+}
+
+// Download current export
+function downloadExport(): void {
+  const activeTab = getActiveExportTab();
+  const exportData = exportResults[activeTab];
+
+  if (!exportData) {
+    console.error("No export data available for:", activeTab);
+    return;
+  }
+
+  const fileName = `kindle-clippings${exportData.extension}`;
+  const blob = new Blob([exportData.content], { type: exportData.mimeType });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 function filterClippings(): void {
@@ -643,6 +720,9 @@ function init(): void {
   // Export options
   elements.exportGroupByBook.addEventListener("change", renderExports);
   elements.exportIncludeStats.addEventListener("change", renderExports);
+
+  // Download button
+  elements.downloadBtn.addEventListener("click", downloadExport);
 
   console.log("Kindle Tools Testing GUI initialized");
 }

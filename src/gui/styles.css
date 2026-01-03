@@ -210,6 +210,18 @@ code {
   transform: translateY(-2px);
 }
 
+.btn-secondary {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--success);
+  color: var(--bg-primary);
+  transform: translateY(-2px);
+}
+
 /* Tabs */
 .tabs {
   display: flex;
