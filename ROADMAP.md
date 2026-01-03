@@ -19,8 +19,8 @@ Plan de implementación de mejoras para el proyecto TypeScript. Este documento s
 - Funciona en Node.js y browser (isomórfico)
 
 ### Gaps Principales vs Python
-1. Solo soporta UTF-8 (Python tiene fallback chain de encodings)
-2. Tags no se preservan durante merge de duplicados
+1. ~~Solo soporta UTF-8~~ ✅ Implementado encoding fallback (UTF-8, UTF-16, latin1)
+2. ~~Tags no se preservan durante merge~~ ✅ Implementado tag merge en deduplicación
 3. JEX solo tiene 2 niveles de notebooks (Python tiene 3: Root > Author > Book)
 4. No hay archivo de configuración persistente
 
@@ -32,9 +32,15 @@ Las tareas están ordenadas por **dependencias lógicas** y **valor incremental*
 
 ---
 
-## Fase 1: Robustez y Compatibilidad
+## Fase 1: Robustez y Compatibilidad ✅ COMPLETADA
 
-### 1.1 Encoding Fallback Chain
+> **Implementado en commit `d3de3ea`** - 2026-01-03
+> - Encoding detection con fallback (BOM detection + latin1)
+> - Tag merge durante deduplicación y smart merge
+> - Range coverage linking para notas (con fallback a proximidad)
+> - 17 nuevos tests en `tests/unit/processor.test.ts`
+
+### 1.1 Encoding Fallback Chain ✅
 **Prioridad:** Alta
 **Impacto:** Usuarios con Kindles antiguos o Windows
 
@@ -84,7 +90,7 @@ async function parseFile(filePath: string, options?: ParseOptions): Promise<Pars
 
 ---
 
-### 1.2 Merge de Tags durante Deduplicación
+### 1.2 Merge de Tags durante Deduplicación ✅
 **Prioridad:** Alta
 **Impacto:** Los tags del usuario no se pierden al mergear highlights
 
@@ -135,7 +141,7 @@ function mergeClippings(survivor: Clipping, absorbed: Clipping): Clipping {
 
 ---
 
-### 1.3 Range Coverage para Linking de Notas
+### 1.3 Range Coverage para Linking de Notas ✅
 **Prioridad:** Media
 **Impacto:** Mejor precisión al asociar notas con highlights largos
 
