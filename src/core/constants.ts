@@ -46,10 +46,10 @@ export const LANGUAGE_MAP: Record<SupportedLanguage, LanguagePatterns> = {
   },
   es: {
     addedOn: "Añadido el",
-    highlight: "Tu subrayado",
-    note: "Tu nota",
-    bookmark: "Tu marcador",
-    clip: "Tu recorte",
+    highlight: "subrayado", // Works with both "Tu subrayado" and "La subrayado"
+    note: "nota", // Works with both "Tu nota" and "La nota"
+    bookmark: "marcador", // Works with both "Tu marcador" and "El marcador"
+    clip: "recorte", // Works with both "Tu recorte" and "El recorte"
     page: "página",
     location: "posición",
     dateFormats: [

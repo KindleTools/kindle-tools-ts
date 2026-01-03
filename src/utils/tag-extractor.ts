@@ -28,9 +28,9 @@ export interface TagExtractionResult {
 
 /**
  * Separators used to split notes into potential tags.
- * Ordered from most specific to most general.
+ * Supports comma, semicolon, period, and newline separators.
  */
-const TAG_SEPARATORS = /[,;\n\r]+/;
+const TAG_SEPARATORS = /[,;.\n\r]+/;
 
 /**
  * Maximum length for a single tag.

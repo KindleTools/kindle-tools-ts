@@ -24,6 +24,7 @@ import { calculateStats, countWords } from "../utils/stats.js";
 import { cleanText } from "../utils/text-cleaner.js";
 import { LANGUAGE_MAP } from "./constants.js";
 import { detectLanguage } from "./language-detector.js";
+import { process } from "./processor.js";
 import { tokenize } from "./tokenizer.js";
 
 /**
@@ -227,13 +228,52 @@ export function parseString(content: string, options?: ParseOptions): ParseResul
     }
   }
 
-  // Step 5: Calculate stats
-  const stats = calculateStats(clippings);
+  // Step 5: Process clippings if any processing options are explicitly enabled
+  // Processing includes: dedup, merge highlights, link notes, extract tags, filter to highlights only
+  // Only process when options are explicitly passed and at least one processing option is true
+  const needsProcessing =
+    options !== undefined &&
+    (options.removeDuplicates === true ||
+      options.mergeOverlapping === true ||
+      options.mergeNotes === true ||
+      options.extractTags === true ||
+      options.highlightsOnly === true);
+
+  let finalClippings = clippings;
+  let duplicatesRemoved = 0;
+  let mergedHighlights = 0;
+  let linkedNotes = 0;
+  let emptyRemoved = 0;
+
+  if (needsProcessing) {
+    const processResult = process(clippings, {
+      detectedLanguage,
+      removeDuplicates: options?.removeDuplicates,
+      mergeOverlapping: options?.mergeOverlapping,
+      mergeNotes: options?.mergeNotes,
+      extractTags: options?.extractTags,
+      highlightsOnly: options?.highlightsOnly,
+    });
+    finalClippings = processResult.clippings;
+    duplicatesRemoved = processResult.duplicatesRemoved;
+    mergedHighlights = processResult.mergedHighlights;
+    linkedNotes = processResult.linkedNotes;
+    emptyRemoved = processResult.emptyRemoved;
+  }
+
+  // Step 6: Calculate stats from processed clippings
+  const stats = calculateStats(finalClippings);
+
+  // Merge processing stats into main stats
+  stats.duplicatesRemoved = duplicatesRemoved;
+  stats.mergedHighlights = mergedHighlights;
+  stats.linkedNotes = linkedNotes;
+  stats.emptyRemoved = emptyRemoved;
 
   const parseTime = performance.now() - startTime;
 
   return {
-    clippings,
+    clippings: finalClippings,
     stats,
     warnings,
     meta: {

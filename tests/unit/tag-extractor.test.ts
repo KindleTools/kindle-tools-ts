@@ -26,6 +26,13 @@ describe("tag-extractor", () => {
       expect(result.hasTags).toBe(true);
     });
 
+    it("should extract period-separated tags", () => {
+      const result = extractTagsFromNote("ESTRATEGIA. SABIDURÍA. FILOSOFÍA");
+      expect(result.tags).toEqual(["estrategia", "sabiduría", "filosofía"]);
+      expect(result.hasTags).toBe(true);
+      expect(result.isTagOnlyNote).toBe(true);
+    });
+
     it("should handle mixed separators", () => {
       const result = extractTagsFromNote("productivity, psychology; habits\nlearning");
       expect(result.tags).toEqual(["productivity", "psychology", "habits", "learning"]);
@@ -81,8 +88,9 @@ describe("tag-extractor", () => {
     });
 
     it("should return false for long notes without separators", () => {
+      // Long note without separators (periods are now separators, so avoid them here)
       const longNote =
-        "This is a long note without any tag-like separators and it contains a full paragraph of text.";
+        "This is a long note without any tag-like separators and it contains a full paragraph of text";
       expect(looksLikeTagNote(longNote)).toBe(false);
     });
   });
