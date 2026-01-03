@@ -137,6 +137,24 @@
         <div class="export-options">
           <label><input type="checkbox" id="export-groupByBook"> Group by book</label>
           <label><input type="checkbox" id="export-includeStats" checked> Include stats</label>
+          <label><input type="checkbox" id="export-includeClippingTags" checked> Include clipping tags</label>
+          <label>
+            Folder structure:
+            <select id="export-folderStructure">
+              <option value="flat" selected>Flat</option>
+              <option value="by-book">By Book</option>
+              <option value="by-author">By Author</option>
+              <option value="by-author-book">Author > Book</option>
+            </select>
+          </label>
+          <label>
+            Author case:
+            <select id="export-authorCase">
+              <option value="original" selected>Original</option>
+              <option value="uppercase">UPPERCASE</option>
+              <option value="lowercase">lowercase</option>
+            </select>
+          </label>
           <button id="download-btn" class="btn btn-secondary" disabled>Download</button>
         </div>
 

@@ -27,7 +27,13 @@ import { MarkdownExporter } from "./exporters/markdown.exporter.js";
 import { ObsidianExporter } from "./exporters/obsidian.exporter.js";
 import type { Clipping } from "./types/clipping.js";
 import type { ParseOptions, ParseResult } from "./types/config.js";
-import type { Exporter, ExporterOptions, ExportResult } from "./types/exporter.js";
+import type {
+  AuthorCase,
+  Exporter,
+  ExporterOptions,
+  ExportResult,
+  FolderStructure,
+} from "./types/exporter.js";
 import type { SupportedLanguage } from "./types/language.js";
 import type { ClippingsStats } from "./types/stats.js";
 
@@ -50,6 +56,10 @@ interface ParsedArgs {
   verbose?: boolean;
   pretty?: boolean;
   groupByBook?: boolean;
+  folderStructure?: FolderStructure;
+  authorCase?: AuthorCase;
+  includeTags?: boolean;
+  extractTags?: boolean;
 }
 
 type ExportFormat = "json" | "csv" | "md" | "markdown" | "obsidian" | "joplin" | "html";
@@ -175,6 +185,20 @@ function parseArgs(args: string[]): ParsedArgs {
       result.pretty = true;
     } else if (arg === "--group-by-book" || arg === "--group") {
       result.groupByBook = true;
+    } else if (arg === "--folder-structure" || arg === "--structure") {
+      result.folderStructure = (args[++i] ?? "flat") as FolderStructure;
+    } else if (arg.startsWith("--folder-structure=") || arg.startsWith("--structure=")) {
+      result.folderStructure = (arg.split("=")[1] ?? "flat") as FolderStructure;
+    } else if (arg === "--author-case" || arg === "--case") {
+      result.authorCase = (args[++i] ?? "original") as AuthorCase;
+    } else if (arg.startsWith("--author-case=") || arg.startsWith("--case=")) {
+      result.authorCase = (arg.split("=")[1] ?? "original") as AuthorCase;
+    } else if (arg === "--include-tags" || arg === "--tags") {
+      result.includeTags = true;
+    } else if (arg === "--no-tags") {
+      result.includeTags = false;
+    } else if (arg === "--extract-tags") {
+      result.extractTags = true;
     }
   }
 
@@ -193,6 +217,7 @@ async function parseClippingsFile(filePath: string, args: ParsedArgs): Promise<P
     normalizeUnicode: true,
     cleanContent: true,
     cleanTitles: true,
+    extractTags: args.extractTags ?? false,
   };
 
   return await parseFile(filePath, options);
@@ -301,8 +326,11 @@ async function handleExport(args: string[]): Promise<void> {
     const exportOptions: ExporterOptions = {
       ...(parsed.output && { outputPath: parsed.output }),
       ...(parsed.groupByBook && { groupByBook: parsed.groupByBook }),
+      ...(parsed.folderStructure && { folderStructure: parsed.folderStructure }),
+      ...(parsed.authorCase && { authorCase: parsed.authorCase }),
       pretty: parsed.pretty ?? true,
       includeStats: true,
+      includeClippingTags: parsed.includeTags ?? true,
     };
 
     // Run export
@@ -551,6 +579,13 @@ ${c.bold("OPTIONS:")}
   --pretty              Pretty print JSON output
   --group-by-book       Group output by book
 
+${c.bold("EXPORT OPTIONS (Obsidian/Joplin):")}
+  --structure <type>    Folder structure: flat, by-book, by-author, by-author-book
+  --author-case <case>  Author folder case: original, uppercase, lowercase
+  --extract-tags        Extract tags from notes during parsing
+  --include-tags        Include clipping tags in export (default: true)
+  --no-tags             Exclude clipping tags from export
+
 ${c.bold("EXAMPLES:")}
   ${c.dim("# Parse and see summary")}
   kindle-tools parse "My Clippings.txt"
@@ -558,11 +593,13 @@ ${c.bold("EXAMPLES:")}
   ${c.dim("# Export to Markdown")}
   kindle-tools export "My Clippings.txt" --format=md --output=./notes.md
 
-  ${c.dim("# Export to Obsidian format (one file per book)")}
-  kindle-tools export "My Clippings.txt" --format=obsidian --output=./vault/books/
+  ${c.dim("# Export to Obsidian with Author > Book folder structure")}
+  kindle-tools export "My Clippings.txt" --format=obsidian --output=./vault/books/ \\
+    --structure=by-author-book --author-case=uppercase
 
-  ${c.dim("# Export to Joplin JEX file")}
-  kindle-tools export "My Clippings.txt" --format=joplin --output=./clippings.jex
+  ${c.dim("# Export to Joplin with 3-level hierarchy (Root > Author > Book)")}
+  kindle-tools export "My Clippings.txt" --format=joplin --output=./clippings.jex \\
+    --structure=by-author --extract-tags
 
   ${c.dim("# Get stats as JSON")}
   kindle-tools stats "My Clippings.txt" --json --pretty

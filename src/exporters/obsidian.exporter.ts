@@ -11,7 +11,14 @@
  */
 
 import type { Clipping } from "../types/clipping.js";
-import type { ExportedFile, Exporter, ExporterOptions, ExportResult } from "../types/exporter.js";
+import type {
+  AuthorCase,
+  ExportedFile,
+  Exporter,
+  ExporterOptions,
+  ExportResult,
+  FolderStructure,
+} from "../types/exporter.js";
 import { groupByBook } from "../utils/stats.js";
 
 /**
@@ -22,10 +29,30 @@ export interface ObsidianExporterOptions extends ExporterOptions {
   wikilinks?: boolean;
   /** Use callouts for highlights (default: true) */
   useCallouts?: boolean;
-  /** Default tags to add to all notes */
+  /** Default tags to add to all notes (default: ["kindle", "highlights"]) */
   tags?: string[];
   /** Folder name for book notes (default: "books") */
   folder?: string;
+  /**
+   * Folder structure for organizing files.
+   * - 'flat': All files in the root folder (default)
+   * - 'by-book': One folder per book (containing a single file)
+   * - 'by-author': One folder per author (files named by book)
+   * - 'by-author-book': Author folder > Book subfolder
+   */
+  folderStructure?: FolderStructure;
+  /**
+   * Case transformation for author folder names.
+   * - 'original': Keep original case (default)
+   * - 'uppercase': Convert to UPPERCASE
+   * - 'lowercase': Convert to lowercase
+   */
+  authorCase?: AuthorCase;
+  /**
+   * Include clipping tags in the frontmatter.
+   * Tags are merged with default tags. (default: true)
+   */
+  includeClippingTags?: boolean;
 }
 
 /**
@@ -49,6 +76,8 @@ export class ObsidianExporter implements Exporter {
       const grouped = groupByBook(clippings);
       const files: ExportedFile[] = [];
       const folder = options?.folder ?? "books";
+      const folderStructure = options?.folderStructure ?? "flat";
+      const authorCase = options?.authorCase ?? "original";
 
       for (const [title, bookClippings] of grouped) {
         const first = bookClippings[0];
@@ -56,9 +85,15 @@ export class ObsidianExporter implements Exporter {
 
         const content = this.generateBookNote(bookClippings, options);
         const safeTitle = this.sanitizeFilename(title);
+        const safeAuthor = this.sanitizeFilename(
+          this.applyCase(first.author || "Unknown Author", authorCase),
+        );
+
+        // Determine file path based on folder structure
+        const filePath = this.getFilePath(folder, safeAuthor, safeTitle, folderStructure);
 
         files.push({
-          path: `${folder}/${safeTitle}.md`,
+          path: filePath,
           content,
         });
       }
@@ -78,6 +113,43 @@ export class ObsidianExporter implements Exporter {
   }
 
   /**
+   * Get file path based on folder structure.
+   */
+  private getFilePath(
+    baseFolder: string,
+    author: string,
+    title: string,
+    structure: FolderStructure,
+  ): string {
+    switch (structure) {
+      case "by-book":
+        return `${baseFolder}/${title}/${title}.md`;
+      case "by-author":
+        return `${baseFolder}/${author}/${title}.md`;
+      case "by-author-book":
+        return `${baseFolder}/${author}/${title}/${title}.md`;
+      case "flat":
+      default:
+        return `${baseFolder}/${title}.md`;
+    }
+  }
+
+  /**
+   * Apply case transformation to a string.
+   */
+  private applyCase(str: string, authorCase: AuthorCase): string {
+    switch (authorCase) {
+      case "uppercase":
+        return str.toUpperCase();
+      case "lowercase":
+        return str.toLowerCase();
+      case "original":
+      default:
+        return str;
+    }
+  }
+
+  /**
    * Generate a complete Obsidian note for a book.
    */
   private generateBookNote(clippings: Clipping[], options?: ObsidianExporterOptions): string {
@@ -86,7 +158,20 @@ export class ObsidianExporter implements Exporter {
 
     const useCallouts = options?.useCallouts ?? true;
     const useWikilinks = options?.wikilinks ?? true;
-    const tags = options?.tags ?? ["kindle", "highlights"];
+    const defaultTags = options?.tags ?? ["kindle", "highlights"];
+    const includeClippingTags = options?.includeClippingTags ?? true;
+
+    // Collect all unique tags from clippings
+    const allTags = new Set<string>(defaultTags);
+    if (includeClippingTags) {
+      for (const clipping of clippings) {
+        if (clipping.tags) {
+          for (const tag of clipping.tags) {
+            allTags.add(tag);
+          }
+        }
+      }
+    }
 
     const lines: string[] = [];
 
@@ -100,7 +185,7 @@ export class ObsidianExporter implements Exporter {
     lines.push(`total_notes: ${clippings.filter((c) => c.type === "note").length}`);
     lines.push(`date_imported: ${new Date().toISOString().split("T")[0]}`);
     lines.push(`tags:`);
-    for (const tag of tags) {
+    for (const tag of allTags) {
       lines.push(`  - ${tag}`);
     }
     lines.push("---");

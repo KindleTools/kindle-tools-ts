@@ -18,11 +18,13 @@ export class CsvExporter implements Exporter {
    * Export clippings to CSV.
    *
    * @param clippings - Clippings to export
-   * @param _options - Export options (unused for CSV)
+   * @param options - Export options
    * @returns Export result with CSV string
    */
-  async export(clippings: Clipping[], _options?: ExporterOptions): Promise<ExportResult> {
+  async export(clippings: Clipping[], options?: ExporterOptions): Promise<ExportResult> {
     try {
+      const includeClippingTags = options?.includeClippingTags ?? true;
+
       const headers = [
         "id",
         "title",
@@ -33,11 +35,15 @@ export class CsvExporter implements Exporter {
         "date",
         "content",
         "wordCount",
+        "tags",
       ];
 
       const rows: string[] = [headers.join(",")];
 
       for (const clipping of clippings) {
+        // Format tags as semicolon-separated string (if includeClippingTags is true)
+        const tagsValue = includeClippingTags ? (clipping.tags?.join("; ") ?? "") : "";
+
         const row = [
           this.escapeCSV(clipping.id),
           this.escapeCSV(clipping.title),
@@ -48,6 +54,7 @@ export class CsvExporter implements Exporter {
           clipping.date?.toISOString() ?? "",
           this.escapeCSV(clipping.content),
           clipping.wordCount.toString(),
+          this.escapeCSV(tagsValue),
         ];
 
         rows.push(row.join(","));

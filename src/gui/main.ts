@@ -4,9 +4,11 @@
  */
 
 import {
+  type AuthorCase,
   type Clipping,
   type ClippingType,
   CsvExporter,
+  type FolderStructure,
   HtmlExporter,
   JoplinExporter,
   JsonExporter,
@@ -72,6 +74,11 @@ const elements = {
   // Export
   exportGroupByBook: document.getElementById("export-groupByBook") as HTMLInputElement,
   exportIncludeStats: document.getElementById("export-includeStats") as HTMLInputElement,
+  exportIncludeClippingTags: document.getElementById(
+    "export-includeClippingTags",
+  ) as HTMLInputElement,
+  exportFolderStructure: document.getElementById("export-folderStructure") as HTMLSelectElement,
+  exportAuthorCase: document.getElementById("export-authorCase") as HTMLSelectElement,
   exportJsonContent: document.getElementById("export-json-content") as HTMLDivElement,
   exportCsvContent: document.getElementById("export-csv-content") as HTMLDivElement,
   exportMdContent: document.getElementById("export-md-content") as HTMLDivElement,
@@ -489,10 +496,17 @@ async function renderExports(): Promise<void> {
 
   const groupByBook = elements.exportGroupByBook.checked;
   const includeStats = elements.exportIncludeStats.checked;
+  const includeClippingTags = elements.exportIncludeClippingTags.checked;
+  const folderStructure = elements.exportFolderStructure.value as FolderStructure;
+  const authorCase = elements.exportAuthorCase.value as AuthorCase;
 
   // JSON Export
   const jsonExporter = new JsonExporter();
-  const jsonResult = await jsonExporter.export(result.clippings, { groupByBook, includeStats });
+  const jsonResult = await jsonExporter.export(result.clippings, {
+    groupByBook,
+    includeStats,
+    includeClippingTags,
+  });
   const jsonContent = typeof jsonResult.output === "string" ? jsonResult.output : "[Binary output]";
   elements.exportJsonContent.textContent = jsonContent;
   elements.exportJsonContent.classList.remove("placeholder");
@@ -500,7 +514,7 @@ async function renderExports(): Promise<void> {
 
   // CSV Export
   const csvExporter = new CsvExporter();
-  const csvResult = await csvExporter.export(result.clippings, {});
+  const csvResult = await csvExporter.export(result.clippings, { includeClippingTags });
   const csvContent = typeof csvResult.output === "string" ? csvResult.output : "[Binary output]";
   elements.exportCsvContent.textContent = csvContent;
   elements.exportCsvContent.classList.remove("placeholder");
@@ -516,7 +530,12 @@ async function renderExports(): Promise<void> {
 
   // Obsidian Export
   const obsidianExporter = new ObsidianExporter();
-  const obsidianResult = await obsidianExporter.export(result.clippings, { groupByBook });
+  const obsidianResult = await obsidianExporter.export(result.clippings, {
+    groupByBook,
+    folderStructure,
+    authorCase,
+    includeClippingTags,
+  });
   const obsidianContent =
     typeof obsidianResult.output === "string" ? obsidianResult.output : "[Binary output]";
   elements.exportObsidianContent.textContent = obsidianContent;
@@ -529,7 +548,12 @@ async function renderExports(): Promise<void> {
 
   // Joplin Export
   const joplinExporter = new JoplinExporter();
-  const joplinResult = await joplinExporter.export(result.clippings, { groupByBook });
+  const joplinResult = await joplinExporter.export(result.clippings, {
+    groupByBook,
+    folderStructure,
+    authorCase,
+    includeClippingTags,
+  });
   const joplinContent =
     typeof joplinResult.output === "string" ? joplinResult.output : "[Binary output]";
   elements.exportJoplinContent.textContent = joplinContent;
@@ -720,6 +744,9 @@ function init(): void {
   // Export options
   elements.exportGroupByBook.addEventListener("change", renderExports);
   elements.exportIncludeStats.addEventListener("change", renderExports);
+  elements.exportIncludeClippingTags.addEventListener("change", renderExports);
+  elements.exportFolderStructure.addEventListener("change", renderExports);
+  elements.exportAuthorCase.addEventListener("change", renderExports);
 
   // Download button
   elements.downloadBtn.addEventListener("click", downloadExport);

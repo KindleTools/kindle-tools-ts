@@ -65,17 +65,27 @@ export class JsonExporter implements Exporter {
   }
 
   /**
-   * Prepare clippings for export (remove raw fields if requested).
+   * Prepare clippings for export (remove raw fields if requested, ensure tags field).
    */
   private prepareClippings(clippings: Clipping[], options?: ExporterOptions): Clipping[] {
-    if (options?.includeRaw) {
-      return clippings;
-    }
+    const includeClippingTags = options?.includeClippingTags ?? true;
 
-    // Remove *Raw fields for cleaner output
     return clippings.map((c) => {
-      const { titleRaw: _titleRaw, authorRaw: _authorRaw, contentRaw: _contentRaw, ...rest } = c;
-      return rest as Clipping;
+      // Start with the clipping, optionally removing raw fields
+      let prepared: Clipping;
+      if (options?.includeRaw) {
+        prepared = { ...c };
+      } else {
+        const { titleRaw: _titleRaw, authorRaw: _authorRaw, contentRaw: _contentRaw, ...rest } = c;
+        prepared = rest as Clipping;
+      }
+
+      // Ensure tags field is always present (as empty array if no tags)
+      if (includeClippingTags) {
+        prepared.tags = c.tags ?? [];
+      }
+
+      return prepared;
     });
   }
 }

@@ -14,7 +14,14 @@
  */
 
 import type { Clipping } from "../types/clipping.js";
-import type { ExportedFile, Exporter, ExporterOptions, ExportResult } from "../types/exporter.js";
+import type {
+  AuthorCase,
+  ExportedFile,
+  Exporter,
+  ExporterOptions,
+  ExportResult,
+  FolderStructure,
+} from "../types/exporter.js";
 import { sha256Sync } from "../utils/hashing.js";
 import { getPageInfo } from "../utils/page-utils.js";
 import { groupByBook } from "../utils/stats.js";
@@ -25,7 +32,7 @@ import { groupByBook } from "../utils/stats.js";
 export interface JoplinExporterOptions extends ExporterOptions {
   /** Root notebook name (default: "Kindle Highlights") */
   notebookName?: string;
-  /** Add tags to notes */
+  /** Add tags to notes (default: ["kindle"]) */
   tags?: string[];
   /** Creator name for metadata */
   creator?: string;
@@ -35,6 +42,26 @@ export interface JoplinExporterOptions extends ExporterOptions {
    * Estimated pages are prefixed with ~ (default: true)
    */
   estimatePages?: boolean;
+  /**
+   * Folder structure for notebooks.
+   * - 'flat': Root > Book (default for backward compatibility)
+   * - 'by-author': Root > Author > Book (3-level hierarchy)
+   * - 'by-author-book': Same as 'by-author'
+   * Note: 'by-book' behaves like 'flat' for Joplin.
+   */
+  folderStructure?: FolderStructure;
+  /**
+   * Case transformation for author notebook names.
+   * - 'original': Keep original case (default)
+   * - 'uppercase': Convert to UPPERCASE
+   * - 'lowercase': Convert to lowercase
+   */
+  authorCase?: AuthorCase;
+  /**
+   * Include clipping tags as Joplin tags.
+   * Tags are merged with default tags. (default: true)
+   */
+  includeClippingTags?: boolean;
 }
 
 /**
@@ -122,7 +149,14 @@ export class JoplinExporter implements Exporter {
       const files: ExportedFile[] = [];
       const now = Date.now();
       const rootNotebookName = options?.notebookName ?? "Kindle Highlights";
-      const tags = options?.tags ?? ["kindle"];
+      const defaultTags = options?.tags ?? ["kindle"];
+      const folderStructure = options?.folderStructure ?? "flat";
+      const authorCase = options?.authorCase ?? "original";
+      const includeClippingTags = options?.includeClippingTags ?? true;
+
+      // Determine if we use 3-level hierarchy (Root > Author > Book)
+      const useAuthorLevel =
+        folderStructure === "by-author" || folderStructure === "by-author-book";
 
       // Generate deterministic IDs
       const rootNotebookId = this.generateId("notebook", rootNotebookName);
@@ -142,9 +176,21 @@ export class JoplinExporter implements Exporter {
         content: this.serializeNotebook(rootNotebook),
       });
 
+      // Collect all unique tags (default + clipping tags)
+      const allTagNames = new Set<string>(defaultTags);
+      if (includeClippingTags) {
+        for (const clipping of clippings) {
+          if (clipping.tags) {
+            for (const tag of clipping.tags) {
+              allTagNames.add(tag);
+            }
+          }
+        }
+      }
+
       // Create tags and track their IDs
       const tagMap = new Map<string, string>();
-      for (const tagName of tags) {
+      for (const tagName of allTagNames) {
         const tagId = this.generateId("tag", tagName);
         tagMap.set(tagName, tagId);
 
@@ -161,6 +207,9 @@ export class JoplinExporter implements Exporter {
         });
       }
 
+      // Track created author notebooks to avoid duplicates
+      const authorNotebookIds = new Map<string, string>();
+
       let orderCounter = 0;
 
       // Create a notebook and notes for each book
@@ -168,11 +217,42 @@ export class JoplinExporter implements Exporter {
         const first = bookClippings[0];
         if (!first) continue;
 
-        // Create book notebook (child of root)
-        const bookNotebookId = this.generateId("notebook", `${rootNotebookName}/${title}`);
+        let parentNotebookId = rootNotebookId;
+
+        // Create author notebook if using 3-level hierarchy
+        if (useAuthorLevel) {
+          const authorName = this.applyCase(first.author || "Unknown Author", authorCase);
+          let authorNotebookId = authorNotebookIds.get(authorName);
+
+          if (!authorNotebookId) {
+            authorNotebookId = this.generateId("notebook", `${rootNotebookName}/${authorName}`);
+            authorNotebookIds.set(authorName, authorNotebookId);
+
+            const authorNotebook: JoplinNotebook = {
+              id: authorNotebookId,
+              parent_id: rootNotebookId,
+              title: authorName,
+              created_time: now,
+              updated_time: now,
+              type_: JoplinExporter.TYPE_FOLDER,
+            };
+            files.push({
+              path: `${authorNotebookId}.md`,
+              content: this.serializeNotebook(authorNotebook),
+            });
+          }
+
+          parentNotebookId = authorNotebookId;
+        }
+
+        // Create book notebook (child of root or author)
+        const bookNotebookPath = useAuthorLevel
+          ? `${rootNotebookName}/${first.author}/${title}`
+          : `${rootNotebookName}/${title}`;
+        const bookNotebookId = this.generateId("notebook", bookNotebookPath);
         const bookNotebook: JoplinNotebook = {
           id: bookNotebookId,
-          parent_id: rootNotebookId,
+          parent_id: parentNotebookId,
           title: first.title,
           created_time: now,
           updated_time: now,
@@ -214,8 +294,16 @@ export class JoplinExporter implements Exporter {
             content: this.serializeNote(note),
           });
 
+          // Determine which tags to apply to this note
+          const noteTags = new Set<string>(defaultTags);
+          if (includeClippingTags && clipping.tags) {
+            for (const tag of clipping.tags) {
+              noteTags.add(tag);
+            }
+          }
+
           // Create note-tag associations
-          for (const tagName of tags) {
+          for (const tagName of noteTags) {
             const tagId = tagMap.get(tagName);
             if (!tagId) continue;
 
@@ -250,6 +338,21 @@ export class JoplinExporter implements Exporter {
         output: "",
         error: error instanceof Error ? error : new Error(String(error)),
       };
+    }
+  }
+
+  /**
+   * Apply case transformation to a string.
+   */
+  private applyCase(str: string, authorCase: AuthorCase): string {
+    switch (authorCase) {
+      case "uppercase":
+        return str.toUpperCase();
+      case "lowercase":
+        return str.toLowerCase();
+      case "original":
+      default:
+        return str;
     }
   }
 

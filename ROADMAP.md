@@ -191,9 +191,17 @@ function linkNotesToHighlights(clippings: Clipping[]): Clipping[] {
 
 ---
 
-## Fase 2: Mejoras en Exportadores
+## Fase 2: Mejoras en Exportadores ✅ COMPLETADA
 
-### 2.1 Jerarquía de 3 Niveles en JEX (Joplin)
+> **Implementado en 2026-01-03**
+> - Estructura de carpetas configurable para Obsidian y Joplin (flat, by-book, by-author, by-author-book)
+> - Case configurable para nombres de autor (original, uppercase, lowercase)
+> - Tags del clipping sincronizados en frontmatter (Obsidian) y como tags Joplin
+> - CSV ahora incluye columna de tags
+> - JSON ahora siempre incluye campo tags (vacío si no hay)
+> - GUI actualizada con nuevas opciones de exportación
+
+### 2.1 Jerarquía de 3 Niveles en JEX (Joplin) ✅
 **Prioridad:** Media
 **Impacto:** Mejor organización para usuarios con muchos libros
 
@@ -252,7 +260,7 @@ function createNotebookHierarchy(
 ---
 
 ### 2.2 ZIP Export para Obsidian
-**Prioridad:** Media
+**Prioridad:** Baja (pospuesto)
 **Impacto:** Más conveniente para importar a Obsidian
 
 **Archivos a modificar:**
@@ -308,7 +316,7 @@ async function exportToZip(
 
 ---
 
-### 2.3 Estructura de Carpetas Configurable (Markdown/Obsidian)
+### 2.3 Estructura de Carpetas Configurable (Markdown/Obsidian) ✅
 **Prioridad:** Media
 **Impacto:** Flexibilidad para diferentes workflows
 
@@ -577,19 +585,20 @@ function filterNewOnly(
 
 ## Resumen de Prioridades
 
-| Tarea | Fase | Prioridad | Complejidad | Dependencias |
-|-------|------|-----------|-------------|--------------|
-| Encoding Fallback | 1 | Alta | Baja | Ninguna |
-| Merge Tags | 1 | Alta | Baja | Ninguna |
-| Range Coverage Linking | 1 | Media | Baja | Ninguna |
-| 3-Level JEX | 2 | Media | Media | Ninguna |
-| ZIP Export Obsidian | 2 | Media | Media | Decisión: archiver vs zlib |
-| Folder Structure Config | 2 | Media | Media | Ninguna |
-| Config File | 3 | Media | Baja | Ninguna |
-| Logging | 3 | Baja | Baja | Ninguna |
-| Templates | 4 | Baja | Media | Ninguna |
-| Joplin API Sync | 4 | Baja | Alta | Token de usuario |
-| New Only Filter | 4 | Baja | Media | State persistence |
+| Tarea | Fase | Prioridad | Complejidad | Estado |
+|-------|------|-----------|-------------|--------|
+| Encoding Fallback | 1 | Alta | Baja | ✅ Completado |
+| Merge Tags | 1 | Alta | Baja | ✅ Completado |
+| Range Coverage Linking | 1 | Media | Baja | ✅ Completado |
+| 3-Level JEX | 2 | Media | Media | ✅ Completado |
+| Folder Structure Config | 2 | Media | Media | ✅ Completado |
+| Clipping Tags Sync | 2 | Media | Baja | ✅ Completado |
+| ZIP Export Obsidian | 2 | Baja | Media | Pospuesto |
+| Config File | 3 | Media | Baja | Pendiente |
+| Logging | 3 | Baja | Baja | Pendiente |
+| Templates | 4 | Baja | Media | Pendiente |
+| Joplin API Sync | 4 | Baja | Alta | Pendiente |
+| New Only Filter | 4 | Baja | Media | Pendiente |
 
 ---
 

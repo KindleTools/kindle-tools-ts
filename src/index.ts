@@ -104,10 +104,12 @@ export type {
   ProcessOptions,
 } from "./types/config.js";
 export type {
+  AuthorCase,
   ExportedFile,
   Exporter,
   ExporterOptions,
   ExportResult,
+  FolderStructure,
 } from "./types/exporter.js";
 export type { LanguagePatterns, SupportedLanguage } from "./types/language.js";
 export type { BookStats, ClippingsStats } from "./types/stats.js";

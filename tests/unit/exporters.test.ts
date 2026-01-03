@@ -159,6 +159,35 @@ describe("CsvExporter", () => {
       const lines = (result.output as string).split("\n").filter((l) => l.trim());
       expect(lines.length).toBe(1);
     });
+
+    it("should include tags column in header", async () => {
+      const result = await exporter.export(SAMPLE_CLIPPINGS);
+      const output = result.output as string;
+      const headerLine = output.split("\n")[0];
+
+      expect(headerLine).toContain("tags");
+    });
+
+    it("should include clipping tags in output", async () => {
+      const clippingsWithTags = SAMPLE_CLIPPINGS.map((c, i) =>
+        i === 0 ? { ...c, tags: ["important", "review"] } : c,
+      );
+      const result = await exporter.export(clippingsWithTags);
+      const output = result.output as string;
+
+      // Tags should be semicolon-separated
+      expect(output).toContain("important; review");
+    });
+
+    it("should exclude tags when includeClippingTags is false", async () => {
+      const clippingsWithTags = SAMPLE_CLIPPINGS.map((c, i) =>
+        i === 0 ? { ...c, tags: ["secret-tag"] } : c,
+      );
+      const result = await exporter.export(clippingsWithTags, { includeClippingTags: false });
+      const output = result.output as string;
+
+      expect(output).not.toContain("secret-tag");
+    });
   });
 });
 
@@ -319,6 +348,67 @@ describe("ObsidianExporter", () => {
       expect(output).toContain("**Highlights:**");
       expect(output).toContain("**Notes:**");
     });
+
+    it("should use flat folder structure by default", async () => {
+      const result = await exporter.export(SAMPLE_CLIPPINGS);
+
+      expect(result.files?.[0]?.path).toMatch(/^books\/[^/]+\.md$/);
+    });
+
+    it("should use by-author folder structure when specified", async () => {
+      const result = await exporter.export(SAMPLE_CLIPPINGS, { folderStructure: "by-author" });
+
+      // Path should be books/Author/Title.md
+      expect(result.files?.[0]?.path).toMatch(/^books\/[^/]+\/[^/]+\.md$/);
+    });
+
+    it("should use by-author-book folder structure when specified", async () => {
+      const result = await exporter.export(SAMPLE_CLIPPINGS, { folderStructure: "by-author-book" });
+
+      // Path should be books/Author/Title/Title.md
+      expect(result.files?.[0]?.path).toMatch(/^books\/[^/]+\/[^/]+\/[^/]+\.md$/);
+    });
+
+    it("should apply uppercase to author folder names", async () => {
+      const result = await exporter.export(SAMPLE_CLIPPINGS, {
+        folderStructure: "by-author",
+        authorCase: "uppercase",
+      });
+
+      // Author name should be uppercase in the path
+      expect(result.files?.[0]?.path).toMatch(/^books\/[A-Z\s.]+\//);
+    });
+
+    it("should apply lowercase to author folder names", async () => {
+      const result = await exporter.export(SAMPLE_CLIPPINGS, {
+        folderStructure: "by-author",
+        authorCase: "lowercase",
+      });
+
+      // Author name should be lowercase in the path
+      expect(result.files?.[0]?.path).toMatch(/^books\/[a-z\s.]+\//);
+    });
+
+    it("should include clipping tags in frontmatter by default", async () => {
+      const clippingsWithTags = SAMPLE_CLIPPINGS.map((c, i) =>
+        i === 0 ? { ...c, tags: ["important", "review"] } : c,
+      );
+      const result = await exporter.export(clippingsWithTags);
+      const output = result.output as string;
+
+      expect(output).toContain("- important");
+      expect(output).toContain("- review");
+    });
+
+    it("should exclude clipping tags when includeClippingTags is false", async () => {
+      const clippingsWithTags = SAMPLE_CLIPPINGS.map((c, i) =>
+        i === 0 ? { ...c, tags: ["secret-tag"] } : c,
+      );
+      const result = await exporter.export(clippingsWithTags, { includeClippingTags: false });
+      const output = result.output as string;
+
+      expect(output).not.toContain("- secret-tag");
+    });
   });
 });
 
@@ -408,6 +498,71 @@ describe("JoplinExporter", () => {
 
       expect(output).toContain("[0005]"); // Page 5 padded
       expect(output).toContain("📖"); // Highlight emoji
+    });
+
+    it("should use flat hierarchy by default (Root > Book)", async () => {
+      const result = await exporter.export(SAMPLE_CLIPPINGS);
+      const output = result.output as string;
+
+      // Count type_: 2 (folders) - should be 1 root + 3 books = 4
+      const folderMatches = output.match(/type_: 2/g);
+      expect(folderMatches?.length).toBe(4);
+    });
+
+    it("should use 3-level hierarchy when folderStructure is by-author", async () => {
+      const result = await exporter.export(SAMPLE_CLIPPINGS, { folderStructure: "by-author" });
+      const output = result.output as string;
+
+      // Count type_: 2 (folders) - should be 1 root + 3 authors + 3 books = 7
+      // (may be less if authors are shared)
+      const folderMatches = output.match(/type_: 2/g);
+      expect(folderMatches!.length).toBeGreaterThan(4);
+    });
+
+    it("should apply uppercase to author notebook names", async () => {
+      const result = await exporter.export(SAMPLE_CLIPPINGS, {
+        folderStructure: "by-author",
+        authorCase: "uppercase",
+      });
+      const output = result.output as string;
+
+      // Should have uppercase author names
+      expect(output).toContain("F. SCOTT FITZGERALD");
+    });
+
+    it("should apply lowercase to author notebook names", async () => {
+      const result = await exporter.export(SAMPLE_CLIPPINGS, {
+        folderStructure: "by-author",
+        authorCase: "lowercase",
+      });
+      const output = result.output as string;
+
+      // Should have lowercase author names
+      expect(output).toContain("f. scott fitzgerald");
+    });
+
+    it("should include clipping tags as Joplin tags by default", async () => {
+      const clippingsWithTags = SAMPLE_CLIPPINGS.map((c, i) =>
+        i === 0 ? { ...c, tags: ["important", "review"] } : c,
+      );
+      const result = await exporter.export(clippingsWithTags);
+      const output = result.output as string;
+
+      // Should create tag entries (Joplin format: title on first line, then metadata)
+      // The tag title appears as a standalone line followed by id:
+      expect(output).toMatch(/\nimportant\n\nid:/);
+      expect(output).toMatch(/\nreview\n\nid:/);
+    });
+
+    it("should not create tag entries when includeClippingTags is false", async () => {
+      const clippingsWithTags = SAMPLE_CLIPPINGS.map((c, i) =>
+        i === 0 ? { ...c, tags: ["secret-tag"] } : c,
+      );
+      const result = await exporter.export(clippingsWithTags, { includeClippingTags: false });
+      const output = result.output as string;
+
+      // Should not contain the clipping tag as a tag entry
+      expect(output).not.toMatch(/\nsecret-tag\n\nid:/);
     });
   });
 });

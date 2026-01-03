@@ -71,3 +71,4 @@ tmp/
 .changeset/*.md
 !.changeset/config.json
 !.changeset/README.md
+dist-gui
