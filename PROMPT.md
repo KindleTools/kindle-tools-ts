@@ -1,9 +1,9 @@
 # kindle-tools-ts — Project Status & Implementation Guide
 
-**Last Updated:** 2026-01-01  
-**Current Phase:** Phase 6 Complete, Ready for Phase 8 (Publishing)  
-**Build Status:** ✅ Passing  
-**Test Status:** ✅ 125 tests passing  
+**Last Updated:** 2026-01-03
+**Current Phase:** Phase 8 Complete (v0.5.0 Published)
+**Build Status:** ✅ Passing
+**Test Status:** ✅ 259 tests passing  
 
 ---
 
@@ -18,7 +18,7 @@
 | 🔴 5 | Exporters | ✅ **COMPLETE** | 100% |
 | 🟣 6 | CLI Tool | ✅ **COMPLETE** | 100% |
 | ⚪ 7 | Testing & Documentation | ✅ **COMPLETE** | 100% |
-| ⚫ 8 | Publishing | ⏳ **PENDING** | 0% |
+| ⚫ 8 | Publishing | ✅ **COMPLETE** | 100% |
 
 ---
 
@@ -100,16 +100,22 @@
 
 ---
 
-## 🔴 What Needs To Be Done
+## ✅ Phase 8: Publishing Complete
 
-### Priority 1: Publishing (Phase 8)
+### What Was Completed
 
-- [ ] GitHub Actions for CI/CD (build, test, lint)
-- [ ] npm publish workflow
-- [ ] Generate CHANGELOG with changesets
-- [ ] Tag v1.0.0 release
-- [ ] Update package.json version to 1.0.0
-- [ ] Add GitHub repository topics and description
+- [x] GitHub Actions CI workflow (build, test, lint on Node 18/20/22)
+- [x] GitHub Actions publish workflow (triggered by tags)
+- [x] GitHub Actions release workflow (changesets automation)
+- [x] CHANGELOG.md generated with initial release notes
+- [x] Package version updated to 0.5.0
+- [x] Changeset created for v0.5.0
+
+### To Publish to npm
+
+1. Push changes to GitHub
+2. Create a tag: `git tag v0.5.0 && git push origin v0.5.0`
+3. The publish workflow will automatically run and publish to npm
 
 ---
 
