@@ -36,6 +36,12 @@ export { MarkdownExporter } from "./exporters/markdown.exporter.js";
 export { ObsidianExporter } from "./exporters/obsidian.exporter.js";
 
 // =============================================================================
+// Importer Exports
+// =============================================================================
+
+export { CsvImporter, JsonImporter } from "./importers/index.js";
+
+// =============================================================================
 // Utility Exports
 // =============================================================================
 
@@ -112,6 +118,7 @@ export {
 // =============================================================================
 
 export type { ProcessResult } from "./core/processor.js";
+export type { Importer, ImportResult } from "./importers/types.js";
 export type { TemplateCollection, TemplatePreset } from "./templates/index.js";
 export type {
   Clipping,

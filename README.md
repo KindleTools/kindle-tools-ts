@@ -40,6 +40,7 @@ A robust TypeScript library to parse and process Amazon Kindle `My Clippings.txt
 - 📊 **Fuzzy duplicate detection** — Uses Jaccard similarity to find near-duplicates
 - 📑 **Page utilities** — Zero-padded page formatting `[0042]` and estimation from Kindle locations
 - 📍 **Geo-location support** — Optional location metadata for personal knowledge management
+- 📥 **Multiple input formats** — Parse from Kindle TXT, or re-import from previously exported JSON/CSV
 - 📚 **6 export formats** — JSON, CSV, Markdown, Obsidian, Joplin JEX, HTML
 - 📊 **Extended statistics** — Avg words/highlight, avg highlights/book, and more
 - 🖥️ **CLI included** — Full command-line interface for quick operations
@@ -206,6 +207,12 @@ kindle-tools export "My Clippings.txt" --format=joplin --output=clippings.jex
 
 # Export to standalone HTML (with dark mode and search)
 kindle-tools export "My Clippings.txt" --format=html --output=clippings.html
+
+# Convert JSON to CSV (use previously exported file as input)
+kindle-tools export clippings.json --format=csv --output=clippings.csv
+
+# Convert CSV to Markdown
+kindle-tools export clippings.csv --format=md --output=notes.md
 ```
 
 #### `stats` — Show detailed statistics
@@ -441,6 +448,33 @@ interface ExporterOptions {
 | `JoplinExporter` | JEX | Importable Joplin archive with 3-level notebook hierarchy |
 | `HtmlExporter` | HTML | Standalone page with dark mode & search |
 
+### Importers
+
+Importers allow you to re-process previously exported files. This enables workflows where you export to JSON, edit the file, and then convert to another format.
+
+```typescript
+import { JsonImporter, CsvImporter } from 'kindle-tools-ts';
+
+// Import from JSON
+const jsonImporter = new JsonImporter();
+const jsonContent = await fs.readFile('clippings.json', 'utf-8');
+const result = await jsonImporter.import(jsonContent);
+
+console.log(`Imported ${result.clippings.length} clippings`);
+
+// Import from CSV
+const csvImporter = new CsvImporter();
+const csvContent = await fs.readFile('clippings.csv', 'utf-8');
+const csvResult = await csvImporter.import(csvContent);
+```
+
+#### Available Importers
+
+| Importer | Format | Description |
+|----------|--------|-------------|
+| `JsonImporter` | JSON | Imports flat or grouped-by-book JSON exports |
+| `CsvImporter` | CSV | Imports CSV exports with standard columns |
+
 ### Utility Functions
 
 ```typescript
@@ -655,6 +689,7 @@ kindle-tools-ts/
 ├── src/
 │   ├── core/           # Parser, processor, tokenizer
 │   ├── exporters/      # All export format implementations
+│   ├── importers/      # JSON and CSV importers for re-processing
 │   ├── types/          # TypeScript interfaces
 │   ├── utils/          # Utility functions
 │   ├── index.ts        # Library entry point
