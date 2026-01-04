@@ -20,6 +20,7 @@ import {
   type ParseOptions,
   type ParseResult,
   parseString,
+  type TagCase,
 } from "../index.js";
 
 // =============================================================================
@@ -55,6 +56,7 @@ const elements = {
   optMergeNotes: document.getElementById("opt-mergeNotes") as HTMLInputElement,
   optMergeOverlapping: document.getElementById("opt-mergeOverlapping") as HTMLInputElement,
   optExtractTags: document.getElementById("opt-extractTags") as HTMLInputElement,
+  optTagCase: document.getElementById("opt-tagCase") as HTMLSelectElement,
   optHighlightsOnly: document.getElementById("opt-highlightsOnly") as HTMLInputElement,
   optNormalizeUnicode: document.getElementById("opt-normalizeUnicode") as HTMLInputElement,
   optCleanContent: document.getElementById("opt-cleanContent") as HTMLInputElement,
@@ -188,6 +190,7 @@ function getParseOptions(): ParseOptions {
     mergeNotes: elements.optMergeNotes.checked,
     mergeOverlapping: elements.optMergeOverlapping.checked,
     extractTags: elements.optExtractTags.checked,
+    ...(elements.optExtractTags.checked && { tagCase: elements.optTagCase.value as TagCase }),
     highlightsOnly: elements.optHighlightsOnly.checked,
     normalizeUnicode: elements.optNormalizeUnicode.checked,
     cleanContent: elements.optCleanContent.checked,

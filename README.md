@@ -292,6 +292,7 @@ Output:
 | `--structure <type>` | | Folder structure: `flat`, `by-book`, `by-author`, `by-author-book` |
 | `--author-case <case>` | | Author folder case: `original`, `uppercase`, `lowercase` |
 | `--extract-tags` | | Extract tags from notes (hashtag format) |
+| `--tag-case <case>` | | Tag case: `original` (as typed), `uppercase`, `lowercase` (default) |
 | `--include-tags` | | Include clipping tags in exports |
 | `--no-tags` | | Exclude tags from output |
 | `--help` | `-h` | Show help message |
@@ -348,6 +349,7 @@ const result = await parseFile('./My Clippings.txt', {
   mergeOverlapping: true,     // Merge extended highlights
   mergeNotes: true,           // Link notes to highlights
   extractTags: false,         // Extract tags from notes
+  tagCase: 'lowercase',       // Tag case: 'original' | 'uppercase' | 'lowercase'
   highlightsOnly: false,      // Return only highlights with embedded notes
   normalizeUnicode: true,     // NFC normalization
   cleanContent: true,         // Clean whitespace
