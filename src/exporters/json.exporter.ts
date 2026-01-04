@@ -5,15 +5,16 @@
  */
 
 import type { Clipping } from "../types/clipping.js";
-import type { Exporter, ExporterOptions, ExportResult } from "../types/exporter.js";
+import type { ExporterOptions, ExportResult } from "../types/exporter.js";
 import { groupByBook } from "../utils/stats.js";
+import { BaseExporter } from "./shared/index.js";
 
 /**
  * Export clippings to JSON format.
  */
-export class JsonExporter implements Exporter {
-  name = "json";
-  extension = ".json";
+export class JsonExporter extends BaseExporter {
+  readonly name = "json";
+  readonly extension = ".json";
 
   /**
    * Export clippings to JSON.
@@ -22,46 +23,38 @@ export class JsonExporter implements Exporter {
    * @param options - Export options
    * @returns Export result with JSON string
    */
-  async export(clippings: Clipping[], options?: ExporterOptions): Promise<ExportResult> {
-    try {
-      let data: unknown;
+  protected async doExport(
+    clippings: Clipping[],
+    options?: ExporterOptions,
+  ): Promise<ExportResult> {
+    let data: unknown;
 
-      if (options?.groupByBook) {
-        // Group by book
-        const grouped = groupByBook(clippings);
-        const books: Record<string, Clipping[]> = {};
+    if (options?.groupByBook) {
+      // Group by book
+      const grouped = groupByBook(clippings);
+      const books: Record<string, Clipping[]> = {};
 
-        for (const [title, bookClippings] of grouped) {
-          books[title] = this.prepareClippings(bookClippings, options);
-        }
-
-        data =
-          options?.includeStats !== false
-            ? { books, meta: { totalBooks: grouped.size, totalClippings: clippings.length } }
-            : { books };
-      } else {
-        // Flat array
-        const preparedClippings = this.prepareClippings(clippings, options);
-        data =
-          options?.includeStats !== false
-            ? { clippings: preparedClippings, meta: { total: clippings.length } }
-            : { clippings: preparedClippings };
+      for (const [title, bookClippings] of grouped) {
+        books[title] = this.prepareClippings(bookClippings, options);
       }
 
-      const indent = options?.pretty ? 2 : undefined;
-      const output = JSON.stringify(data, null, indent);
-
-      return {
-        success: true,
-        output,
-      };
-    } catch (error) {
-      return {
-        success: false,
-        output: "",
-        error: error instanceof Error ? error : new Error(String(error)),
-      };
+      data =
+        options?.includeStats !== false
+          ? { books, meta: { totalBooks: grouped.size, totalClippings: clippings.length } }
+          : { books };
+    } else {
+      // Flat array
+      const preparedClippings = this.prepareClippings(clippings, options);
+      data =
+        options?.includeStats !== false
+          ? { clippings: preparedClippings, meta: { total: clippings.length } }
+          : { clippings: preparedClippings };
     }
+
+    const indent = options?.pretty ? 2 : undefined;
+    const output = JSON.stringify(data, null, indent);
+
+    return this.success(output);
   }
 
   /**

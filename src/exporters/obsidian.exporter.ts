@@ -14,12 +14,12 @@ import type { Clipping } from "../types/clipping.js";
 import type {
   AuthorCase,
   ExportedFile,
-  Exporter,
   ExporterOptions,
   ExportResult,
   FolderStructure,
 } from "../types/exporter.js";
 import { groupByBook } from "../utils/stats.js";
+import { BaseExporter } from "./shared/index.js";
 
 /**
  * Extended options for Obsidian export.
@@ -58,9 +58,9 @@ export interface ObsidianExporterOptions extends ExporterOptions {
 /**
  * Export clippings to Obsidian-compatible Markdown format.
  */
-export class ObsidianExporter implements Exporter {
-  name = "obsidian";
-  extension = ".md";
+export class ObsidianExporter extends BaseExporter {
+  readonly name = "obsidian";
+  readonly extension = ".md";
 
   /**
    * Export clippings to Obsidian format.
@@ -71,45 +71,36 @@ export class ObsidianExporter implements Exporter {
    * @param options - Export options
    * @returns Export result with Markdown files
    */
-  async export(clippings: Clipping[], options?: ObsidianExporterOptions): Promise<ExportResult> {
-    try {
-      const grouped = groupByBook(clippings);
-      const files: ExportedFile[] = [];
-      const folder = options?.folder ?? "books";
-      const folderStructure = options?.folderStructure ?? "flat";
-      const authorCase = options?.authorCase ?? "original";
+  protected async doExport(
+    clippings: Clipping[],
+    options?: ObsidianExporterOptions,
+  ): Promise<ExportResult> {
+    const grouped = groupByBook(clippings);
+    const files: ExportedFile[] = [];
+    const folder = options?.folder ?? "books";
+    const folderStructure = options?.folderStructure ?? "flat";
+    const authorCase = options?.authorCase ?? "original";
 
-      for (const [title, bookClippings] of grouped) {
-        const first = bookClippings[0];
-        if (!first) continue;
+    for (const [title, bookClippings] of grouped) {
+      const first = bookClippings[0];
+      if (!first) continue;
 
-        const content = this.generateBookNote(bookClippings, options);
-        const safeTitle = this.sanitizeFilename(title);
-        const safeAuthor = this.sanitizeFilename(
-          this.applyCase(first.author || "Unknown Author", authorCase),
-        );
+      const content = this.generateBookNote(bookClippings, options);
+      const safeTitle = this.sanitizeFilename(title);
+      const safeAuthor = this.sanitizeFilename(
+        this.applyCase(first.author || "Unknown Author", authorCase),
+      );
 
-        // Determine file path based on folder structure
-        const filePath = this.getFilePath(folder, safeAuthor, safeTitle, folderStructure);
+      // Determine file path based on folder structure
+      const filePath = this.getFilePath(folder, safeAuthor, safeTitle, folderStructure);
 
-        files.push({
-          path: filePath,
-          content,
-        });
-      }
-
-      return {
-        success: true,
-        output: files.map((f) => f.content).join("\n\n---\n\n"),
-        files,
-      };
-    } catch (error) {
-      return {
-        success: false,
-        output: "",
-        error: error instanceof Error ? error : new Error(String(error)),
-      };
+      files.push({
+        path: filePath,
+        content,
+      });
     }
+
+    return this.success(files.map((f) => f.content).join("\n\n---\n\n"), files);
   }
 
   /**
@@ -128,24 +119,8 @@ export class ObsidianExporter implements Exporter {
         return `${baseFolder}/${author}/${title}.md`;
       case "by-author-book":
         return `${baseFolder}/${author}/${title}/${title}.md`;
-      case "flat":
       default:
         return `${baseFolder}/${title}.md`;
-    }
-  }
-
-  /**
-   * Apply case transformation to a string.
-   */
-  private applyCase(str: string, authorCase: AuthorCase): string {
-    switch (authorCase) {
-      case "uppercase":
-        return str.toUpperCase();
-      case "lowercase":
-        return str.toLowerCase();
-      case "original":
-      default:
-        return str;
     }
   }
 
@@ -298,23 +273,5 @@ export class ObsidianExporter implements Exporter {
     }
 
     lines.push("");
-  }
-
-  /**
-   * Escape special characters for YAML strings.
-   */
-  private escapeYaml(str: string): string {
-    return str.replace(/"/g, '\\"').replace(/\n/g, " ");
-  }
-
-  /**
-   * Sanitize a string for use as a filename.
-   */
-  private sanitizeFilename(name: string): string {
-    return name
-      .replace(/[<>:"/\\|?*]/g, "-")
-      .replace(/\s+/g, " ")
-      .trim()
-      .slice(0, 100);
   }
 }

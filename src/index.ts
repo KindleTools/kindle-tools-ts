@@ -35,6 +35,19 @@ export { JsonExporter } from "./exporters/json.exporter.js";
 export { MarkdownExporter } from "./exporters/markdown.exporter.js";
 export { ObsidianExporter } from "./exporters/obsidian.exporter.js";
 
+// Base exporter and shared utilities for creating custom exporters
+export { BaseExporter } from "./exporters/shared/base-exporter.js";
+export {
+  applyCase,
+  createErrorResult,
+  createSuccessResult,
+  escapeCSV,
+  escapeHtml,
+  escapeYaml,
+  sanitizeFilename,
+  withExportErrorHandling,
+} from "./exporters/shared/exporter-utils.js";
+
 // =============================================================================
 // Importer Exports
 // =============================================================================

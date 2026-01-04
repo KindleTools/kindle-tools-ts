@@ -17,7 +17,6 @@ import type { Clipping } from "../types/clipping.js";
 import type {
   AuthorCase,
   ExportedFile,
-  Exporter,
   ExporterOptions,
   ExportResult,
   FolderStructure,
@@ -25,6 +24,7 @@ import type {
 import { sha256Sync } from "../utils/hashing.js";
 import { getPageInfo } from "../utils/page-utils.js";
 import { groupByBook } from "../utils/stats.js";
+import { BaseExporter } from "./shared/index.js";
 
 /**
  * Extended options for Joplin export.
@@ -127,9 +127,9 @@ interface JoplinNoteTag {
  * This exporter generates the raw files; actual tar packaging should be
  * done by the consuming application or CLI.
  */
-export class JoplinExporter implements Exporter {
-  name = "joplin";
-  extension = ".jex";
+export class JoplinExporter extends BaseExporter {
+  readonly name = "joplin";
+  readonly extension = ".jex";
 
   private static readonly SOURCE_APP = "kindle-tools-ts";
   private static readonly TYPE_NOTE = 1;
@@ -144,216 +144,191 @@ export class JoplinExporter implements Exporter {
    * @param options - Export options
    * @returns Export result with JEX files
    */
-  async export(clippings: Clipping[], options?: JoplinExporterOptions): Promise<ExportResult> {
-    try {
-      const files: ExportedFile[] = [];
-      const now = Date.now();
-      const rootNotebookName = options?.notebookName ?? "Kindle Highlights";
-      const defaultTags = options?.tags ?? ["kindle"];
-      const folderStructure = options?.folderStructure ?? "flat";
-      const authorCase = options?.authorCase ?? "original";
-      const includeClippingTags = options?.includeClippingTags ?? true;
+  protected async doExport(
+    clippings: Clipping[],
+    options?: JoplinExporterOptions,
+  ): Promise<ExportResult> {
+    const files: ExportedFile[] = [];
+    const now = Date.now();
+    const rootNotebookName = options?.notebookName ?? "Kindle Highlights";
+    const defaultTags = options?.tags ?? ["kindle"];
+    const folderStructure = options?.folderStructure ?? "flat";
+    const authorCase = options?.authorCase ?? "original";
+    const includeClippingTags = options?.includeClippingTags ?? true;
 
-      // Determine if we use 3-level hierarchy (Root > Author > Book)
-      const useAuthorLevel =
-        folderStructure === "by-author" || folderStructure === "by-author-book";
+    // Determine if we use 3-level hierarchy (Root > Author > Book)
+    const useAuthorLevel = folderStructure === "by-author" || folderStructure === "by-author-book";
 
-      // Generate deterministic IDs
-      const rootNotebookId = this.generateId("notebook", rootNotebookName);
-      const grouped = groupByBook(clippings);
+    // Generate deterministic IDs
+    const rootNotebookId = this.generateId("notebook", rootNotebookName);
+    const grouped = groupByBook(clippings);
 
-      // Create root notebook
-      const rootNotebook: JoplinNotebook = {
-        id: rootNotebookId,
-        parent_id: "",
-        title: rootNotebookName,
+    // Create root notebook
+    const rootNotebook: JoplinNotebook = {
+      id: rootNotebookId,
+      parent_id: "",
+      title: rootNotebookName,
+      created_time: now,
+      updated_time: now,
+      type_: JoplinExporter.TYPE_FOLDER,
+    };
+    files.push({
+      path: `${rootNotebookId}.md`,
+      content: this.serializeNotebook(rootNotebook),
+    });
+
+    // Collect all unique tags (default + clipping tags)
+    const allTagNames = new Set<string>(defaultTags);
+    if (includeClippingTags) {
+      for (const clipping of clippings) {
+        if (clipping.tags) {
+          for (const tag of clipping.tags) {
+            allTagNames.add(tag);
+          }
+        }
+      }
+    }
+
+    // Create tags and track their IDs
+    const tagMap = new Map<string, string>();
+    for (const tagName of allTagNames) {
+      const tagId = this.generateId("tag", tagName);
+      tagMap.set(tagName, tagId);
+
+      const tag: JoplinTag = {
+        id: tagId,
+        title: tagName,
+        created_time: now,
+        updated_time: now,
+        type_: JoplinExporter.TYPE_TAG,
+      };
+      files.push({
+        path: `${tagId}.md`,
+        content: this.serializeTag(tag),
+      });
+    }
+
+    // Track created author notebooks to avoid duplicates
+    const authorNotebookIds = new Map<string, string>();
+
+    let orderCounter = 0;
+
+    // Create a notebook and notes for each book
+    for (const [title, bookClippings] of grouped) {
+      const first = bookClippings[0];
+      if (!first) continue;
+
+      let parentNotebookId = rootNotebookId;
+
+      // Create author notebook if using 3-level hierarchy
+      if (useAuthorLevel) {
+        const authorName = this.applyCase(first.author || "Unknown Author", authorCase);
+        let authorNotebookId = authorNotebookIds.get(authorName);
+
+        if (!authorNotebookId) {
+          authorNotebookId = this.generateId("notebook", `${rootNotebookName}/${authorName}`);
+          authorNotebookIds.set(authorName, authorNotebookId);
+
+          const authorNotebook: JoplinNotebook = {
+            id: authorNotebookId,
+            parent_id: rootNotebookId,
+            title: authorName,
+            created_time: now,
+            updated_time: now,
+            type_: JoplinExporter.TYPE_FOLDER,
+          };
+          files.push({
+            path: `${authorNotebookId}.md`,
+            content: this.serializeNotebook(authorNotebook),
+          });
+        }
+
+        parentNotebookId = authorNotebookId;
+      }
+
+      // Create book notebook (child of root or author)
+      const bookNotebookPath = useAuthorLevel
+        ? `${rootNotebookName}/${first.author}/${title}`
+        : `${rootNotebookName}/${title}`;
+      const bookNotebookId = this.generateId("notebook", bookNotebookPath);
+      const bookNotebook: JoplinNotebook = {
+        id: bookNotebookId,
+        parent_id: parentNotebookId,
+        title: first.title,
         created_time: now,
         updated_time: now,
         type_: JoplinExporter.TYPE_FOLDER,
       };
       files.push({
-        path: `${rootNotebookId}.md`,
-        content: this.serializeNotebook(rootNotebook),
+        path: `${bookNotebookId}.md`,
+        content: this.serializeNotebook(bookNotebook),
       });
 
-      // Collect all unique tags (default + clipping tags)
-      const allTagNames = new Set<string>(defaultTags);
-      if (includeClippingTags) {
-        for (const clipping of clippings) {
-          if (clipping.tags) {
-            for (const tag of clipping.tags) {
-              allTagNames.add(tag);
-            }
-          }
-        }
-      }
+      // Create notes for each clipping
+      for (const clipping of bookClippings) {
+        const noteId = this.generateId("note", clipping.id);
+        const estimatePages = options?.estimatePages ?? true;
+        const noteTitle = this.generateNoteTitle(clipping, estimatePages);
+        const noteBody = this.generateNoteBody(clipping, options);
 
-      // Create tags and track their IDs
-      const tagMap = new Map<string, string>();
-      for (const tagName of allTagNames) {
-        const tagId = this.generateId("tag", tagName);
-        tagMap.set(tagName, tagId);
+        const clippingDate = clipping.date?.getTime() ?? now;
 
-        const tag: JoplinTag = {
-          id: tagId,
-          title: tagName,
-          created_time: now,
+        const note: JoplinNote = {
+          id: noteId,
+          parent_id: bookNotebookId,
+          title: noteTitle,
+          body: noteBody,
+          created_time: clippingDate,
           updated_time: now,
-          type_: JoplinExporter.TYPE_TAG,
+          is_todo: 0,
+          todo_completed: 0,
+          source: "kindle",
+          source_url: "",
+          source_application: JoplinExporter.SOURCE_APP,
+          order: orderCounter++,
+          user_created_time: clippingDate,
+          user_updated_time: now,
+          type_: JoplinExporter.TYPE_NOTE,
         };
         files.push({
-          path: `${tagId}.md`,
-          content: this.serializeTag(tag),
+          path: `${noteId}.md`,
+          content: this.serializeNote(note),
         });
-      }
 
-      // Track created author notebooks to avoid duplicates
-      const authorNotebookIds = new Map<string, string>();
-
-      let orderCounter = 0;
-
-      // Create a notebook and notes for each book
-      for (const [title, bookClippings] of grouped) {
-        const first = bookClippings[0];
-        if (!first) continue;
-
-        let parentNotebookId = rootNotebookId;
-
-        // Create author notebook if using 3-level hierarchy
-        if (useAuthorLevel) {
-          const authorName = this.applyCase(first.author || "Unknown Author", authorCase);
-          let authorNotebookId = authorNotebookIds.get(authorName);
-
-          if (!authorNotebookId) {
-            authorNotebookId = this.generateId("notebook", `${rootNotebookName}/${authorName}`);
-            authorNotebookIds.set(authorName, authorNotebookId);
-
-            const authorNotebook: JoplinNotebook = {
-              id: authorNotebookId,
-              parent_id: rootNotebookId,
-              title: authorName,
-              created_time: now,
-              updated_time: now,
-              type_: JoplinExporter.TYPE_FOLDER,
-            };
-            files.push({
-              path: `${authorNotebookId}.md`,
-              content: this.serializeNotebook(authorNotebook),
-            });
+        // Determine which tags to apply to this note
+        const noteTags = new Set<string>(defaultTags);
+        if (includeClippingTags && clipping.tags) {
+          for (const tag of clipping.tags) {
+            noteTags.add(tag);
           }
-
-          parentNotebookId = authorNotebookId;
         }
 
-        // Create book notebook (child of root or author)
-        const bookNotebookPath = useAuthorLevel
-          ? `${rootNotebookName}/${first.author}/${title}`
-          : `${rootNotebookName}/${title}`;
-        const bookNotebookId = this.generateId("notebook", bookNotebookPath);
-        const bookNotebook: JoplinNotebook = {
-          id: bookNotebookId,
-          parent_id: parentNotebookId,
-          title: first.title,
-          created_time: now,
-          updated_time: now,
-          type_: JoplinExporter.TYPE_FOLDER,
-        };
-        files.push({
-          path: `${bookNotebookId}.md`,
-          content: this.serializeNotebook(bookNotebook),
-        });
+        // Create note-tag associations
+        for (const tagName of noteTags) {
+          const tagId = tagMap.get(tagName);
+          if (!tagId) continue;
 
-        // Create notes for each clipping
-        for (const clipping of bookClippings) {
-          const noteId = this.generateId("note", clipping.id);
-          const estimatePages = options?.estimatePages ?? true;
-          const noteTitle = this.generateNoteTitle(clipping, estimatePages);
-          const noteBody = this.generateNoteBody(clipping, options);
-
-          const clippingDate = clipping.date?.getTime() ?? now;
-
-          const note: JoplinNote = {
-            id: noteId,
-            parent_id: bookNotebookId,
-            title: noteTitle,
-            body: noteBody,
-            created_time: clippingDate,
+          const noteTagId = this.generateId("note-tag", `${noteId}-${tagId}`);
+          const noteTag: JoplinNoteTag = {
+            id: noteTagId,
+            note_id: noteId,
+            tag_id: tagId,
+            created_time: now,
             updated_time: now,
-            is_todo: 0,
-            todo_completed: 0,
-            source: "kindle",
-            source_url: "",
-            source_application: JoplinExporter.SOURCE_APP,
-            order: orderCounter++,
-            user_created_time: clippingDate,
-            user_updated_time: now,
-            type_: JoplinExporter.TYPE_NOTE,
+            type_: JoplinExporter.TYPE_NOTE_TAG,
           };
           files.push({
-            path: `${noteId}.md`,
-            content: this.serializeNote(note),
+            path: `${noteTagId}.md`,
+            content: this.serializeNoteTag(noteTag),
           });
-
-          // Determine which tags to apply to this note
-          const noteTags = new Set<string>(defaultTags);
-          if (includeClippingTags && clipping.tags) {
-            for (const tag of clipping.tags) {
-              noteTags.add(tag);
-            }
-          }
-
-          // Create note-tag associations
-          for (const tagName of noteTags) {
-            const tagId = tagMap.get(tagName);
-            if (!tagId) continue;
-
-            const noteTagId = this.generateId("note-tag", `${noteId}-${tagId}`);
-            const noteTag: JoplinNoteTag = {
-              id: noteTagId,
-              note_id: noteId,
-              tag_id: tagId,
-              created_time: now,
-              updated_time: now,
-              type_: JoplinExporter.TYPE_NOTE_TAG,
-            };
-            files.push({
-              path: `${noteTagId}.md`,
-              content: this.serializeNoteTag(noteTag),
-            });
-          }
         }
       }
-
-      // Combined output for single-string representation
-      const output = files.map((f) => `# ${f.path}\n${f.content}`).join("\n\n---\n\n");
-
-      return {
-        success: true,
-        output,
-        files,
-      };
-    } catch (error) {
-      return {
-        success: false,
-        output: "",
-        error: error instanceof Error ? error : new Error(String(error)),
-      };
     }
-  }
 
-  /**
-   * Apply case transformation to a string.
-   */
-  private applyCase(str: string, authorCase: AuthorCase): string {
-    switch (authorCase) {
-      case "uppercase":
-        return str.toUpperCase();
-      case "lowercase":
-        return str.toLowerCase();
-      case "original":
-      default:
-        return str;
-    }
+    // Combined output for single-string representation
+    const output = files.map((f) => `# ${f.path}\n${f.content}`).join("\n\n---\n\n");
+
+    return this.success(output, files);
   }
 
   /**

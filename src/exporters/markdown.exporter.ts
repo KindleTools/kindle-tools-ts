@@ -11,9 +11,10 @@
 
 import { getTemplatePreset, type TemplatePreset } from "../templates/index.js";
 import type { Clipping } from "../types/clipping.js";
-import type { ExportedFile, Exporter, ExporterOptions, ExportResult } from "../types/exporter.js";
+import type { ExportedFile, ExporterOptions, ExportResult } from "../types/exporter.js";
 import { groupByBook } from "../utils/stats.js";
 import { TemplateEngine } from "../utils/template-engine.js";
+import { BaseExporter } from "./shared/index.js";
 
 /**
  * Extended options for Markdown export.
@@ -61,9 +62,9 @@ export interface MarkdownExporterOptions extends ExporterOptions {
  * });
  * ```
  */
-export class MarkdownExporter implements Exporter {
-  name = "markdown";
-  extension = ".md";
+export class MarkdownExporter extends BaseExporter {
+  readonly name = "markdown";
+  readonly extension = ".md";
 
   /**
    * Export clippings to Markdown.
@@ -74,23 +75,18 @@ export class MarkdownExporter implements Exporter {
    * @param options - Export options
    * @returns Export result with Markdown content
    */
-  async export(clippings: Clipping[], options?: MarkdownExporterOptions): Promise<ExportResult> {
-    try {
-      // Create template engine with appropriate templates
-      const engine = this.createTemplateEngine(options);
+  protected async doExport(
+    clippings: Clipping[],
+    options?: MarkdownExporterOptions,
+  ): Promise<ExportResult> {
+    // Create template engine with appropriate templates
+    const engine = this.createTemplateEngine(options);
 
-      if (options?.groupByBook) {
-        return this.exportGrouped(clippings, engine);
-      }
-
-      return this.exportSingle(clippings, engine);
-    } catch (error) {
-      return {
-        success: false,
-        output: "",
-        error: error instanceof Error ? error : new Error(String(error)),
-      };
+    if (options?.groupByBook) {
+      return this.exportGrouped(clippings, engine);
     }
+
+    return this.exportSingle(clippings, engine);
   }
 
   /**
@@ -119,10 +115,7 @@ export class MarkdownExporter implements Exporter {
     const grouped = groupByBook(clippings);
     const output = engine.renderExport(grouped);
 
-    return {
-      success: true,
-      output,
-    };
+    return this.success(output);
   }
 
   /**
@@ -138,8 +131,8 @@ export class MarkdownExporter implements Exporter {
 
       const content = engine.renderBook(bookClippings);
 
-      // Create safe filename using the actual title from the clipping, not the grouping key (which is lowercased)
-      const safeTitle = first.title.replace(/[<>:"/\\|?*]/g, "-").slice(0, 100);
+      // Create safe filename using inherited utility
+      const safeTitle = this.sanitizeFilename(first.title);
 
       files.push({
         path: `${safeTitle}.md`,
@@ -147,11 +140,7 @@ export class MarkdownExporter implements Exporter {
       });
     }
 
-    return {
-      success: true,
-      output: files.map((f) => f.content).join("\n\n---\n\n"),
-      files,
-    };
+    return this.success(files.map((f) => f.content).join("\n\n---\n\n"), files);
   }
 
   /**

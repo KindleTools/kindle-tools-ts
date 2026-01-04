@@ -12,8 +12,9 @@
  */
 
 import type { Clipping } from "../types/clipping.js";
-import type { ExportedFile, Exporter, ExporterOptions, ExportResult } from "../types/exporter.js";
+import type { ExportedFile, ExporterOptions, ExportResult } from "../types/exporter.js";
 import { groupByBook } from "../utils/stats.js";
+import { BaseExporter } from "./shared/index.js";
 
 /**
  * Extended options for HTML export.
@@ -32,9 +33,9 @@ export interface HtmlExporterOptions extends ExporterOptions {
 /**
  * Export clippings to standalone HTML format.
  */
-export class HtmlExporter implements Exporter {
-  name = "html";
-  extension = ".html";
+export class HtmlExporter extends BaseExporter {
+  readonly name = "html";
+  readonly extension = ".html";
 
   /**
    * Export clippings to HTML.
@@ -43,65 +44,53 @@ export class HtmlExporter implements Exporter {
    * @param options - Export options
    * @returns Export result with HTML content
    */
-  async export(clippings: Clipping[], options?: HtmlExporterOptions): Promise<ExportResult> {
-    try {
-      const title = options?.title ?? "Kindle Highlights";
-      const includeSearch = options?.includeSearch ?? true;
-      const includeDarkMode = options?.includeDarkMode ?? true;
+  protected async doExport(
+    clippings: Clipping[],
+    options?: HtmlExporterOptions,
+  ): Promise<ExportResult> {
+    const title = options?.title ?? "Kindle Highlights";
+    const includeSearch = options?.includeSearch ?? true;
+    const includeDarkMode = options?.includeDarkMode ?? true;
 
-      const grouped = groupByBook(clippings);
-      const html = this.generateHtml(
-        grouped,
-        title,
-        includeSearch,
-        includeDarkMode,
-        options?.customCss,
-      );
+    const grouped = groupByBook(clippings);
+    const html = this.generateHtml(
+      grouped,
+      title,
+      includeSearch,
+      includeDarkMode,
+      options?.customCss,
+    );
 
-      if (options?.groupByBook) {
-        // Generate separate files per book
-        const files: ExportedFile[] = [];
+    if (options?.groupByBook) {
+      // Generate separate files per book
+      const files: ExportedFile[] = [];
 
-        for (const [bookTitle, bookClippings] of grouped) {
-          const bookGrouped = new Map<string, Clipping[]>();
-          bookGrouped.set(bookTitle, bookClippings);
+      for (const [bookTitle, bookClippings] of grouped) {
+        const bookGrouped = new Map<string, Clipping[]>();
+        bookGrouped.set(bookTitle, bookClippings);
 
-          const first = bookClippings[0];
-          const pageTitle = first?.title ?? bookTitle;
-          const content = this.generateHtml(
-            bookGrouped,
-            pageTitle,
-            includeSearch,
-            includeDarkMode,
-            options?.customCss,
-          );
+        const first = bookClippings[0];
+        const pageTitle = first?.title ?? bookTitle;
+        const content = this.generateHtml(
+          bookGrouped,
+          pageTitle,
+          includeSearch,
+          includeDarkMode,
+          options?.customCss,
+        );
 
-          const safeTitle = bookTitle.replace(/[<>:"/\\|?*]/g, "-").slice(0, 100);
+        const safeTitle = this.sanitizeFilename(bookTitle);
 
-          files.push({
-            path: `${safeTitle}.html`,
-            content,
-          });
-        }
-
-        return {
-          success: true,
-          output: html,
-          files,
-        };
+        files.push({
+          path: `${safeTitle}.html`,
+          content,
+        });
       }
 
-      return {
-        success: true,
-        output: html,
-      };
-    } catch (error) {
-      return {
-        success: false,
-        output: "",
-        error: error instanceof Error ? error : new Error(String(error)),
-      };
+      return this.success(html, files);
     }
+
+    return this.success(html);
   }
 
   /**
@@ -547,17 +536,5 @@ ${this.getStyles(customCss)}
       ${darkModeScript}
     });
   </script>`;
-  }
-
-  /**
-   * Escape HTML special characters.
-   */
-  private escapeHtml(str: string): string {
-    return str
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
   }
 }
