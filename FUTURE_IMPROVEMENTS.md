@@ -78,11 +78,30 @@ Use Joplin's Web Clipper API (localhost:41184) to sync directly without importin
 
 ---
 
+
+## High-Value Features (Proposed)
+
+### Notion Integration
+Direct export to Notion databases using the official API. Transforms the tool into a productivity hub by syncing highlights to a structured database.
+
+### Visual Enrichment
+Fetch high-quality book covers via the Google Books API. This would enhance HTML and Markdown exports, making the visual experience comparable to premium services like Readwise.
+
+### Interactive CLI Mode
+A guided, interactive experience using prompts for users who don't want to memorize CLI flags:
+- Auto-detection of `My Clippings.txt`
+- Interactive format selection menu
+- Visual progress bars
+
+### Anki Export
+Support for CSV or `.apkg` export for flashcards. Ideal for language learners and students using Kindle for active study to create flashcards from highlights.
+
+---
+
 ## Not Planned
 
 These would add significant complexity for limited value:
 
 - **PDF Export**: Would need a PDF rendering library
-- **Notion Integration**: Different API model
 - **Readwise Sync**: Proprietary API
 - **Highlight Colors**: Kindle doesn't export this data

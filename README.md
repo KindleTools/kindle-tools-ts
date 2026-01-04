@@ -1,9 +1,12 @@
 # kindle-tools-ts
 
-[![npm version](https://img.shields.io/npm/v/kindle-tools-ts.svg)](https://www.npmjs.com/package/kindle-tools-ts)
-[![license](https://img.shields.io/npm/l/kindle-tools-ts.svg)](https://github.com/YOUR_USERNAME/kindle-tools-ts/blob/main/LICENSE)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
-[![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
+[![npm version](https://img.shields.io/npm/v/kindle-tools-ts.svg?style=flat-square)](https://www.npmjs.com/package/kindle-tools-ts)
+[![CI](https://github.com/YOUR_USERNAME/kindle-tools-ts/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USERNAME/kindle-tools-ts/actions/workflows/ci.yml)
+[![install size](https://packagephobia.com/badge?p=kindle-tools-ts)](https://packagephobia.com/result?p=kindle-tools-ts)
+[![Downloads](https://img.shields.io/npm/dm/kindle-tools-ts.svg?style=flat-square)](https://www.npmjs.com/package/kindle-tools-ts)
+[![license](https://img.shields.io/npm/l/kindle-tools-ts.svg?style=flat-square)](https://github.com/YOUR_USERNAME/kindle-tools-ts/blob/main/LICENSE)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg?style=flat-square&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
 
 A robust TypeScript library to parse and process Amazon Kindle `My Clippings.txt` files with smart merging, deduplication, and multiple export formats.
 
