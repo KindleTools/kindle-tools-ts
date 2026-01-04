@@ -76,15 +76,15 @@
     "export",
     "typescript"
   ],
-  "author": "",
+  "author": "Andrés M. Jiménez",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/YOUR_USERNAME/kindle-tools-ts.git"
+    "url": "https://github.com/KindleTools/kindle-tools-ts.git"
   },
-  "homepage": "https://github.com/YOUR_USERNAME/kindle-tools-ts#readme",
+  "homepage": "https://github.com/KindleTools/kindle-tools-ts#readme",
   "bugs": {
-    "url": "https://github.com/YOUR_USERNAME/kindle-tools-ts/issues"
+    "url": "https://github.com/KindleTools/kindle-tools-ts/issues"
   },
   "engines": {
     "node": ">=18.18.0"

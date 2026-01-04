@@ -247,12 +247,8 @@ export function parseString(content: string, options?: ParseOptions): ParseResul
 
   if (needsProcessing) {
     const processResult = process(clippings, {
+      ...(options || {}),
       detectedLanguage,
-      removeDuplicates: options?.removeDuplicates,
-      mergeOverlapping: options?.mergeOverlapping,
-      mergeNotes: options?.mergeNotes,
-      extractTags: options?.extractTags,
-      highlightsOnly: options?.highlightsOnly,
     });
     finalClippings = processResult.clippings;
     duplicatesRemoved = processResult.duplicatesRemoved;

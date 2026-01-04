@@ -618,7 +618,7 @@ ${c.bold("EXAMPLES:")}
   kindle-tools validate "My Clippings.txt"
 
 ${c.bold("DOCUMENTATION:")}
-  https://github.com/YOUR_USERNAME/kindle-tools-ts
+  https://github.com/KindleTools/kindle-tools-ts
 `);
 }
 
