@@ -13,6 +13,24 @@
  */
 
 /**
+ * Case transformation for extracted tags.
+ */
+export type TagCase = "original" | "uppercase" | "lowercase";
+
+/**
+ * Options for tag extraction.
+ */
+export interface TagExtractionOptions {
+  /**
+   * Case transformation for extracted tags.
+   * - 'original': Keep original case as typed in notes
+   * - 'uppercase': Convert to UPPERCASE
+   * - 'lowercase': Convert to lowercase (default)
+   */
+  tagCase?: TagCase;
+}
+
+/**
  * Result of tag extraction.
  */
 export interface TagExtractionResult {
@@ -66,12 +84,16 @@ const MIN_TAG_LENGTH = 2;
  * // result.isTagOnlyNote = true
  * ```
  */
-export function extractTagsFromNote(noteContent: string): TagExtractionResult {
+export function extractTagsFromNote(
+  noteContent: string,
+  options: TagExtractionOptions = {},
+): TagExtractionResult {
   if (!noteContent || noteContent.trim().length === 0) {
     return { tags: [], hasTags: false, isTagOnlyNote: false };
   }
 
   const trimmed = noteContent.trim();
+  const tagCase = options.tagCase ?? "lowercase";
 
   // Split by separators
   const parts = trimmed.split(TAG_SEPARATORS);
@@ -80,15 +102,23 @@ export function extractTagsFromNote(noteContent: string): TagExtractionResult {
   const tags: string[] = [];
 
   for (const part of parts) {
-    const cleaned = cleanTag(part);
+    const cleaned = cleanTag(part, tagCase);
 
     if (isValidTag(cleaned)) {
       tags.push(cleaned);
     }
   }
 
-  // Deduplicate (case-insensitive)
-  const uniqueTags = [...new Set(tags.map((t) => t.toLowerCase()))];
+  // Deduplicate (case-insensitive comparison, but preserve the chosen case)
+  const seen = new Set<string>();
+  const uniqueTags: string[] = [];
+  for (const tag of tags) {
+    const key = tag.toLowerCase();
+    if (!seen.has(key)) {
+      seen.add(key);
+      uniqueTags.push(tag);
+    }
+  }
 
   // Determine if this looks like a tag-only note
   // (all parts became valid tags, no long text fragments)
@@ -108,7 +138,7 @@ export function extractTagsFromNote(noteContent: string): TagExtractionResult {
  * @param tag - Raw tag text
  * @returns Cleaned tag
  */
-function cleanTag(tag: string): string {
+function cleanTag(tag: string, tagCase: TagCase): string {
   let cleaned = tag.trim();
 
   // Remove leading # if present (hashtag style)
@@ -127,8 +157,18 @@ function cleanTag(tag: string): string {
   // Normalize whitespace
   cleaned = cleaned.replace(/\s+/g, " ").trim();
 
-  // Convert to lowercase for consistency
-  cleaned = cleaned.toLowerCase();
+  // Apply case transformation
+  switch (tagCase) {
+    case "uppercase":
+      cleaned = cleaned.toUpperCase();
+      break;
+    case "lowercase":
+      cleaned = cleaned.toLowerCase();
+      break;
+    case "original":
+      // Keep original case
+      break;
+  }
 
   return cleaned;
 }

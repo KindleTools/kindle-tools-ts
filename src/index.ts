@@ -161,6 +161,7 @@ export type {
   ExporterOptions,
   ExportResult,
   FolderStructure,
+  TagCase,
 } from "./types/exporter.js";
 export type { LanguagePatterns, SupportedLanguage } from "./types/language.js";
 export type { BookStats, ClippingsStats } from "./types/stats.js";
@@ -168,7 +169,7 @@ export type { GeoLocation } from "./utils/geo-location.js";
 export type { PageInfo } from "./utils/page-utils.js";
 export type { TitleSanitizeResult } from "./utils/sanitizers.js";
 export type { SimilarityResult } from "./utils/similarity.js";
-export type { TagExtractionResult } from "./utils/tag-extractor.js";
+export type { TagExtractionOptions, TagExtractionResult } from "./utils/tag-extractor.js";
 export type {
   BookContext,
   ClippingContext,

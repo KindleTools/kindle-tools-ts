@@ -118,7 +118,7 @@ export function process(clippings: Clipping[], options?: ProcessOptions): Proces
 
   // Step 5: Extract tags from notes (optional, default: false)
   if (options?.extractTags) {
-    const tagResult = extractTagsFromLinkedNotes(result);
+    const tagResult = extractTagsFromLinkedNotes(result, options.tagCase);
     result = tagResult.clippings;
     tagsExtracted = tagResult.extractedCount;
   }
@@ -657,7 +657,10 @@ export function flagFuzzyDuplicates(
  * @param clippings - Clippings to process
  * @returns Clippings with tags and extraction count
  */
-export function extractTagsFromLinkedNotes(clippings: Clipping[]): {
+export function extractTagsFromLinkedNotes(
+  clippings: Clipping[],
+  tagCase?: "original" | "uppercase" | "lowercase",
+): {
   clippings: Clipping[];
   extractedCount: number;
 } {
@@ -670,7 +673,7 @@ export function extractTagsFromLinkedNotes(clippings: Clipping[]): {
     }
 
     // Extract tags from the note content
-    const extraction = extractTagsFromNote(clipping.note);
+    const extraction = extractTagsFromNote(clipping.note, tagCase ? { tagCase } : {});
 
     if (extraction.hasTags) {
       extractedCount++;

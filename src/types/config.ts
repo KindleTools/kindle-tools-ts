@@ -28,6 +28,16 @@ export interface ParseOptions {
    */
   extractTags?: boolean;
 
+  /**
+   * Case transformation for extracted tags.
+   * - 'original': Keep original case as typed in notes
+   * - 'uppercase': Convert to UPPERCASE
+   * - 'lowercase': Convert to lowercase (default)
+   * Only applies when extractTags is enabled.
+   * Default: 'lowercase'
+   */
+  tagCase?: "original" | "uppercase" | "lowercase";
+
   /** Merge overlapping/extended highlights. Default: true */
   mergeOverlapping?: boolean;
 
