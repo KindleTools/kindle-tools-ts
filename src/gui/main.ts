@@ -8,10 +8,13 @@ import {
   type Clipping,
   type ClippingType,
   CsvExporter,
+  CsvImporter,
+  calculateStats,
   type FolderStructure,
   HtmlExporter,
   JoplinExporter,
   JsonExporter,
+  JsonImporter,
   MarkdownExporter,
   ObsidianExporter,
   type ParseOptions,
@@ -195,16 +198,64 @@ function getParseOptions(): ParseOptions {
   };
 }
 
-function parseFile(): void {
-  if (!state.fileContent) return;
+/**
+ * Detect input file format from filename.
+ */
+function detectInputFormat(fileName: string): "txt" | "json" | "csv" {
+  const ext = fileName.toLowerCase().split(".").pop() || "";
+  switch (ext) {
+    case "json":
+      return "json";
+    case "csv":
+      return "csv";
+    default:
+      return "txt";
+  }
+}
 
-  const options = getParseOptions();
+async function parseFile(): Promise<void> {
+  if (!state.fileContent || !state.fileName) return;
+
+  const inputFormat = detectInputFormat(state.fileName);
   const startTime = performance.now();
 
   try {
-    state.parseResult = parseString(state.fileContent, options);
-    const parseTime = performance.now() - startTime;
+    // For JSON and CSV imports, use the importers
+    if (inputFormat === "json" || inputFormat === "csv") {
+      const importer = inputFormat === "json" ? new JsonImporter() : new CsvImporter();
+      const result = await importer.import(state.fileContent);
 
+      if (!result.success || result.clippings.length === 0) {
+        throw result.error || new Error(`Failed to import ${inputFormat.toUpperCase()} file`);
+      }
+
+      // Calculate stats for imported clippings
+      const stats = calculateStats(result.clippings);
+      const parseTime = performance.now() - startTime;
+
+      state.parseResult = {
+        clippings: result.clippings,
+        stats,
+        warnings: result.warnings.map((msg, idx) => ({
+          type: "unknown_format" as const,
+          message: msg,
+          blockIndex: idx,
+        })),
+        meta: {
+          fileSize: state.fileContent.length,
+          parseTime,
+          detectedLanguage: "en",
+          totalBlocks: result.clippings.length,
+          parsedBlocks: result.clippings.length,
+        },
+      };
+    } else {
+      // For TXT files, use the standard parser
+      const options = getParseOptions();
+      state.parseResult = parseString(state.fileContent, options);
+    }
+
+    const parseTime = performance.now() - startTime;
     console.log("Parse result:", state.parseResult);
     console.log(`Parsed in ${parseTime.toFixed(2)}ms`);
 

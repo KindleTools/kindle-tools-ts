@@ -25,6 +25,7 @@ import { JoplinExporter } from "./exporters/joplin.exporter.js";
 import { JsonExporter } from "./exporters/json.exporter.js";
 import { MarkdownExporter } from "./exporters/markdown.exporter.js";
 import { ObsidianExporter } from "./exporters/obsidian.exporter.js";
+import { CsvImporter, JsonImporter } from "./importers/index.js";
 import type { Clipping } from "./types/clipping.js";
 import type { ParseOptions, ParseResult } from "./types/config.js";
 import type {
@@ -36,6 +37,7 @@ import type {
 } from "./types/exporter.js";
 import type { SupportedLanguage } from "./types/language.js";
 import type { ClippingsStats } from "./types/stats.js";
+import { calculateStats } from "./utils/stats.js";
 
 // CLI uses console for output - this is intentional
 const log = console.log.bind(console);
@@ -209,9 +211,63 @@ function parseArgs(args: string[]): ParsedArgs {
 }
 
 /**
+ * Detect input file format from extension.
+ */
+function detectInputFormat(filePath: string): "txt" | "json" | "csv" {
+  const ext = path.extname(filePath).toLowerCase();
+  switch (ext) {
+    case ".json":
+      return "json";
+    case ".csv":
+      return "csv";
+    default:
+      return "txt";
+  }
+}
+
+/**
  * Parse a clippings file with the given options.
+ * Supports TXT (Kindle format), JSON, and CSV input formats.
  */
 async function parseClippingsFile(filePath: string, args: ParsedArgs): Promise<ParseResult> {
+  const inputFormat = detectInputFormat(filePath);
+  const startTime = Date.now();
+
+  // For JSON and CSV imports, use the importers
+  if (inputFormat === "json" || inputFormat === "csv") {
+    const content = await fs.readFile(filePath, "utf-8");
+    const fileStats = await fs.stat(filePath);
+
+    const importer = inputFormat === "json" ? new JsonImporter() : new CsvImporter();
+    const result = await importer.import(content);
+
+    if (!result.success || result.clippings.length === 0) {
+      throw result.error || new Error(`Failed to import ${inputFormat.toUpperCase()} file`);
+    }
+
+    // Calculate stats for imported clippings
+    const stats = calculateStats(result.clippings);
+    const elapsed = Date.now() - startTime;
+
+    return {
+      clippings: result.clippings,
+      stats,
+      warnings: result.warnings.map((msg, idx) => ({
+        type: "unknown_format" as const,
+        message: msg,
+        blockIndex: idx,
+      })),
+      meta: {
+        fileSize: fileStats.size,
+        parseTime: elapsed,
+        detectedLanguage: "en",
+        totalBlocks: result.clippings.length,
+        parsedBlocks: result.clippings.length,
+      },
+    };
+  }
+
+  // For TXT files, use the standard parser
   const options: ParseOptions = {
     language: args.lang || "auto",
     removeDuplicates: !args.noDedup,
@@ -565,10 +621,15 @@ ${c.bold("USAGE:")}
   kindle-tools <command> [options]
 
 ${c.bold("COMMANDS:")}
-  ${c.info("parse")} <file>      Parse a My Clippings.txt file and show summary
+  ${c.info("parse")} <file>      Parse a clippings file and show summary
   ${c.info("export")} <file>     Export clippings to a specific format
   ${c.info("stats")} <file>      Show detailed statistics
-  ${c.info("validate")} <file>   Validate file format
+  ${c.info("validate")} <file>   Validate file format (TXT only)
+
+${c.bold("SUPPORTED INPUT FORMATS:")}
+  .txt               Kindle's "My Clippings.txt" format
+  .json              JSON exported by this tool
+  .csv               CSV exported by this tool
 
 ${c.bold("OPTIONS:")}
   -h, --help            Show this help message
@@ -613,6 +674,15 @@ ${c.bold("EXAMPLES:")}
 
   ${c.dim("# Get stats as JSON")}
   kindle-tools stats "My Clippings.txt" --json --pretty
+
+  ${c.dim("# Re-process a previously exported JSON file")}
+  kindle-tools parse clippings.json
+
+  ${c.dim("# Convert JSON to CSV")}
+  kindle-tools export clippings.json --format=csv --output=clippings.csv
+
+  ${c.dim("# Convert CSV to Markdown")}
+  kindle-tools export clippings.csv --format=md --output=notes.md
 
   ${c.dim("# Validate file format")}
   kindle-tools validate "My Clippings.txt"
