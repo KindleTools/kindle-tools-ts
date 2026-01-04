@@ -1,4 +1,5 @@
 import type { Clipping } from "./clipping.js";
+import type { CustomTemplates, TemplatePreset } from "./template.js";
 
 /**
  * Folder structure options for Markdown-based exporters.
@@ -30,7 +31,23 @@ export interface ExporterOptions {
   /** Include statistics in output */
   includeStats?: boolean;
 
-  /** Custom template (for Markdown exporters) */
+  /**
+   * Template preset to use (for Markdown exporters).
+   * Available: 'default', 'minimal', 'obsidian', 'notion', 'academic', 'compact', 'verbose'
+   */
+  templatePreset?: TemplatePreset;
+
+  /**
+   * Custom templates for Markdown output.
+   * Takes precedence over templatePreset if both are specified.
+   * See template-engine.ts for available variables and helpers.
+   */
+  customTemplates?: CustomTemplates;
+
+  /**
+   * @deprecated Use templatePreset or customTemplates instead.
+   * Legacy custom template string (for Markdown exporters).
+   */
   template?: string;
 
   /** Include raw fields in output */

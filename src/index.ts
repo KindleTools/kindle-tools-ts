@@ -39,6 +39,26 @@ export { ObsidianExporter } from "./exporters/obsidian.exporter.js";
 // Utility Exports
 // =============================================================================
 
+export {
+  BOOK_ACADEMIC,
+  // Book templates
+  BOOK_DEFAULT,
+  BOOK_MINIMAL,
+  BOOK_NOTION,
+  BOOK_OBSIDIAN,
+  CLIPPING_ACADEMIC,
+  CLIPPING_COMPACT,
+  // Clipping templates
+  CLIPPING_DEFAULT,
+  CLIPPING_MINIMAL,
+  CLIPPING_VERBOSE,
+  // Export templates
+  EXPORT_DEFAULT,
+  EXPORT_INDEX,
+  EXPORT_SUMMARY,
+  getAvailablePresets,
+  getTemplatePreset,
+} from "./templates/index.js";
 export { parseKindleDate, parseKindleDateAuto } from "./utils/dates.js";
 export {
   distanceBetween,
@@ -71,6 +91,7 @@ export {
 export { compareTexts, isSubset, jaccardSimilarity } from "./utils/similarity.js";
 export { calculateStats, countWords, groupByBook } from "./utils/stats.js";
 export { extractTagsFromNote, looksLikeTagNote } from "./utils/tag-extractor.js";
+export { createHandlebarsInstance, TemplateEngine } from "./utils/template-engine.js";
 export { cleanText, needsCleaning } from "./utils/text-cleaner.js";
 
 // =============================================================================
@@ -91,6 +112,7 @@ export {
 // =============================================================================
 
 export type { ProcessResult } from "./core/processor.js";
+export type { TemplateCollection, TemplatePreset } from "./templates/index.js";
 export type {
   Clipping,
   ClippingLocation,
@@ -118,6 +140,13 @@ export type { PageInfo } from "./utils/page-utils.js";
 export type { TitleSanitizeResult } from "./utils/sanitizers.js";
 export type { SimilarityResult } from "./utils/similarity.js";
 export type { TagExtractionResult } from "./utils/tag-extractor.js";
+export type {
+  BookContext,
+  ClippingContext,
+  CustomTemplates,
+  ExportContext,
+  TemplateType,
+} from "./utils/template-engine.js";
 export type { CleaningOperation, TextCleaningResult } from "./utils/text-cleaner.js";
 
 // =============================================================================
