@@ -54,6 +54,14 @@ export {
 
 export { CsvImporter, JsonImporter } from "./importers/index.js";
 
+// Importer utilities for custom importer creation
+export {
+  createErrorImport,
+  createSuccessImport,
+  generateImportId,
+  parseLocationString,
+} from "./importers/shared/importer-utils.js";
+
 // =============================================================================
 // Utility Exports
 // =============================================================================
@@ -79,6 +87,7 @@ export {
   getTemplatePreset,
 } from "./templates/index.js";
 export { parseKindleDate, parseKindleDateAuto } from "./utils/dates.js";
+export { getErrorMessage, toError } from "./utils/errors.js";
 export {
   distanceBetween,
   formatGeoLocation,

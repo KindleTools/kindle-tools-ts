@@ -8,6 +8,7 @@
  */
 
 import type { AuthorCase, ExportedFile, ExportResult } from "../../types/exporter.js";
+import { toError } from "../../utils/errors.js";
 
 /**
  * Create a successful export result.
@@ -39,7 +40,7 @@ export function createErrorResult(error: unknown): ExportResult {
   return {
     success: false,
     output: "",
-    error: error instanceof Error ? error : new Error(String(error)),
+    error: toError(error),
   };
 }
 

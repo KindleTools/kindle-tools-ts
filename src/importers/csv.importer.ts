@@ -6,29 +6,14 @@
  * @packageDocumentation
  */
 
-import type { Clipping, ClippingLocation, ClippingType } from "../types/clipping.js";
+import type { Clipping, ClippingType } from "../types/clipping.js";
+import {
+  createErrorImport,
+  createSuccessImport,
+  generateImportId,
+  parseLocationString,
+} from "./shared/index.js";
 import type { Importer, ImportResult } from "./types.js";
-
-/**
- * Generate a simple ID for clippings that don't have one.
- */
-function generateId(index: number): string {
-  return `imp_${Date.now().toString(36)}_${index.toString(36)}`;
-}
-
-/**
- * Parse a location string into a ClippingLocation object.
- */
-function parseLocation(loc: string): ClippingLocation {
-  if (!loc) {
-    return { raw: "", start: 0, end: null };
-  }
-
-  const parts = loc.split("-");
-  const start = Number.parseInt(parts[0] ?? "0", 10) || 0;
-  const end = parts[1] ? Number.parseInt(parts[1], 10) : null;
-  return { raw: loc, start, end };
-}
 
 /**
  * Parse CSV content, handling quoted fields with embedded commas and newlines.
@@ -109,23 +94,13 @@ export class CsvImporter implements Importer {
       const rows = parseCSV(content);
 
       if (rows.length < 2) {
-        return {
-          success: false,
-          clippings: [],
-          warnings,
-          error: new Error("CSV file has no data rows"),
-        };
+        return createErrorImport(new Error("CSV file has no data rows"), warnings);
       }
 
       // Parse header row
       const headerRow = rows[0];
       if (!headerRow) {
-        return {
-          success: false,
-          clippings: [],
-          warnings,
-          error: new Error("CSV file has no header row"),
-        };
+        return createErrorImport(new Error("CSV file has no header row"), warnings);
       }
 
       const headers = headerRow.map((h) => h.toLowerCase().trim());
@@ -144,12 +119,10 @@ export class CsvImporter implements Importer {
       const hasTitle = "title" in colIndex;
 
       if (!hasContent && !hasTitle) {
-        return {
-          success: false,
-          clippings: [],
+        return createErrorImport(
+          new Error("CSV must have at least 'content' or 'title' column"),
           warnings,
-          error: new Error("CSV must have at least 'content' or 'title' column"),
-        };
+        );
       }
 
       const clippings: Clipping[] = [];
@@ -167,13 +140,13 @@ export class CsvImporter implements Importer {
             return idx !== undefined ? (row[idx] ?? "") : "";
           };
 
-          const id = getValue("id") || generateId(rowIdx);
+          const id = getValue("id") || generateImportId(rowIdx);
           const title = getValue("title") || "Unknown";
           const author = getValue("author") || "Unknown";
           const type = (getValue("type") || "highlight") as ClippingType;
           const pageStr = getValue("page");
           const page = pageStr ? Number.parseInt(pageStr, 10) : null;
-          const location = parseLocation(getValue("location"));
+          const location = parseLocationString(getValue("location"));
           const dateStr = getValue("date");
           const date = dateStr ? new Date(dateStr) : null;
           const content = getValue("content");
@@ -224,26 +197,12 @@ export class CsvImporter implements Importer {
       }
 
       if (clippings.length === 0) {
-        return {
-          success: false,
-          clippings: [],
-          warnings,
-          error: new Error("No valid clippings found in CSV file"),
-        };
+        return createErrorImport(new Error("No valid clippings found in CSV file"), warnings);
       }
 
-      return {
-        success: true,
-        clippings,
-        warnings,
-      };
+      return createSuccessImport(clippings, warnings);
     } catch (error) {
-      return {
-        success: false,
-        clippings: [],
-        warnings,
-        error: error instanceof Error ? error : new Error(String(error)),
-      };
+      return createErrorImport(error, warnings);
     }
   }
 }

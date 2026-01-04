@@ -8,6 +8,12 @@
 
 import type { Clipping, ClippingLocation, ClippingType } from "../types/clipping.js";
 import type { SupportedLanguage } from "../types/language.js";
+import {
+  createErrorImport,
+  createSuccessImport,
+  generateImportId,
+  parseLocationString,
+} from "./shared/index.js";
 import type { Importer, ImportResult } from "./types.js";
 
 /**
@@ -60,13 +66,6 @@ interface JsonExport {
 }
 
 /**
- * Generate a simple ID for clippings that don't have one.
- */
-function generateId(index: number): string {
-  return `imp_${Date.now().toString(36)}_${index.toString(36)}`;
-}
-
-/**
  * Parse a location value that could be a string or object.
  */
 function parseLocation(loc: ClippingLocation | string | undefined): ClippingLocation {
@@ -75,10 +74,7 @@ function parseLocation(loc: ClippingLocation | string | undefined): ClippingLoca
   }
 
   if (typeof loc === "string") {
-    const parts = loc.split("-");
-    const start = Number.parseInt(parts[0] ?? "0", 10) || 0;
-    const end = parts[1] ? Number.parseInt(parts[1], 10) : null;
-    return { raw: loc, start, end };
+    return parseLocationString(loc);
   }
 
   return {
@@ -98,7 +94,7 @@ function jsonToClipping(json: JsonClipping, index: number): Clipping {
 
   // Build base clipping with required fields
   const clipping: Clipping = {
-    id: json.id ?? generateId(index),
+    id: json.id ?? generateImportId(index),
     title,
     titleRaw: json.titleRaw ?? title,
     author,
@@ -214,26 +210,12 @@ export class JsonImporter implements Importer {
       }
 
       if (clippings.length === 0) {
-        return {
-          success: false,
-          clippings: [],
-          warnings,
-          error: new Error("No clippings found in JSON file"),
-        };
+        return createErrorImport(new Error("No clippings found in JSON file"), warnings);
       }
 
-      return {
-        success: true,
-        clippings,
-        warnings,
-      };
+      return createSuccessImport(clippings, warnings);
     } catch (error) {
-      return {
-        success: false,
-        clippings: [],
-        warnings,
-        error: error instanceof Error ? error : new Error(String(error)),
-      };
+      return createErrorImport(error, warnings);
     }
   }
 }
