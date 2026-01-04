@@ -51,7 +51,7 @@
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
     "check": "biome check --write . && pnpm test",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p src/gui/tsconfig.json",
     "prepare": "husky",
     "changeset": "changeset",
     "version": "changeset version",
