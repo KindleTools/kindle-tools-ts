@@ -18,39 +18,39 @@ describe("parser", () => {
       const result = parseString(SAMPLE_CLIPPINGS_EN);
 
       // Should detect as English
-      expect(result.clippings[0]!.language).toBe("en");
+      expect(result.clippings[0]?.language).toBe("en");
     });
 
     it("should extract title and author correctly", () => {
       const result = parseString(SAMPLE_CLIPPINGS_EN);
-      const firstClipping = result.clippings[0]!;
+      const firstClipping = result.clippings[0];
 
-      expect(firstClipping.title).toBe("The Great Gatsby");
-      expect(firstClipping.author).toBe("F. Scott Fitzgerald");
+      expect(firstClipping?.title).toBe("The Great Gatsby");
+      expect(firstClipping?.author).toBe("F. Scott Fitzgerald");
     });
 
     it("should extract page and location", () => {
       const result = parseString(SAMPLE_CLIPPINGS_EN);
-      const firstClipping = result.clippings[0]!;
+      const firstClipping = result.clippings[0];
 
-      expect(firstClipping.page).toBe(5);
-      expect(firstClipping.location.start).toBe(100);
-      expect(firstClipping.location.end).toBe(105);
+      expect(firstClipping?.page).toBe(5);
+      expect(firstClipping?.location.start).toBe(100);
+      expect(firstClipping?.location.end).toBe(105);
     });
 
     it("should identify clipping types correctly", () => {
       const result = parseString(SAMPLE_CLIPPINGS_EN);
 
-      expect(result.clippings[0]!.type).toBe("highlight");
-      expect(result.clippings[1]!.type).toBe("note");
-      expect(result.clippings[3]!.type).toBe("bookmark");
+      expect(result.clippings[0]?.type).toBe("highlight");
+      expect(result.clippings[1]?.type).toBe("note");
+      expect(result.clippings[3]?.type).toBe("bookmark");
     });
 
     it("should extract content correctly", () => {
       const result = parseString(SAMPLE_CLIPPINGS_EN);
-      const firstClipping = result.clippings[0]!;
+      const firstClipping = result.clippings[0];
 
-      expect(firstClipping.content).toContain("In my younger and more vulnerable years");
+      expect(firstClipping?.content).toContain("In my younger and more vulnerable years");
     });
 
     it("should mark bookmarks as empty", () => {
@@ -65,23 +65,23 @@ describe("parser", () => {
       const result2 = parseString(SAMPLE_CLIPPINGS_EN);
 
       // Same input = same IDs
-      expect(result1.clippings[0]!.id).toBe(result2.clippings[0]!.id);
+      expect(result1.clippings[0]?.id).toBe(result2.clippings[0]?.id);
     });
 
     it("should count words correctly", () => {
       const result = parseString(SAMPLE_CLIPPINGS_EN);
-      const firstClipping = result.clippings[0]!;
+      const firstClipping = result.clippings[0];
 
-      expect(firstClipping.wordCount).toBeGreaterThan(0);
-      expect(firstClipping.charCount).toBeGreaterThan(0);
+      expect(firstClipping?.wordCount).toBeGreaterThan(0);
+      expect(firstClipping?.charCount).toBeGreaterThan(0);
     });
 
     it("should include blockIndex for ordering", () => {
       const result = parseString(SAMPLE_CLIPPINGS_EN);
 
-      expect(result.clippings[0]!.blockIndex).toBe(0);
-      expect(result.clippings[1]!.blockIndex).toBe(1);
-      expect(result.clippings[2]!.blockIndex).toBe(2);
+      expect(result.clippings[0]?.blockIndex).toBe(0);
+      expect(result.clippings[1]?.blockIndex).toBe(1);
+      expect(result.clippings[2]?.blockIndex).toBe(2);
     });
 
     it("should include stats in result", () => {
@@ -114,17 +114,17 @@ describe("parser", () => {
     it("should detect Spanish language", () => {
       const result = parseString(SAMPLE_CLIPPINGS_ES);
 
-      expect(result.clippings[0]!.language).toBe("es");
+      expect(result.clippings[0]?.language).toBe("es");
     });
 
     it("should extract Spanish metadata correctly", () => {
       const result = parseString(SAMPLE_CLIPPINGS_ES);
-      const firstClipping = result.clippings[0]!;
+      const firstClipping = result.clippings[0];
 
-      expect(firstClipping.title).toBe("Don Quijote de la Mancha");
-      expect(firstClipping.author).toBe("Miguel de Cervantes");
-      expect(firstClipping.type).toBe("highlight");
-      expect(firstClipping.page).toBe(10);
+      expect(firstClipping?.title).toBe("Don Quijote de la Mancha");
+      expect(firstClipping?.author).toBe("Miguel de Cervantes");
+      expect(firstClipping?.type).toBe("highlight");
+      expect(firstClipping?.page).toBe(10);
     });
   });
 
@@ -132,7 +132,7 @@ describe("parser", () => {
     it("should use specified language instead of auto-detecting", () => {
       const result = parseString(SAMPLE_CLIPPINGS_EN, { language: "en" });
 
-      expect(result.clippings[0]!.language).toBe("en");
+      expect(result.clippings[0]?.language).toBe("en");
     });
   });
 
@@ -163,7 +163,7 @@ Just one line
     });
 
     it("should handle BOM", () => {
-      const withBom = "\uFEFF" + SAMPLE_CLIPPINGS_EN;
+      const withBom = `\uFEFF${SAMPLE_CLIPPINGS_EN}`;
       const result = parseString(withBom);
 
       expect(result.clippings.length).toBe(5);
@@ -178,7 +178,7 @@ Just one line
 
       const result = parseString(withExtraSpace);
 
-      expect(result.clippings[0]!.content).toBe("Some content with leading spaces");
+      expect(result.clippings[0]?.content).toBe("Some content with leading spaces");
     });
 
     it("should detect sideloaded books", () => {
@@ -190,7 +190,7 @@ Content from sideloaded book
 
       const result = parseString(sideloaded);
 
-      expect(result.clippings[0]!.source).toBe("sideload");
+      expect(result.clippings[0]?.source).toBe("sideload");
     });
 
     it("should detect DRM limit messages", () => {
@@ -202,7 +202,7 @@ You have reached the clipping limit for this item
 
       const result = parseString(drmLimited);
 
-      expect(result.clippings[0]!.isLimitReached).toBe(true);
+      expect(result.clippings[0]?.isLimitReached).toBe(true);
     });
   });
 });

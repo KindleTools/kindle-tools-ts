@@ -1,10 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  BOOK_OBSIDIAN,
-  CLIPPING_MINIMAL,
-  getAvailablePresets,
-  getTemplatePreset,
-} from "../../src/templates/index.js";
+import { getAvailablePresets, getTemplatePreset } from "../../src/templates/index.js";
 import type { Clipping } from "../../src/types/clipping.js";
 import {
   createHandlebarsInstance,

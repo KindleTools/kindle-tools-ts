@@ -147,33 +147,39 @@ export function parseGeoLocation(input: string): GeoLocation | null {
   const cleaned = input.trim();
 
   // Try decimal degrees format: "40.7128, -74.0060" or "40.7128 -74.0060"
+  // Try decimal degrees format: "40.7128, -74.0060" or "40.7128 -74.0060"
   const decimalMatch = cleaned.match(/^(-?\d+\.?\d*)[,\s]+(-?\d+\.?\d*)$/);
-  if (decimalMatch && decimalMatch[1] && decimalMatch[2]) {
-    const latitude = parseFloat(decimalMatch[1]);
-    const longitude = parseFloat(decimalMatch[2]);
-    const location = { latitude, longitude };
-    return isValidGeoLocation(location) ? location : null;
+  if (decimalMatch?.length === 3) {
+    const latStr = decimalMatch[1];
+    const lonStr = decimalMatch[2];
+    if (latStr && lonStr) {
+      const latitude = parseFloat(latStr);
+      const longitude = parseFloat(lonStr);
+      const location = { latitude, longitude };
+      return isValidGeoLocation(location) ? location : null;
+    }
   }
 
   // Try format with directions: "40.7128°N, 74.0060°W"
   const directionMatch = cleaned.match(
     /(-?\d+\.?\d*)\s*°?\s*([NS])[,\s]+(-?\d+\.?\d*)\s*°?\s*([EW])/i,
   );
-  if (
-    directionMatch &&
-    directionMatch[1] &&
-    directionMatch[2] &&
-    directionMatch[3] &&
-    directionMatch[4]
-  ) {
-    let latitude = parseFloat(directionMatch[1]);
-    let longitude = parseFloat(directionMatch[3]);
+  if (directionMatch?.length === 5) {
+    const latVal = directionMatch[1];
+    const latDir = directionMatch[2];
+    const lonVal = directionMatch[3];
+    const lonDir = directionMatch[4];
 
-    if (directionMatch[2].toUpperCase() === "S") latitude = -latitude;
-    if (directionMatch[4].toUpperCase() === "W") longitude = -longitude;
+    if (latVal && latDir && lonVal && lonDir) {
+      let latitude = parseFloat(latVal);
+      let longitude = parseFloat(lonVal);
 
-    const location = { latitude, longitude };
-    return isValidGeoLocation(location) ? location : null;
+      if (latDir.toUpperCase() === "S") latitude = -latitude;
+      if (lonDir.toUpperCase() === "W") longitude = -longitude;
+
+      const location = { latitude, longitude };
+      return isValidGeoLocation(location) ? location : null;
+    }
   }
 
   return null;

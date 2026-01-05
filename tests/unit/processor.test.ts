@@ -76,10 +76,10 @@ describe("processor", () => {
       const result = removeDuplicates(clippings);
 
       expect(result.clippings.length).toBe(1);
-      expect(result.clippings[0]!.tags).toContain("tag1");
-      expect(result.clippings[0]!.tags).toContain("tag2");
-      expect(result.clippings[0]!.tags).toContain("tag3");
-      expect(result.clippings[0]!.tags!.length).toBe(3);
+      expect(result.clippings[0]?.tags).toContain("tag1");
+      expect(result.clippings[0]?.tags).toContain("tag2");
+      expect(result.clippings[0]?.tags).toContain("tag3");
+      expect(result.clippings[0]?.tags?.length).toBe(3);
     });
 
     it("should preserve tags when only one clipping has them", () => {
@@ -100,7 +100,7 @@ describe("processor", () => {
       const result = removeDuplicates(clippings);
 
       expect(result.clippings.length).toBe(1);
-      expect(result.clippings[0]!.tags).toEqual(["important"]);
+      expect(result.clippings[0]?.tags).toEqual(["important"]);
     });
   });
 
@@ -124,7 +124,7 @@ describe("processor", () => {
       expect(result.clippings.length).toBe(1);
       expect(result.mergedCount).toBe(1);
       // Should keep the longer content
-      expect(result.clippings[0]!.content).toContain("longer sentence");
+      expect(result.clippings[0]?.content).toContain("longer sentence");
     });
 
     it("should merge tags when merging highlights", () => {
@@ -146,8 +146,8 @@ describe("processor", () => {
       const result = smartMergeHighlights(clippings);
 
       expect(result.clippings.length).toBe(1);
-      expect(result.clippings[0]!.tags).toContain("tag1");
-      expect(result.clippings[0]!.tags).toContain("tag2");
+      expect(result.clippings[0]?.tags).toContain("tag1");
+      expect(result.clippings[0]?.tags).toContain("tag2");
     });
 
     it("should not merge non-overlapping highlights", () => {
@@ -355,8 +355,8 @@ describe("processor", () => {
       const result = filterToHighlightsOnly(clippings);
 
       expect(result.clippings.length).toBe(1);
-      expect(result.clippings[0]!.note).toBe("My thoughts on this");
-      expect(result.clippings[0]!.linkedNoteId).toBe("note-1");
+      expect(result.clippings[0]?.note).toBe("My thoughts on this");
+      expect(result.clippings[0]?.linkedNoteId).toBe("note-1");
     });
 
     it("should return empty array when no highlights exist", () => {
@@ -415,9 +415,9 @@ describe("processor", () => {
       });
 
       expect(result.clippings.length).toBe(1);
-      expect(result.clippings[0]!.tags).toContain("philosophy");
-      expect(result.clippings[0]!.tags).toContain("important");
-      expect(result.clippings[0]!.tags).toContain("to-review");
+      expect(result.clippings[0]?.tags).toContain("philosophy");
+      expect(result.clippings[0]?.tags).toContain("important");
+      expect(result.clippings[0]?.tags).toContain("to-review");
     });
 
     it("should filter to highlights only when highlightsOnly is enabled", () => {
@@ -451,8 +451,8 @@ describe("processor", () => {
       });
 
       expect(result.clippings.length).toBe(1);
-      expect(result.clippings[0]!.type).toBe("highlight");
-      expect(result.clippings[0]!.note).toBe("A note linked to highlight");
+      expect(result.clippings[0]?.type).toBe("highlight");
+      expect(result.clippings[0]?.note).toBe("A note linked to highlight");
       expect(result.filteredForHighlightsOnly).toBe(2);
     });
 

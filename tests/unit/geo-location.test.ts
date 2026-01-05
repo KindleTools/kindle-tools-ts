@@ -98,15 +98,15 @@ describe("geo-location", () => {
     it("should parse format with direction letters", () => {
       const result = parseGeoLocation("40.7128°N, 74.006°W");
       expect(result).not.toBeNull();
-      expect(result!.latitude).toBeCloseTo(40.7128);
-      expect(result!.longitude).toBeCloseTo(-74.006);
+      expect(result?.latitude).toBeCloseTo(40.7128);
+      expect(result?.longitude).toBeCloseTo(-74.006);
     });
 
     it("should parse format with direction letters (south/east)", () => {
       const result = parseGeoLocation("33.8688°S, 151.2093°E");
       expect(result).not.toBeNull();
-      expect(result!.latitude).toBeCloseTo(-33.8688);
-      expect(result!.longitude).toBeCloseTo(151.2093);
+      expect(result?.latitude).toBeCloseTo(-33.8688);
+      expect(result?.longitude).toBeCloseTo(151.2093);
     });
 
     it("should return null for invalid input", () => {

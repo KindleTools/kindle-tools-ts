@@ -68,7 +68,7 @@ describe("Integration: Full Pipeline", () => {
 
       expect(exportResult.success).toBe(true);
       expect(exportResult.files).toBeDefined();
-      expect(exportResult.files!.length).toBeGreaterThan(0);
+      expect(exportResult.files?.length).toBeGreaterThan(0);
     });
 
     it("should parse and export to HTML", async () => {
@@ -142,7 +142,7 @@ describe("Integration: Full Pipeline", () => {
 
       // IDs should be deterministic
       for (let i = 0; i < result1.clippings.length; i++) {
-        expect(result1.clippings[i]!.id).toBe(result2.clippings[i]!.id);
+        expect(result1.clippings[i]?.id).toBe(result2.clippings[i]?.id);
       }
     });
 
@@ -216,8 +216,8 @@ Habe nun, ach! Philosophie, Juristerei und Medizin
     const parseResult = parse(spanishContent);
 
     expect(parseResult.clippings.length).toBe(1);
-    expect(parseResult.clippings[0]!.language).toBe("es");
-    expect(parseResult.clippings[0]!.title).toBe("Don Quijote de la Mancha");
+    expect(parseResult.clippings[0]?.language).toBe("es");
+    expect(parseResult.clippings[0]?.title).toBe("Don Quijote de la Mancha");
 
     const exporter = new MarkdownExporter();
     const exportResult = await exporter.export(parseResult.clippings);
@@ -230,8 +230,8 @@ Habe nun, ach! Philosophie, Juristerei und Medizin
     const parseResult = parse(germanContent);
 
     expect(parseResult.clippings.length).toBe(1);
-    expect(parseResult.clippings[0]!.language).toBe("de");
-    expect(parseResult.clippings[0]!.title).toBe("Faust");
+    expect(parseResult.clippings[0]?.language).toBe("de");
+    expect(parseResult.clippings[0]?.title).toBe("Faust");
 
     const exporter = new HtmlExporter();
     const exportResult = await exporter.export(parseResult.clippings);

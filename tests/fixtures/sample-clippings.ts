@@ -173,7 +173,7 @@ export const EMPTY_CLIPPINGS: Clipping[] = [];
 /**
  * Single clipping for minimal tests.
  */
-export const SINGLE_CLIPPING: Clipping[] = [SAMPLE_CLIPPINGS[0]!];
+export const SINGLE_CLIPPING: Clipping[] = [SAMPLE_CLIPPINGS[0] as Clipping];
 
 /**
  * Clippings with a sideloaded book (PDF).

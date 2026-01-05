@@ -9,6 +9,7 @@ import { JoplinExporter } from "../../src/exporters/joplin.exporter.js";
 import { JsonExporter } from "../../src/exporters/json.exporter.js";
 import { MarkdownExporter } from "../../src/exporters/markdown.exporter.js";
 import { ObsidianExporter } from "../../src/exporters/obsidian.exporter.js";
+import type { Clipping } from "../../src/types/clipping.js";
 import {
   EMPTY_CLIPPINGS,
   SAMPLE_CLIPPINGS,
@@ -140,7 +141,7 @@ describe("CsvExporter", () => {
     it("should escape quotes in content", async () => {
       const clippingWithQuotes = [
         {
-          ...SINGLE_CLIPPING[0]!,
+          ...(SINGLE_CLIPPING[0] as Clipping),
           content: 'He said "hello" to me',
         },
       ];
@@ -432,7 +433,7 @@ describe("JoplinExporter", () => {
 
       expect(result.success).toBe(true);
       expect(result.files).toBeDefined();
-      expect(result.files!.length).toBeGreaterThan(0);
+      expect(result.files?.length).toBeGreaterThan(0);
     });
 
     it("should create root notebook", async () => {
@@ -493,7 +494,7 @@ describe("JoplinExporter", () => {
     });
 
     it("should format note titles with page number", async () => {
-      const result = await exporter.export([SAMPLE_CLIPPINGS[0]!]);
+      const result = await exporter.export([SAMPLE_CLIPPINGS[0] as Clipping]);
       const output = result.output as string;
 
       expect(output).toContain("[0005]"); // Page 5 padded
@@ -516,7 +517,7 @@ describe("JoplinExporter", () => {
       // Count type_: 2 (folders) - should be 1 root + 3 authors + 3 books = 7
       // (may be less if authors are shared)
       const folderMatches = output.match(/type_: 2/g);
-      expect(folderMatches!.length).toBeGreaterThan(4);
+      expect(folderMatches?.length).toBeGreaterThan(4);
     });
 
     it("should apply uppercase to author notebook names", async () => {
@@ -687,7 +688,7 @@ describe("HtmlExporter", () => {
     it("should escape HTML in content", async () => {
       const maliciousClipping = [
         {
-          ...SINGLE_CLIPPING[0]!,
+          ...(SINGLE_CLIPPING[0] as Clipping),
           content: '<script>alert("xss")</script>',
         },
       ];
