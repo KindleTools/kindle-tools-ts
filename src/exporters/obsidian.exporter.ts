@@ -35,16 +35,16 @@ export interface ObsidianExporterOptions extends ExporterOptions {
   folder?: string;
   /**
    * Folder structure for organizing files.
-   * - 'flat': All files in the root folder (default)
+   * - 'flat': All files in the root folder
    * - 'by-book': One folder per book (containing a single file)
-   * - 'by-author': One folder per author (files named by book)
+   * - 'by-author': Root > Author > Book (default)
    * - 'by-author-book': Author folder > Book subfolder
    */
   folderStructure?: FolderStructure;
   /**
    * Case transformation for author folder names.
-   * - 'original': Keep original case (default)
-   * - 'uppercase': Convert to UPPERCASE
+   * - 'original': Keep original case
+   * - 'uppercase': Convert to UPPERCASE (default)
    * - 'lowercase': Convert to lowercase
    */
   authorCase?: AuthorCase;
@@ -78,8 +78,8 @@ export class ObsidianExporter extends BaseExporter {
     const grouped = groupByBook(clippings);
     const files: ExportedFile[] = [];
     const folder = options?.folder ?? "books";
-    const folderStructure = options?.folderStructure ?? "flat";
-    const authorCase = options?.authorCase ?? "original";
+    const folderStructure = options?.folderStructure ?? "by-author";
+    const authorCase = options?.authorCase ?? "uppercase";
 
     for (const [title, bookClippings] of grouped) {
       const first = bookClippings[0];

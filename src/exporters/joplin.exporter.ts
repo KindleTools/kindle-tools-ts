@@ -66,8 +66,8 @@ export interface JoplinExporterOptions extends ExporterOptions {
 
   /**
    * Folder structure for notebooks.
-   * - 'flat': Root > Book (default for backward compatibility)
-   * - 'by-author': Root > Author > Book (3-level hierarchy)
+   * - 'flat': Root > Book
+   * - 'by-author': Root > Author > Book (default, 3-level hierarchy)
    * - 'by-author-book': Same as 'by-author'
    * Note: 'by-book' behaves like 'flat' for Joplin.
    */
@@ -229,7 +229,7 @@ export class JoplinExporter extends BaseExporter {
     // Extract options with defaults
     const rootNotebookName = options?.notebookName ?? "Kindle Highlights";
     const defaultTags = options?.tags ?? [];
-    const folderStructure = options?.folderStructure ?? "flat";
+    const folderStructure = options?.folderStructure ?? "by-author";
     const authorCase = options?.authorCase ?? "uppercase"; // Python default
     const includeClippingTags = options?.includeClippingTags ?? true;
     const estimatePages = options?.estimatePages ?? true;

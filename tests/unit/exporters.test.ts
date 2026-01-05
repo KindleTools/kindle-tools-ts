@@ -350,10 +350,11 @@ describe("ObsidianExporter", () => {
       expect(output).toContain("**Notes:**");
     });
 
-    it("should use flat folder structure by default", async () => {
+    it("should use by-author folder structure by default (Root > Author > Book)", async () => {
       const result = await exporter.export(SAMPLE_CLIPPINGS);
 
-      expect(result.files?.[0]?.path).toMatch(/^books\/[^/]+\.md$/);
+      // Path should be books/Author/Title.md
+      expect(result.files?.[0]?.path).toMatch(/^books\/[^/]+\/[^/]+\.md$/);
     });
 
     it("should use by-author folder structure when specified", async () => {
@@ -504,13 +505,14 @@ describe("JoplinExporter", () => {
       expect(output).toContain("[0005]"); // Page 5 padded
     });
 
-    it("should use flat hierarchy by default (Root > Book)", async () => {
+    it("should use 3-level hierarchy by default (Root > Author > Book)", async () => {
       const result = await exporter.export(SAMPLE_CLIPPINGS);
       const output = result.output as string;
 
-      // Count type_: 2 (folders) - should be 1 root + 3 books = 4
+      // Count type_: 2 (folders) - should be 1 root + 3 authors + 3 books = 7
+      // (may be less if authors are shared)
       const folderMatches = output.match(/type_: 2/g);
-      expect(folderMatches?.length).toBe(4);
+      expect(folderMatches?.length).toBeGreaterThan(4);
     });
 
     it("should use 3-level hierarchy when folderStructure is by-author", async () => {

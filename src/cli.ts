@@ -658,8 +658,8 @@ ${c.bold("PROCESSING OPTIONS:")}
   --tag-case <case>     Tag case: original (as typed), uppercase (default), lowercase
 
 ${c.bold("EXPORT OPTIONS (Obsidian/Joplin):")}
-  --structure <type>    Folder structure: flat, by-book, by-author, by-author-book
-  --author-case <case>  Author folder case: original, uppercase, lowercase
+  --structure <type>    Folder structure: flat, by-book, by-author (default), by-author-book
+  --author-case <case>  Author folder case: original, uppercase (default), lowercase
   --include-tags        Include clipping tags in export (default: true)
   --no-tags             Exclude clipping tags from export
 
