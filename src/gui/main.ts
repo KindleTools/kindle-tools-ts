@@ -11,6 +11,7 @@ import {
   CsvImporter,
   calculateStats,
   createTarArchive,
+  type ExportedFile,
   type FolderStructure,
   HtmlExporter,
   JoplinExporter,
@@ -327,37 +328,40 @@ function renderStats(): void {
       </div>
     </div>
 
-    <div class="meta-info">
-      <div class="meta-item">
-        <span class="label">Language Detected</span>
-        <span class="value">${meta.detectedLanguage.toUpperCase()}</span>
+    <div class="meta-info-container">
+      <h3>Metadata</h3>
+      <div class="meta-info-grid">
+        <div class="meta-item">
+          <span class="label">Language Detected</span>
+          <span class="value">${meta.detectedLanguage.toUpperCase()}</span>
+        </div>
+        <div class="meta-item">
+          <span class="label">Parse Time</span>
+          <span class="value">${meta.parseTime.toFixed(2)}ms</span>
+        </div>
+        <div class="meta-item">
+          <span class="label">Total Blocks</span>
+          <span class="value">${meta.totalBlocks}</span>
+        </div>
+        <div class="meta-item">
+          <span class="label">Parsed Blocks</span>
+          <span class="value">${meta.parsedBlocks}</span>
+        </div>
+        <div class="meta-item">
+          <span class="label">File Size</span>
+          <span class="value">${formatBytes(meta.fileSize)}</span>
+        </div>
+        ${
+          stats.dateRange.earliest && stats.dateRange.latest
+            ? `
+        <div class="meta-item">
+          <span class="label">Date Range</span>
+          <span class="value">${formatDate(stats.dateRange.earliest)} - ${formatDate(stats.dateRange.latest)}</span>
+        </div>
+        `
+            : ""
+        }
       </div>
-      <div class="meta-item">
-        <span class="label">Parse Time</span>
-        <span class="value">${meta.parseTime.toFixed(2)}ms</span>
-      </div>
-      <div class="meta-item">
-        <span class="label">Total Blocks</span>
-        <span class="value">${meta.totalBlocks}</span>
-      </div>
-      <div class="meta-item">
-        <span class="label">Parsed Blocks</span>
-        <span class="value">${meta.parsedBlocks}</span>
-      </div>
-      <div class="meta-item">
-        <span class="label">File Size</span>
-        <span class="value">${formatBytes(meta.fileSize)}</span>
-      </div>
-      ${
-        stats.dateRange.earliest && stats.dateRange.latest
-          ? `
-      <div class="meta-item">
-        <span class="label">Date Range</span>
-        <span class="value">${formatDate(stats.dateRange.earliest)} - ${formatDate(stats.dateRange.latest)}</span>
-      </div>
-      `
-          : ""
-      }
     </div>
 
     ${renderQualityStats(result.clippings)}
@@ -538,7 +542,7 @@ function renderRawData(): void {
   const result = state.parseResult;
   if (!result) return;
 
-  elements.rawContent.innerHTML = `<pre>${escapeHtml(JSON.stringify(result, null, 2))}</pre>`;
+  elements.rawContent.innerHTML = `<div class="raw-data-container"><pre>${escapeHtml(JSON.stringify(result, null, 2))}</pre></div>`;
 }
 
 // =============================================================================
@@ -567,6 +571,7 @@ async function renderExports(): Promise<void> {
     groupByBook,
     includeStats,
     includeClippingTags,
+    pretty: true,
   });
   const jsonContent = typeof jsonResult.output === "string" ? jsonResult.output : "[Binary output]";
   elements.exportJsonContent.textContent = jsonContent;
@@ -597,12 +602,20 @@ async function renderExports(): Promise<void> {
     authorCase,
     includeClippingTags,
   });
-  const obsidianContent =
+
+  if (obsidianResult.files && obsidianResult.files.length > 0) {
+    renderMultiFilePreview(elements.exportObsidianContent, obsidianResult.files);
+  } else {
+    const obsidianContent =
+      typeof obsidianResult.output === "string" ? obsidianResult.output : "[Binary output]";
+    elements.exportObsidianContent.textContent = obsidianContent;
+    elements.exportObsidianContent.classList.remove("placeholder");
+  }
+
+  const obsidianDownloadContent =
     typeof obsidianResult.output === "string" ? obsidianResult.output : "[Binary output]";
-  elements.exportObsidianContent.textContent = obsidianContent;
-  elements.exportObsidianContent.classList.remove("placeholder");
   exportResults.obsidian = {
-    content: obsidianContent,
+    content: obsidianDownloadContent,
     extension: ".md",
     mimeType: "text/markdown",
   };
@@ -617,6 +630,8 @@ async function renderExports(): Promise<void> {
   });
 
   if (joplinResult.files && joplinResult.files.length > 0) {
+    renderMultiFilePreview(elements.exportJoplinContent, joplinResult.files);
+
     try {
       // Create TAR/JEX archive
       const entries: TarEntry[] = joplinResult.files.map((f) => ({
@@ -626,9 +641,6 @@ async function renderExports(): Promise<void> {
 
       const tarData = createTarArchive(entries);
 
-      elements.exportJoplinContent.textContent = `[Generated JEX Archive: ${formatBytes(tarData.byteLength)}]`;
-      elements.exportJoplinContent.classList.remove("placeholder");
-
       exportResults.joplin = {
         content: tarData,
         extension: ".jex",
@@ -636,7 +648,6 @@ async function renderExports(): Promise<void> {
       };
     } catch (err) {
       console.error("JEX generation error:", err);
-      elements.exportJoplinContent.textContent = `Error creating JEX archive: ${err}`;
       exportResults.joplin = {
         content: `Error: ${err}`,
         extension: ".txt",
@@ -662,6 +673,78 @@ async function renderExports(): Promise<void> {
 
   // Enable download button
   elements.downloadBtn.disabled = false;
+}
+
+function renderMultiFilePreview(container: HTMLElement, files: ExportedFile[]): void {
+  container.innerHTML = "";
+  container.classList.remove("placeholder");
+
+  // Summary header
+  const totalSize = files.reduce(
+    (acc, f) => acc + (typeof f.content === "string" ? f.content.length : f.content.length),
+    0,
+  );
+
+  const summary = document.createElement("div");
+  summary.style.marginBottom = "10px";
+  summary.style.color = "var(--text-secondary)";
+  summary.style.fontSize = "0.85rem";
+  summary.textContent = `Generated ${files.length} files (${formatBytes(totalSize)})`;
+  container.appendChild(summary);
+
+  // Explorer container
+  const explorer = document.createElement("div");
+  explorer.className = "file-explorer";
+
+  // File list sidebar
+  const fileList = document.createElement("div");
+  fileList.className = "file-list";
+
+  // Content preview area
+  const preview = document.createElement("div");
+  preview.className = "file-content-preview";
+
+  // Helper to show content
+  const showFile = (file: ExportedFile) => {
+    // Update active class
+    const items = fileList.querySelectorAll(".file-list-item");
+    items.forEach((item) => {
+      if (item.getAttribute("data-path") === file.path) {
+        item.classList.add("active");
+      } else {
+        item.classList.remove("active");
+      }
+    });
+
+    if (file.content instanceof Uint8Array) {
+      preview.textContent = `[Binary content, ${file.content.length} bytes]`;
+    } else {
+      preview.textContent = file.content;
+    }
+  };
+
+  // Build file list
+  files.forEach((file) => {
+    const item = document.createElement("div");
+    item.className = "file-list-item";
+    item.textContent = file.path;
+    item.title = file.path;
+    item.setAttribute("data-path", file.path);
+    item.addEventListener("click", () => showFile(file));
+    fileList.appendChild(item);
+  });
+
+  explorer.appendChild(fileList);
+  explorer.appendChild(preview);
+  container.appendChild(explorer);
+
+  // Show first file if available
+  if (files.length > 0) {
+    const first = files[0];
+    if (first) {
+      showFile(first);
+    }
+  }
 }
 
 // =============================================================================
