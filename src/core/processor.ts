@@ -187,32 +187,73 @@ function mergeTags(target: Clipping, source: Clipping): Clipping {
  * - Same location
  * - Same content (case-insensitive)
  *
- * When a duplicate is found, tags from the duplicate are merged
- * into the surviving clipping to preserve user categorization.
+ * Strategy: "Last Wins"
+ * When a duplicate is found, we assume the later entry is a correction
+ * or refinement by the user. Therefore, we keep the NEW entry and
+ * discard the OLD one (merging tags from old to new).
+ *
+ * If removeDuplicates option is false. duplicates are NOT removed but
+ * flagged as 'exact_duplicate'.
  *
  * @param clippings - Clippings to deduplicate
- * @returns Deduplicated clippings and count removed
+ * @param remove - Whether to remove duplicates (true) or just flag them (false)
+ * @returns Deduplicated (or flagged) clippings and count affected
  */
-export function removeDuplicates(clippings: Clipping[]): {
+export function removeDuplicates(
+  clippings: Clipping[],
+  remove = true,
+): {
   clippings: Clipping[];
   removedCount: number;
 } {
   const seen = new Map<string, Clipping>();
+  const flaggedClippings: Clipping[] = [];
 
   for (const clipping of clippings) {
     const hash = generateDuplicateHash(clipping.title, clipping.location.raw, clipping.content);
     const existing = seen.get(hash);
 
     if (existing) {
-      // Merge tags from duplicate into survivor
-      seen.set(hash, mergeTags(existing, clipping));
+      if (remove) {
+        // "Last Wins" Strategy:
+        // The current 'clipping' is later in the file, so it's the "newer" version.
+        // We replace the 'existing' (older) one with this new one.
+        // But first, rescue any tags from the old one.
+        const merged = mergeTags(clipping, existing);
+        seen.set(hash, merged);
+      } else {
+        // Flagging Mode:
+        // We keep BOTH. The 'existing' one is the older duplicate, so we flag it.
+        // The 'clipping' (newer) remains clean (until it potentially becomes a duplicate of an even later one).
+
+        // 1. Mark the OLD one as a duplicate
+        const flaggedExisting = {
+          ...existing,
+          isSuspiciousHighlight: true,
+          suspiciousReason: "exact_duplicate" as const,
+          possibleDuplicateOf: clipping.id, // Point to the newer version
+        };
+
+        // 2. Move the flagged old one to our "done" list (it won't be in 'seen' anymore to avoid double counting)
+        flaggedClippings.push(flaggedExisting);
+
+        // 3. Put the NEW one in 'seen' as the current "clean" version (candidate for future duplication)
+        seen.set(hash, clipping);
+      }
     } else {
+      // First time seeing this content
       seen.set(hash, clipping);
     }
   }
 
+  // Combine the "clean" unique/latest versions with the flagged duplicates (if any)
+  // We sort by blockIndex to restore original file order loosely
+  const result = [...Array.from(seen.values()), ...flaggedClippings].sort(
+    (a, b) => a.blockIndex - b.blockIndex,
+  );
+
   return {
-    clippings: Array.from(seen.values()),
+    clippings: result,
     removedCount: clippings.length - seen.size,
   };
 }
@@ -235,10 +276,17 @@ export function removeDuplicates(clippings: Clipping[]): {
  *      - Combined location range
  *      - More recent date
  *
+ * If merge is false, instead of merging, we FLAG the redundant highlighting
+ * (the one that would have been absorbed) as 'overlapping'.
+ *
  * @param clippings - Clippings to merge
- * @returns Merged clippings and count merged
+ * @param merge - Whether to merge (true) or just flag (false)
+ * @returns Merged (or flagged) clippings and count merged
  */
-export function smartMergeHighlights(clippings: Clipping[]): {
+export function smartMergeHighlights(
+  clippings: Clipping[],
+  merge = true,
+): {
   clippings: Clipping[];
   mergedCount: number;
 } {
@@ -264,9 +312,35 @@ export function smartMergeHighlights(clippings: Clipping[]): {
 
       // Check if clippings can be merged
       if (canMerge(current, clipping)) {
-        // Merge clipping into current
-        current = mergeClippings(current, clipping);
-        mergedCount++;
+        if (merge) {
+          // Merge clipping into current
+          current = mergeClippings(current, clipping);
+          mergedCount++;
+        } else {
+          // Flagging Mode:
+          // We identify which one would have been "absorbed" (the redundant one)
+          // and mark it as suspicious.
+
+          // Logic from mergeClippings: 'base' is the one we keep (longer content)
+          // 'other' is the one we merge/discard.
+          const isBase: boolean = current.content.length >= clipping.content.length;
+          const redundant: Clipping = isBase ? clipping : current;
+          const keeper: Clipping = isBase ? current : clipping;
+
+          // Flag the redundant one
+          const flaggedRedundant = {
+            ...redundant,
+            isSuspiciousHighlight: true,
+            suspiciousReason: "overlapping" as const,
+            possibleDuplicateOf: keeper.id,
+          };
+
+          // We add the redundant one to our list immediately (we don't merge it)
+          merged.push(flaggedRedundant);
+
+          // The keeper becomes the new 'current' for the next iteration comparison
+          current = keeper;
+        }
       } else {
         // No overlap, push current and start new
         merged.push(current);

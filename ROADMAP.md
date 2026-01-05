@@ -23,3 +23,17 @@ Currently, Joplin users have to use the `default` preset, which is generic, or `
 
 ### 3. General Template Maintenance
 - [ ] **Standard Markdown (`BOOK_DEFAULT`)**: Ensure it remains "Universal" and compatible with simple editors (Typora, iA Writer, VS Code) without specific plugin requirements.
+
+---
+
+## 🔧 CLI & GUI Parity (Consistency Update)
+Ensure the CLI and GUI offer the same set of powerful filtering and configuration options to avoid user confusion.
+
+- [ ] **CLI Updates**:
+  - Add `--exclude-types` flag (e.g., `highlight,note`).
+  - Add `--min-length` flag to filter short noise.
+  - Add `--filter-books` (allowlist) and `--exclude-books` (blocklist) flags.
+
+- [ ] **GUI Updates**:
+  - Add **Tag Case** selector (Original / Uppercase / Lowercase) to match CLI capabilities.
+  - Add **Exclude Books** text area (for blocklisting books).

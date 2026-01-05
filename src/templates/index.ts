@@ -360,14 +360,16 @@ export const EXPORT_INDEX = `# Kindle Library Index
 // ============================================================================
 
 // Re-export types from centralized location
-export type { TemplateCollection, TemplatePreset } from "../types/template.js";
+// Import for local usage
+import type { TemplatePreset as PresetType, TemplateCollection } from "../types/template.js";
 
-import type { TemplateCollection, TemplatePreset } from "../types/template.js";
+// Re-export for consumers
+export type { TemplateCollection, TemplatePreset } from "../types/template.js";
 
 /**
  * Get a complete template collection by preset name.
  */
-export function getTemplatePreset(preset: TemplatePreset): TemplateCollection {
+export function getTemplatePreset(preset: PresetType): TemplateCollection {
   switch (preset) {
     case "minimal":
       return {
@@ -405,7 +407,6 @@ export function getTemplatePreset(preset: TemplatePreset): TemplateCollection {
         book: BOOK_DEFAULT,
         export: EXPORT_DEFAULT,
       };
-    case "default":
     default:
       return {
         clipping: CLIPPING_DEFAULT,
@@ -418,6 +419,6 @@ export function getTemplatePreset(preset: TemplatePreset): TemplateCollection {
 /**
  * List all available preset names.
  */
-export function getAvailablePresets(): TemplatePreset[] {
+export function getAvailablePresets(): PresetType[] {
   return ["default", "minimal", "obsidian", "notion", "academic", "compact", "verbose"];
 }

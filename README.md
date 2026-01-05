@@ -15,6 +15,7 @@ A robust TypeScript library to parse and process Amazon Kindle `My Clippings.txt
 ## 📑 Table of Contents
 
 - [✨ Features](#-features)
+- [🧠 Technical Details](#-technical-details)
 - [📦 Installation](#-installation)
 - [🚀 Quick Start](#-quick-start)
 - [💻 CLI Usage](#-cli-usage)
@@ -47,6 +48,61 @@ A robust TypeScript library to parse and process Amazon Kindle `My Clippings.txt
 - 📘 **TypeScript-first** — Full type definitions with strict mode
 - 🪶 **Lightweight** — Only 2 runtime dependencies (date-fns, zod)
 - 🔒 **Non-destructive** — Always preserves original data (titleRaw, contentRaw) for user review
+
+---
+
+## 🧠 Technical Details
+
+### Deduplication Strategy
+**Config:** `removeDuplicates` (default: `true`)
+The library doesn't just delete duplicates; it aggressively preserves data. If two clippings are identical (same content + title + location) but have different tags (extracted from notes), the system **merges the tags into the surviving clipping** before removing the duplicate.
+
+### Smart Merging Logic
+**Config:** `mergeOverlapping` (default: `true`)
+Overlapping highlights are merged using a robust heuristic:
+- **Location Check**: Highlights must overlap or be within **5 characters** of each other.
+- **Content Check**: One highlight must be a substring of the other, OR they must share **>50% of the same words**.
+- **Result**: Creates a single merged entry with the longest content, combined location range, and most recent date.
+
+### Note Linking Algorithm
+**Config:** `mergeNotes` (default: `true`)
+Notes are linked to highlights using a two-phase strategy:
+1.  **Range Match (Primary)**: If the note's location falls strictly within the highlight's start/end range.
+2.  **Proximity Fallback**: If no range match is found, it searches for the nearest highlight within **10 location positions**.
+
+### Quality Flags
+The system doesn't just delete data; it flags potential issues for user review via the `isSuspiciousHighlight` property.
+- **`too_short`**: Content < 5 characters (likely accidental tap).
+- **`fragment`**: Starts with lowercase (likely mid-sentence selection).
+- **`incomplete`**: No terminal punctuation (cut off).
+- **`exact_duplicate`**: Copy of another highlight (only visible if `removeDuplicates: false`).
+- **`overlapping`**: Subset of another highlight (only visible if `mergeOverlapping: false`).
+
+### Tag Extraction
+**Config:** `extractTags` (default: `false`)
+Turn your Kindle notes into a tagging system.
+- If a note contains only comma/semicolon-separated words (e.g., "productivity, habit"), it's treated as a tag list.
+- Tags are assigned to the linked highlight.
+- Options: `tagCase` ("original" | "lowercase" | "uppercase").
+
+### Normalization Pipeline
+**Config:** `normalizeUnicode` (default: `true`)
+Before processing, text undergoes strict normalization to ensure data integrity:
+- **Unicode NFC**: Unifies characters (e.g., `ñ` vs `n+~`) to ensure duplicates are detected correctly.
+- **BOM Removal**: Strips Byte Order Marks often found in Kindle files.
+- **Line Endings**: Standardizes to Unix style `\n`.
+
+### Advanced Cleaning
+**Config:** `cleanContent`, `cleanTitles` (default: `true`)
+- **Content**: De-hyphenates words broken by PDF line endings (`pro-\nblem` → `problem`) and fixes spacing around punctuation.
+- **Titles**: Aggressively cleans Amazon noise, removing patterns like `_EBOK`, `(Spanish Edition)`, `[Print Replica]`, and file extensions (`.mobi`, `.pdf`).
+
+### Filtering & Constraints
+**Config:** `excludeBooks`, `onlyBooks`, `excludeTypes`, `minContentLength`
+The library includes powerful pre-parsing filters that are often overlooked:
+- **Blocklists/Allowlists**: Filter books by exact title matching (`excludeBooks`, `onlyBooks`).
+- **Type Filtering**: Ignore specific types like `'bookmark'` or `'note'` (`excludeTypes`).
+- **Noise Reduction**: Use `minContentLength` (e.g., 10) to automatically discard accidental one-word highlights or gibberish.
 
 ---
 

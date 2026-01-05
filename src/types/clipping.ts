@@ -149,7 +149,7 @@ export interface Clipping {
    * - 'fragment': Short content starting with lowercase (likely mid-sentence)
    * - 'incomplete': Short content without proper ending punctuation
    */
-  suspiciousReason?: "too_short" | "fragment" | "incomplete";
+  suspiciousReason?: "too_short" | "fragment" | "incomplete" | "exact_duplicate" | "overlapping";
 
   /**
    * Similarity score with another clipping (0-1).
