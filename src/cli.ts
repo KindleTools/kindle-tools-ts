@@ -882,7 +882,7 @@ async function writeExportResult(
     const tarBuffer = createTarArchive(
       result.files.map((f) => ({
         name: f.path,
-        content: typeof f.content === "string" ? f.content : f.content.toString("utf-8"),
+        content: f.content,
       })),
     );
 

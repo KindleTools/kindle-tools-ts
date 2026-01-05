@@ -93,7 +93,7 @@ export interface ExportedFile {
   path: string;
 
   /** File content */
-  content: string | Buffer;
+  content: string | Uint8Array;
 }
 
 /**
@@ -104,7 +104,7 @@ export interface ExportResult {
   success: boolean;
 
   /** Generated content (for single-file exports) */
-  output: string | Buffer;
+  output: string | Uint8Array;
 
   /** Generated files (for multi-file exports) */
   files?: ExportedFile[];

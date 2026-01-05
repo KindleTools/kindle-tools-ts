@@ -97,7 +97,7 @@ export abstract class BaseExporter implements Exporter {
   /**
    * Create a successful export result.
    */
-  protected success(output: string | Buffer, files?: ExportedFile[]): ExportResult {
+  protected success(output: string | Uint8Array, files?: ExportedFile[]): ExportResult {
     return createSuccessResult(output, files);
   }
 

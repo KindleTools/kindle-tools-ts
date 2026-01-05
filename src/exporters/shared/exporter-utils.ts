@@ -17,7 +17,10 @@ import { toError } from "../../utils/errors.js";
  * @param files - Optional array of exported files (for multi-file exports)
  * @returns A successful ExportResult
  */
-export function createSuccessResult(output: string | Buffer, files?: ExportedFile[]): ExportResult {
+export function createSuccessResult(
+  output: string | Uint8Array,
+  files?: ExportedFile[],
+): ExportResult {
   const result: ExportResult = {
     success: true,
     output,
