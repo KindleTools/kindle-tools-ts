@@ -24,10 +24,10 @@ export const CLIPPING_DEFAULT = `{{#if (eq type "highlight")}}
 **Tags:** {{tagsHashtags}}
 {{/if}}
 {{else if (eq type "note")}}
-📝 **Note (Location {{location}}):**
+**Note (Location {{location}}):**
 {{content}}
 {{else if (eq type "bookmark")}}
-🔖 Bookmark at Location {{location}}{{#if (neq page "?")}} (Page {{page}}){{/if}}
+**Bookmark** at Location {{location}}{{#if (neq page "?")}} (Page {{page}}){{/if}}
 {{/if}}
 `;
 
@@ -106,7 +106,7 @@ export const BOOK_DEFAULT = `# {{title}}
 
 ---
 
-**📊 Summary:**
+**Summary:**
 - Highlights: {{highlightCount}}
 - Notes: {{noteCount}}
 - Bookmarks: {{bookmarkCount}}
@@ -131,15 +131,16 @@ highlights: {{highlightCount}}
 notes: {{noteCount}}
 date_exported: {{exportDateIso}}
 tags:
-  - kindle
-  - book-notes
+{{#each tags}}
+  - {{this}}
+{{/each}}
 ---
 
 # {{title}}
 
 **Author:** [[{{author}}]]
 
-## 📊 Statistics
+## Statistics
 | Metric | Count |
 |--------|-------|
 | Highlights | {{highlightCount}} |
@@ -148,7 +149,7 @@ tags:
 
 ---
 
-## 📝 Highlights
+## Highlights
 
 {{#each highlights}}
 > [!quote] Page {{page}}, Location {{location}}
@@ -162,12 +163,53 @@ tags:
 {{/each}}
 
 {{#if (gt notes.length 0)}}
-## 💭 Standalone Notes
+## Standalone Notes
 
 {{#each notes}}
 > [!info] Location {{location}}
 > {{content}}
 
+{{/each}}
+{{/if}}
+`;
+
+/**
+ * Joplin-optimized book template.
+ * Uses simplified structure and standard Markdown for compatibility.
+ */
+export const BOOK_JOPLIN = `---
+title: "{{title}}"
+author: "{{author}}"
+source: kindle
+created: {{exportDateIso}}
+tags: {{join tags ", "}}
+---
+
+# {{title}}
+
+*by {{author}}*
+
+**Summary:** {{highlightCount}} highlights, {{noteCount}} notes
+
+---
+
+## Highlights
+
+{{#each highlights}}
+> {{content}}
+> — *Page {{page}} | Location {{location}}*
+
+{{#if hasNote}}
+**Note:** {{note}}
+{{/if}}
+
+{{/each}}
+
+{{#if (gt notes.length 0)}}
+## Notes
+
+{{#each notes}}
+- {{content}} *(Location {{location}})*
 {{/each}}
 {{/if}}
 `;
@@ -383,6 +425,12 @@ export function getTemplatePreset(preset: PresetType): TemplateCollection {
         book: BOOK_OBSIDIAN,
         export: EXPORT_DEFAULT,
       };
+    case "joplin":
+      return {
+        clipping: CLIPPING_DEFAULT,
+        book: BOOK_JOPLIN,
+        export: EXPORT_DEFAULT,
+      };
     case "notion":
       return {
         clipping: CLIPPING_DEFAULT,
@@ -420,5 +468,5 @@ export function getTemplatePreset(preset: PresetType): TemplateCollection {
  * List all available preset names.
  */
 export function getAvailablePresets(): PresetType[] {
-  return ["default", "minimal", "obsidian", "notion", "academic", "compact", "verbose"];
+  return ["default", "minimal", "obsidian", "joplin", "notion", "academic", "compact", "verbose"];
 }

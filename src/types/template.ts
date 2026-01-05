@@ -14,7 +14,8 @@ export type TemplatePreset =
   | "notion"
   | "academic"
   | "compact"
-  | "verbose";
+  | "verbose"
+  | "joplin";
 
 /**
  * Template preset collections.

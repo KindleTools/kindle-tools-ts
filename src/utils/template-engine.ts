@@ -90,6 +90,10 @@ export interface BookContext {
   exportDate: string;
   /** Current date (ISO) */
   exportDateIso: string;
+  /** All unique tags from clippings */
+  tags: string[];
+  /** True if book has any tags */
+  hasTags: boolean;
 }
 
 /**
@@ -537,6 +541,17 @@ export class TemplateEngine {
     const contexts = clippings.map((c) => this.toClippingContext(c));
     const now = new Date();
 
+    // Aggregate unique tags from all clippings
+    const allTags = new Set<string>();
+    for (const clipping of clippings) {
+      if (clipping.tags) {
+        for (const tag of clipping.tags) {
+          allTags.add(tag);
+        }
+      }
+    }
+    const tags = Array.from(allTags).sort();
+
     return {
       title: first?.title ?? "Unknown",
       author: first?.author ?? "Unknown",
@@ -554,6 +569,8 @@ export class TemplateEngine {
         day: "numeric",
       }),
       exportDateIso: now.toISOString(),
+      tags,
+      hasTags: tags.length > 0,
     };
   }
 
@@ -717,6 +734,8 @@ export class TemplateEngine {
         "bookmarkCount",
         "exportDate",
         "exportDateIso",
+        "tags",
+        "hasTags",
       ],
       export: [
         "books",

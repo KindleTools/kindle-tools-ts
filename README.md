@@ -629,6 +629,108 @@ Clean Markdown with blockquotes.
 ---
 ```
 
+#### 🎨 Advanced Template Customization
+
+You have full control over the Markdown output using [Handlebars](https://handlebarsjs.com/) templates.
+
+**1. Using Presets**
+
+```typescript
+const exporter = new MarkdownExporter();
+exporter.export(clippings, { templatePreset: 'obsidian' });
+// Presets: 'default', 'minimal', 'obsidian', 'notion', 'academic', 'compact', 'verbose'
+```
+
+**2. Custom Templates**
+
+You can override specific levels of the export hierarchy:
+
+```typescript
+exporter.export(clippings, {
+  customTemplates: {
+    // Level 1: How each clipping looks
+    clipping: `> {{content}}\n> *({{page}})*\n`,
+    
+    // Level 2: How clippings are grouped into a book file
+    book: `# {{title}}\n\n{{#each clippings}}{{> clipping}}{{/each}}`,
+    
+    // Level 3: (Optional) How books are combined if exporting to a single file
+    export: `{{#each books}}{{> book}}{{/each}}`
+  }
+});
+```
+
+**📚 Variable Reference**
+
+**Clipping Context** (Available in `clipping` template):
+| Variable | Description |
+|----------|-------------|
+| `content` | The highlight text or note content |
+| `title` | Book title |
+| `author` | Book author |
+| `type` | `highlight`, `note`, or `bookmark` |
+| `page` | Page number string (e.g. "42" or "?") |
+| `location` | Location string (e.g. "100-105") |
+| `date` | Formatted date string |
+| `dateIso` | ISO date string for machine parsing |
+| `note` | Content of the linked user note (if any) |
+| `tags` | Array of strings extracted from note |
+| `tagsHashtags` | Tags formatted as hashtags: `#tag1 #tag2` |
+| `hasNote` | Boolean true if a note is attached |
+| `hasTags` | Boolean true if tags exist |
+| `isLimitReached`| Boolean true if DRM limit hit |
+
+**Book Context** (Available in `book` template):
+| Variable | Description |
+|----------|-------------|
+| `title` | Book title |
+| `author` | Book author |
+| `clippings` | Array of all clippings in the book |
+| `highlights` | Array of only highlights |
+| `notes` | Array of only standalone notes |
+| `bookmarks` | Array of only bookmarks |
+| `highlightCount`| Number of highlights |
+| `noteCount` | Number of notes |
+| `tags` | Array of all unique tags found in this book |
+
+**🛠️ Helper Reference**
+
+**Logic & Comparison:**
+- `eq a b`, `neq a b`: Equality check
+- `gt a b`, `lt a b`, `gte`, `lte`: Numeric parsing comparison
+- `and a b`, `or a b`, `not a`: Boolean logic
+- `isHighlight`, `isNote`, `isBookmark`: Block helpers (e.g. `{{#isHighlight}}...{{/isHighlight}}`)
+
+**Formatting:**
+- `formatDate date "short"|"long"|"iso"|"relative"`: Date formatting
+- `truncate text length`: Truncates text with ellipses
+- `upper`, `lower`, `capitalize`: String case transformation
+- `replace text "old" "new"`: String replacement
+- `blockquote text`: Prefixes every line with `> `
+- `yamlTags tags`: Formats array as YAML list items
+
+**Example: Detailed Obsidian Template**
+```handlebars
+---
+title: "{{title}}"
+author: "{{author}}"
+tags:
+{{yamlTags tags}}
+---
+
+# {{title}}
+
+{{#each highlights}}
+> {{content}}
+> — Loc {{location}} {{#if hasNote}}[[Note]]{{/if}}
+
+{{#if hasNote}}
+> [!NOTE] User Note
+> {{note}}
+{{/if}}
+{{/each}}
+```
+
 ### Obsidian
 
 One file per book with YAML frontmatter and callouts. Supports configurable folder structure.
@@ -649,8 +751,6 @@ total_highlights: 25
 total_notes: 3
 date_imported: 2024-01-01
 tags:
-  - kindle
-  - highlights
   - strategy  # clipping tags merged here
 ---
 
