@@ -66,6 +66,7 @@ Desktop.ini
 
 # Test fixtures output
 tests/fixtures/output/
+tests/output
 
 # Temporary files
 *.tmp

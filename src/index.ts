@@ -119,6 +119,11 @@ export {
 export { compareTexts, isSubset, jaccardSimilarity } from "./utils/similarity.js";
 export { calculateStats, countWords, groupByBook } from "./utils/stats.js";
 export { extractTagsFromNote, looksLikeTagNote } from "./utils/tag-extractor.js";
+export {
+  createJexArchive,
+  createTarArchive,
+  type TarEntry,
+} from "./utils/tar.js";
 export { createHandlebarsInstance, TemplateEngine } from "./utils/template-engine.js";
 export { cleanText, needsCleaning } from "./utils/text-cleaner.js";
 

@@ -490,15 +490,18 @@ describe("JoplinExporter", () => {
       const result = await exporter.export(SAMPLE_CLIPPINGS, { creator: "John Doe" });
       const output = result.output as string;
 
-      expect(output).toContain("Exported by John Doe");
+      // Creator appears as author field in Joplin note metadata (not in body footer)
+      // Body footer contains book author (e.g., "- author: F. Scott Fitzgerald")
+      expect(output).toContain("author: John Doe"); // Joplin metadata field
+      expect(output).toContain("- author: F. Scott Fitzgerald"); // Body footer
     });
 
     it("should format note titles with page number", async () => {
       const result = await exporter.export([SAMPLE_CLIPPINGS[0] as Clipping]);
       const output = result.output as string;
 
+      // Python-compatible format: [0005] without emojis
       expect(output).toContain("[0005]"); // Page 5 padded
-      expect(output).toContain("📖"); // Highlight emoji
     });
 
     it("should use flat hierarchy by default (Root > Book)", async () => {

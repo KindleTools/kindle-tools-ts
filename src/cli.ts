@@ -39,6 +39,7 @@ import type {
 import type { SupportedLanguage } from "./types/language.js";
 import type { ClippingsStats } from "./types/stats.js";
 import { calculateStats } from "./utils/stats.js";
+import { createTarArchive } from "./utils/tar.js";
 
 // CLI uses console for output - this is intentional
 const log = console.log.bind(console);
@@ -871,11 +872,33 @@ function getExporter(format: ExportFormat): Exporter | null {
  * Write export result to file(s).
  */
 async function writeExportResult(
-  _exporter: Exporter,
+  exporter: Exporter,
   result: ExportResult,
   outputPath: string,
 ): Promise<void> {
-  // Handle multi-file exports (Obsidian)
+  // Handle Joplin JEX exports (TAR archive)
+  if (exporter.name === "joplin" && result.files && result.files.length > 0) {
+    // Create TAR archive from files
+    const tarBuffer = createTarArchive(
+      result.files.map((f) => ({
+        name: f.path,
+        content: typeof f.content === "string" ? f.content : f.content.toString("utf-8"),
+      })),
+    );
+
+    // Ensure output path ends with .jex
+    const jexPath = outputPath.endsWith(".jex") ? outputPath : `${outputPath}.jex`;
+
+    const dir = path.dirname(jexPath);
+    if (dir && dir !== ".") {
+      await fs.mkdir(dir, { recursive: true });
+    }
+
+    await fs.writeFile(jexPath, tarBuffer);
+    return;
+  }
+
+  // Handle multi-file exports (Obsidian, etc)
   if (result.files && result.files.length > 0) {
     // Create output directory
     await fs.mkdir(outputPath, { recursive: true });

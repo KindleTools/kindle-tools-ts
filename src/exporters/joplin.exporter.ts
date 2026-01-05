@@ -7,8 +7,10 @@
  * Features:
  * - Deterministic IDs for idempotent imports
  * - Proper Joplin metadata (created_time, updated_time, etc.)
- * - Notebook organization by book
- * - Tag support
+ * - Notebook organization by book/author
+ * - Tag support with note-tag associations
+ * - Geolocation support (latitude, longitude, altitude)
+ * - Configurable author field for creator attribution
  *
  * @packageDocumentation
  */
@@ -21,10 +23,22 @@ import type {
   ExportResult,
   FolderStructure,
 } from "../types/exporter.js";
+import type { GeoLocation } from "../utils/geo-location.js";
 import { sha256Sync } from "../utils/hashing.js";
-import { getPageInfo } from "../utils/page-utils.js";
+import { formatPage } from "../utils/page-utils.js";
 import { groupByBook } from "../utils/stats.js";
 import { BaseExporter } from "./shared/index.js";
+
+// ============================================================================
+// Constants
+// ============================================================================
+
+/** Default Kindle locations per page for estimation */
+const LOCATIONS_PER_PAGE = 16.69;
+
+// ============================================================================
+// Types
+// ============================================================================
 
 /**
  * Extended options for Joplin export.
@@ -32,16 +46,24 @@ import { BaseExporter } from "./shared/index.js";
 export interface JoplinExporterOptions extends ExporterOptions {
   /** Root notebook name (default: "Kindle Highlights") */
   notebookName?: string;
+
   /** Add tags to notes (default: ["kindle"]) */
   tags?: string[];
-  /** Creator name for metadata */
+
+  /**
+   * Creator/author name for note metadata.
+   * This appears in the note body as attribution.
+   * Example: "John Doe" -> "- author: John Doe"
+   */
   creator?: string;
+
   /**
    * Estimate page numbers from Kindle locations when not available.
-   * Uses ~16 locations per page as a heuristic.
-   * Estimated pages are prefixed with ~ (default: true)
+   * Uses ~16.69 locations per page as a heuristic.
+   * Default: true
    */
   estimatePages?: boolean;
+
   /**
    * Folder structure for notebooks.
    * - 'flat': Root > Book (default for backward compatibility)
@@ -50,22 +72,34 @@ export interface JoplinExporterOptions extends ExporterOptions {
    * Note: 'by-book' behaves like 'flat' for Joplin.
    */
   folderStructure?: FolderStructure;
+
   /**
    * Case transformation for author notebook names.
-   * - 'original': Keep original case (default)
-   * - 'uppercase': Convert to UPPERCASE
+   * - 'original': Keep original case
+   * - 'uppercase': Convert to UPPERCASE (default, like Python version)
    * - 'lowercase': Convert to lowercase
    */
   authorCase?: AuthorCase;
+
   /**
    * Include clipping tags as Joplin tags.
    * Tags are merged with default tags. (default: true)
    */
   includeClippingTags?: boolean;
+
+  /**
+   * Geographic location where the reading took place.
+   * If provided, latitude/longitude/altitude will be added to each note.
+   * Useful for personal knowledge management.
+   *
+   * @example
+   * { latitude: 40.7128, longitude: -74.0060, altitude: 10 }
+   */
+  geoLocation?: GeoLocation;
 }
 
 /**
- * Joplin note metadata structure.
+ * Joplin note metadata structure (complete fields).
  */
 interface JoplinNote {
   id: string;
@@ -74,14 +108,21 @@ interface JoplinNote {
   body: string;
   created_time: number;
   updated_time: number;
+  user_created_time: number;
+  user_updated_time: number;
   is_todo: number;
   todo_completed: number;
   source: string;
   source_url: string;
   source_application: string;
   order: number;
-  user_created_time: number;
-  user_updated_time: number;
+  latitude: number;
+  longitude: number;
+  altitude: number;
+  author: string;
+  is_shared: number;
+  encryption_applied: number;
+  markup_language: number;
   type_: number;
 }
 
@@ -103,6 +144,7 @@ interface JoplinNotebook {
 interface JoplinTag {
   id: string;
   title: string;
+  parent_id: string;
   created_time: number;
   updated_time: number;
   type_: number;
@@ -120,6 +162,37 @@ interface JoplinNoteTag {
   type_: number;
 }
 
+// ============================================================================
+// Helper Functions
+// ============================================================================
+
+/**
+ * Format a date for human-readable display (not for Joplin metadata).
+ * Format: "2024-01-05 10:30:45"
+ */
+function formatDateHuman(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  const seconds = String(date.getSeconds()).padStart(2, "0");
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+}
+
+/**
+ * Estimate page number from Kindle location.
+ */
+function estimatePageFromLocation(location: number): number {
+  if (location <= 0) return 1;
+  const estimated = Math.floor(location / LOCATIONS_PER_PAGE);
+  return estimated < 1 ? 1 : estimated;
+}
+
+// ============================================================================
+// Exporter
+// ============================================================================
+
 /**
  * Export clippings to Joplin JEX format.
  *
@@ -131,11 +204,13 @@ export class JoplinExporter extends BaseExporter {
   readonly name = "joplin";
   readonly extension = ".jex";
 
+  private static readonly SOURCE = "kindle-to-jex";
   private static readonly SOURCE_APP = "kindle-tools-ts";
   private static readonly TYPE_NOTE = 1;
   private static readonly TYPE_FOLDER = 2;
   private static readonly TYPE_TAG = 5;
   private static readonly TYPE_NOTE_TAG = 6;
+  private static readonly MARKUP_MARKDOWN = 1;
 
   /**
    * Export clippings to Joplin format.
@@ -150,11 +225,16 @@ export class JoplinExporter extends BaseExporter {
   ): Promise<ExportResult> {
     const files: ExportedFile[] = [];
     const now = Date.now();
+
+    // Extract options with defaults
     const rootNotebookName = options?.notebookName ?? "Kindle Highlights";
     const defaultTags = options?.tags ?? ["kindle"];
     const folderStructure = options?.folderStructure ?? "flat";
-    const authorCase = options?.authorCase ?? "original";
+    const authorCase = options?.authorCase ?? "uppercase"; // Python default
     const includeClippingTags = options?.includeClippingTags ?? true;
+    const estimatePages = options?.estimatePages ?? true;
+    const creator = options?.creator ?? "";
+    const geoLocation = options?.geoLocation ?? { latitude: 0, longitude: 0, altitude: 0 };
 
     // Determine if we use 3-level hierarchy (Root > Author > Book)
     const useAuthorLevel = folderStructure === "by-author" || folderStructure === "by-author-book";
@@ -198,6 +278,7 @@ export class JoplinExporter extends BaseExporter {
       const tag: JoplinTag = {
         id: tagId,
         title: tagName,
+        parent_id: "", // Tags don't have parents
         created_time: now,
         updated_time: now,
         type_: JoplinExporter.TYPE_TAG,
@@ -267,9 +348,8 @@ export class JoplinExporter extends BaseExporter {
       // Create notes for each clipping
       for (const clipping of bookClippings) {
         const noteId = this.generateId("note", clipping.id);
-        const estimatePages = options?.estimatePages ?? true;
         const noteTitle = this.generateNoteTitle(clipping, estimatePages);
-        const noteBody = this.generateNoteBody(clipping, options);
+        const noteBody = this.generateNoteBody(clipping);
 
         const clippingDate = clipping.date?.getTime() ?? now;
 
@@ -280,14 +360,21 @@ export class JoplinExporter extends BaseExporter {
           body: noteBody,
           created_time: clippingDate,
           updated_time: now,
+          user_created_time: clippingDate,
+          user_updated_time: now,
           is_todo: 0,
           todo_completed: 0,
-          source: "kindle",
+          source: JoplinExporter.SOURCE,
           source_url: "",
           source_application: JoplinExporter.SOURCE_APP,
           order: orderCounter++,
-          user_created_time: clippingDate,
-          user_updated_time: now,
+          latitude: geoLocation.latitude ?? 0,
+          longitude: geoLocation.longitude ?? 0,
+          altitude: geoLocation.altitude ?? 0,
+          author: creator,
+          is_shared: 0,
+          encryption_applied: 0,
+          markup_language: JoplinExporter.MARKUP_MARKDOWN,
           type_: JoplinExporter.TYPE_NOTE,
         };
         files.push({
@@ -333,6 +420,7 @@ export class JoplinExporter extends BaseExporter {
 
   /**
    * Generate a deterministic ID for Joplin entities.
+   * Uses MD5-equivalent length (32 chars) for compatibility with Python version.
    */
   private generateId(type: string, content: string): string {
     const input = `${type}:${content.toLowerCase().trim()}`;
@@ -342,77 +430,90 @@ export class JoplinExporter extends BaseExporter {
   }
 
   /**
-   * Generate a title for the note based on clipping type.
+   * Generate a title for the note.
+   * Format: "[0042] snippet..." (Python-compatible, no emojis)
    */
-  private generateNoteTitle(clipping: Clipping, estimatePages = true): string {
-    const pageInfo = getPageInfo(clipping.page, clipping.location, estimatePages);
-    const typeEmoji = clipping.type === "highlight" ? "📖" : clipping.type === "note" ? "📝" : "🔖";
+  private generateNoteTitle(clipping: Clipping, estimate = true): string {
     const preview = clipping.content.slice(0, 50).replace(/\n/g, " ");
-    const ellipsis = clipping.content.length > 50 ? "..." : "";
 
-    return `${pageInfo.formatted} ${typeEmoji} ${preview}${ellipsis}`;
+    // Determine page number
+    let pageNum = 0;
+
+    // Strategy 1: Use actual page if available
+    if (clipping.page !== null) {
+      pageNum = clipping.page;
+    }
+    // Strategy 2: Estimate from location
+    else if (estimate && clipping.location.start > 0) {
+      pageNum = estimatePageFromLocation(clipping.location.start);
+    }
+
+    // Format the reference
+    const ref = pageNum > 0 ? formatPage(pageNum) : "";
+
+    return ref ? `${ref} ${preview}` : preview;
   }
 
   /**
    * Generate the body content for a Joplin note.
+   * Python-compatible format: content first, metadata footer at bottom.
    */
-  private generateNoteBody(clipping: Clipping, options?: JoplinExporterOptions): string {
-    const lines: string[] = [];
+  private generateNoteBody(clipping: Clipping): string {
+    const parts: string[] = [];
 
-    // Metadata section
-    lines.push(`**Book:** ${clipping.title}`);
-    lines.push(`**Author:** ${clipping.author}`);
-    lines.push(`**Type:** ${clipping.type}`);
-    lines.push(`**Page:** ${clipping.page ?? "N/A"}`);
-    lines.push(`**Location:** ${clipping.location.raw}`);
+    // Content first
+    parts.push(clipping.content);
 
-    if (clipping.date) {
-      lines.push(`**Date:** ${clipping.date.toISOString()}`);
-    }
-
-    lines.push("");
-    lines.push("---");
-    lines.push("");
-
-    // Content
-    if (clipping.type === "highlight") {
-      lines.push(`> ${clipping.content.replace(/\n/g, "\n> ")}`);
-    } else if (clipping.type === "note") {
-      lines.push(clipping.content);
-    } else if (clipping.type === "bookmark") {
-      lines.push(`*Bookmark at Location ${clipping.location.raw}*`);
-    }
-
-    // Linked note
+    // Linked note (if any)
     if (clipping.note) {
-      lines.push("");
-      lines.push("### My Note");
-      lines.push("");
-      lines.push(clipping.note);
+      parts.push("");
+      parts.push("---");
+      parts.push("");
+      parts.push("**My Note:**");
+      parts.push(clipping.note);
     }
 
-    // Creator info
-    if (options?.creator) {
-      lines.push("");
-      lines.push("---");
-      lines.push("");
-      lines.push(`*Exported by ${options.creator}*`);
+    // Metadata footer (Python style)
+    parts.push("");
+    parts.push("");
+    parts.push("-----");
+
+    // Build metadata list (Python-compatible format)
+    const meta: string[] = [];
+    if (clipping.date) {
+      meta.push(`- date: ${formatDateHuman(clipping.date)}`);
+    }
+    meta.push(`- author: ${clipping.author}`);
+    meta.push(`- book: ${clipping.title}`);
+    if (clipping.page !== null) {
+      meta.push(`- page: ${clipping.page}`);
+    }
+    if (clipping.tags && clipping.tags.length > 0) {
+      meta.push(`- tags: ${clipping.tags.join(", ")}`);
     }
 
-    return lines.join("\n");
+    parts.push(meta.join("\n"));
+    parts.push("-----");
+
+    return parts.join("\n");
   }
 
   /**
    * Serialize a Joplin note to its file format.
+   * Complete format with all Joplin fields.
    */
   private serializeNote(note: JoplinNote): string {
     const lines: string[] = [];
 
-    // Title comes first in Joplin format
+    // Title comes first (required by Joplin)
     lines.push(note.title);
     lines.push("");
+
+    // Body
     lines.push(note.body);
     lines.push("");
+
+    // Properties (type_ must be LAST)
     lines.push(`id: ${note.id}`);
     lines.push(`parent_id: ${note.parent_id}`);
     lines.push(`created_time: ${this.formatTimestamp(note.created_time)}`);
@@ -422,10 +523,17 @@ export class JoplinExporter extends BaseExporter {
     lines.push(`source: ${note.source}`);
     lines.push(`source_url: ${note.source_url}`);
     lines.push(`source_application: ${note.source_application}`);
+    lines.push(`latitude: ${note.latitude.toFixed(8)}`);
+    lines.push(`longitude: ${note.longitude.toFixed(8)}`);
+    lines.push(`altitude: ${note.altitude.toFixed(4)}`);
+    lines.push(`author: ${note.author}`);
     lines.push(`order: ${note.order}`);
     lines.push(`user_created_time: ${this.formatTimestamp(note.user_created_time)}`);
     lines.push(`user_updated_time: ${this.formatTimestamp(note.user_updated_time)}`);
-    lines.push(`type_: ${note.type_}`);
+    lines.push(`is_shared: ${note.is_shared}`);
+    lines.push(`encryption_applied: ${note.encryption_applied}`);
+    lines.push(`markup_language: ${note.markup_language}`);
+    lines.push(`type_: ${note.type_}`); // MUST be last
 
     return lines.join("\n");
   }
@@ -456,6 +564,7 @@ export class JoplinExporter extends BaseExporter {
     lines.push(tag.title);
     lines.push("");
     lines.push(`id: ${tag.id}`);
+    lines.push(`parent_id: ${tag.parent_id}`);
     lines.push(`created_time: ${this.formatTimestamp(tag.created_time)}`);
     lines.push(`updated_time: ${this.formatTimestamp(tag.updated_time)}`);
     lines.push(`type_: ${tag.type_}`);
@@ -480,7 +589,8 @@ export class JoplinExporter extends BaseExporter {
   }
 
   /**
-   * Format a timestamp for Joplin (ISO 8601).
+   * Format a timestamp for Joplin metadata (ISO 8601 with Z suffix).
+   * This format is required by Joplin's internal parser.
    */
   private formatTimestamp(ms: number): string {
     return new Date(ms).toISOString();

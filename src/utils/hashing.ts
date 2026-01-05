@@ -13,15 +13,24 @@ import type { ClippingType } from "../types/clipping.js";
  * @returns 64-character hex string
  */
 export function sha256Sync(input: string): string {
-  // Check if we're in Node.js
-  if (typeof globalThis.process !== "undefined" && globalThis.process.versions?.node) {
-    // Node.js environment - use crypto module
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const crypto = require("node:crypto");
-    return crypto.createHash("sha256").update(input, "utf8").digest("hex");
+  // Check if we're in Node.js with crypto available
+  try {
+    // Try to use Node.js crypto module synchronously
+    // This works in most Node.js environments
+    // biome-ignore lint/suspicious/noExplicitAny: Dynamic require for Node.js compatibility
+    const crypto = (globalThis as any).process?.versions?.node
+      ? // biome-ignore lint/suspicious/noExplicitAny: Dynamic require for Node.js compatibility
+        (require as any)("node:crypto")
+      : null;
+
+    if (crypto) {
+      return crypto.createHash("sha256").update(input, "utf8").digest("hex");
+    }
+  } catch {
+    // Crypto not available, fall through to browser implementation
   }
 
-  // Browser environment - use simple hash (djb2 + fnv1a combined for better distribution)
+  // Browser/fallback environment - use simple hash (djb2 + fnv1a combined for better distribution)
   // Note: This is NOT cryptographically secure, but sufficient for ID generation
   let h1 = 0xdeadbeef;
   let h2 = 0x41c6ce57;

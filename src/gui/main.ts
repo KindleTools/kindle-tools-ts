@@ -10,6 +10,7 @@ import {
   CsvExporter,
   CsvImporter,
   calculateStats,
+  createTarArchive,
   type FolderStructure,
   HtmlExporter,
   JoplinExporter,
@@ -21,6 +22,7 @@ import {
   type ParseResult,
   parseString,
   type TagCase,
+  type TarEntry,
 } from "../index.js";
 
 // =============================================================================
@@ -544,7 +546,10 @@ function renderRawData(): void {
 // =============================================================================
 
 // Store export results for download
-const exportResults: Record<string, { content: string; extension: string; mimeType: string }> = {};
+const exportResults: Record<
+  string,
+  { content: string | Uint8Array; extension: string; mimeType: string }
+> = {};
 
 async function renderExports(): Promise<void> {
   const result = state.parseResult;
@@ -610,11 +615,41 @@ async function renderExports(): Promise<void> {
     authorCase,
     includeClippingTags,
   });
-  const joplinContent =
-    typeof joplinResult.output === "string" ? joplinResult.output : "[Binary output]";
-  elements.exportJoplinContent.textContent = joplinContent;
-  elements.exportJoplinContent.classList.remove("placeholder");
-  exportResults.joplin = { content: joplinContent, extension: ".md", mimeType: "text/markdown" };
+
+  if (joplinResult.files && joplinResult.files.length > 0) {
+    try {
+      // Create TAR/JEX archive
+      const entries: TarEntry[] = joplinResult.files.map((f) => ({
+        name: f.path,
+        content: f.content,
+      }));
+
+      const tarData = createTarArchive(entries);
+
+      elements.exportJoplinContent.textContent = `[Generated JEX Archive: ${formatBytes(tarData.byteLength)}]`;
+      elements.exportJoplinContent.classList.remove("placeholder");
+
+      exportResults.joplin = {
+        content: tarData,
+        extension: ".jex",
+        mimeType: "application/x-tar",
+      };
+    } catch (err) {
+      console.error("JEX generation error:", err);
+      elements.exportJoplinContent.textContent = `Error creating JEX archive: ${err}`;
+      exportResults.joplin = {
+        content: `Error: ${err}`,
+        extension: ".txt",
+        mimeType: "text/plain",
+      };
+    }
+  } else {
+    const joplinContent =
+      typeof joplinResult.output === "string" ? joplinResult.output : "[Binary output]";
+    elements.exportJoplinContent.textContent = joplinContent;
+    elements.exportJoplinContent.classList.remove("placeholder");
+    exportResults.joplin = { content: joplinContent, extension: ".md", mimeType: "text/markdown" };
+  }
 
   // HTML Export
   const htmlExporter = new HtmlExporter();
@@ -667,7 +702,10 @@ function downloadExport(): void {
   }
 
   const fileName = `kindle-clippings${exportData.extension}`;
-  const blob = new Blob([exportData.content], { type: exportData.mimeType });
+  const blob =
+    exportData.content instanceof Uint8Array
+      ? new Blob([exportData.content as any], { type: exportData.mimeType })
+      : new Blob([exportData.content as string], { type: exportData.mimeType });
   const url = URL.createObjectURL(blob);
 
   const a = document.createElement("a");
