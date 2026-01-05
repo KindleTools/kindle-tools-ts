@@ -465,7 +465,10 @@ export class JoplinExporter extends BaseExporter {
     parts.push(clipping.content);
 
     // Linked note (if any)
-    if (clipping.note) {
+    // Only show if the note wasn't consumed as tags
+    // (if clipping has tags, the note was used for tag extraction)
+    const noteWasConsumedAsTags = clipping.tags && clipping.tags.length > 0;
+    if (clipping.note && !noteWasConsumedAsTags) {
       parts.push("");
       parts.push("---");
       parts.push("");

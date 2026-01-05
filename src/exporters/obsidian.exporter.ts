@@ -239,8 +239,9 @@ export class ObsidianExporter extends BaseExporter {
         lines.push(`> ${line}`);
       }
 
-      // Add linked note if present
-      if (clipping.note) {
+      // Add linked note if present (only if not consumed as tags)
+      const noteWasConsumedAsTags = clipping.tags && clipping.tags.length > 0;
+      if (clipping.note && !noteWasConsumedAsTags) {
         lines.push(">");
         lines.push(`> [!note] My Note`);
         lines.push(`> ${clipping.note}`);
@@ -249,7 +250,9 @@ export class ObsidianExporter extends BaseExporter {
       lines.push(`> ${clipping.content}`);
       lines.push(`> — ${locationInfo}`);
 
-      if (clipping.note) {
+      // Add linked note if present (only if not consumed as tags)
+      const noteWasConsumedAsTags = clipping.tags && clipping.tags.length > 0;
+      if (clipping.note && !noteWasConsumedAsTags) {
         lines.push("");
         lines.push(`**Note:** ${clipping.note}`);
       }
