@@ -47,7 +47,7 @@ export interface JoplinExporterOptions extends ExporterOptions {
   /** Root notebook name (default: "Kindle Highlights") */
   notebookName?: string;
 
-  /** Add tags to notes (default: ["kindle"]) */
+  /** Add tags to notes (default: []) */
   tags?: string[];
 
   /**
@@ -228,7 +228,7 @@ export class JoplinExporter extends BaseExporter {
 
     // Extract options with defaults
     const rootNotebookName = options?.notebookName ?? "Kindle Highlights";
-    const defaultTags = options?.tags ?? ["kindle"];
+    const defaultTags = options?.tags ?? [];
     const folderStructure = options?.folderStructure ?? "flat";
     const authorCase = options?.authorCase ?? "uppercase"; // Python default
     const includeClippingTags = options?.includeClippingTags ?? true;

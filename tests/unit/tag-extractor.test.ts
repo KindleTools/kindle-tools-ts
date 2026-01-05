@@ -9,55 +9,55 @@ describe("tag-extractor", () => {
   describe("extractTagsFromNote", () => {
     it("should extract comma-separated tags", () => {
       const result = extractTagsFromNote("productivity, psychology, habits");
-      expect(result.tags).toEqual(["productivity", "psychology", "habits"]);
+      expect(result.tags).toEqual(["PRODUCTIVITY", "PSYCHOLOGY", "HABITS"]);
       expect(result.hasTags).toBe(true);
       expect(result.isTagOnlyNote).toBe(true);
     });
 
     it("should extract semicolon-separated tags", () => {
       const result = extractTagsFromNote("business; self-help; motivation");
-      expect(result.tags).toEqual(["business", "self-help", "motivation"]);
+      expect(result.tags).toEqual(["BUSINESS", "SELF-HELP", "MOTIVATION"]);
       expect(result.hasTags).toBe(true);
     });
 
     it("should extract newline-separated tags", () => {
       const result = extractTagsFromNote("tag1\ntag2\ntag3");
-      expect(result.tags).toEqual(["tag1", "tag2", "tag3"]);
+      expect(result.tags).toEqual(["TAG1", "TAG2", "TAG3"]);
       expect(result.hasTags).toBe(true);
     });
 
     it("should extract period-separated tags", () => {
       const result = extractTagsFromNote("ESTRATEGIA. SABIDURÍA. FILOSOFÍA");
-      expect(result.tags).toEqual(["estrategia", "sabiduría", "filosofía"]);
+      expect(result.tags).toEqual(["ESTRATEGIA", "SABIDURÍA", "FILOSOFÍA"]);
       expect(result.hasTags).toBe(true);
       expect(result.isTagOnlyNote).toBe(true);
     });
 
     it("should handle mixed separators", () => {
       const result = extractTagsFromNote("productivity, psychology; habits\nlearning");
-      expect(result.tags).toEqual(["productivity", "psychology", "habits", "learning"]);
+      expect(result.tags).toEqual(["PRODUCTIVITY", "PSYCHOLOGY", "HABITS", "LEARNING"]);
     });
 
     it("should remove hashtag prefix", () => {
       const result = extractTagsFromNote("#productivity, #habits");
-      expect(result.tags).toEqual(["productivity", "habits"]);
+      expect(result.tags).toEqual(["PRODUCTIVITY", "HABITS"]);
     });
 
     it("should deduplicate tags (case-insensitive)", () => {
       const result = extractTagsFromNote("Productivity, PRODUCTIVITY, productivity");
-      expect(result.tags).toEqual(["productivity"]);
+      expect(result.tags).toEqual(["PRODUCTIVITY"]);
     });
 
     it("should reject very short tags", () => {
       const result = extractTagsFromNote("a, ab, abc");
       // "a" is too short (< 2), "ab" is at minimum
-      expect(result.tags).toEqual(["ab", "abc"]);
+      expect(result.tags).toEqual(["AB", "ABC"]);
     });
 
     it("should reject sentence fragments", () => {
       const result = extractTagsFromNote("This is a sentence, tag1");
       // "This is a sentence" contains "is" and "a" - likely a sentence
-      expect(result.tags).toEqual(["tag1"]);
+      expect(result.tags).toEqual(["TAG1"]);
     });
 
     it("should handle empty input", () => {

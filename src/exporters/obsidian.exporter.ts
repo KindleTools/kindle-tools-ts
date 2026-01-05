@@ -29,7 +29,7 @@ export interface ObsidianExporterOptions extends ExporterOptions {
   wikilinks?: boolean;
   /** Use callouts for highlights (default: true) */
   useCallouts?: boolean;
-  /** Default tags to add to all notes (default: ["kindle", "highlights"]) */
+  /** Default tags to add to all notes (default: []) */
   tags?: string[];
   /** Folder name for book notes (default: "books") */
   folder?: string;
@@ -133,7 +133,7 @@ export class ObsidianExporter extends BaseExporter {
 
     const useCallouts = options?.useCallouts ?? true;
     const useWikilinks = options?.wikilinks ?? true;
-    const defaultTags = options?.tags ?? ["kindle", "highlights"];
+    const defaultTags = options?.tags ?? [];
     const includeClippingTags = options?.includeClippingTags ?? true;
 
     // Collect all unique tags from clippings

@@ -24,8 +24,8 @@ export interface TagExtractionOptions {
   /**
    * Case transformation for extracted tags.
    * - 'original': Keep original case as typed in notes
-   * - 'uppercase': Convert to UPPERCASE
-   * - 'lowercase': Convert to lowercase (default)
+   * - 'uppercase': Convert to UPPERCASE (default)
+   * - 'lowercase': Convert to lowercase
    */
   tagCase?: TagCase;
 }
@@ -93,7 +93,7 @@ export function extractTagsFromNote(
   }
 
   const trimmed = noteContent.trim();
-  const tagCase = options.tagCase ?? "lowercase";
+  const tagCase = options.tagCase ?? "uppercase";
 
   // Split by separators
   const parts = trimmed.split(TAG_SEPARATORS);
@@ -160,10 +160,10 @@ function cleanTag(tag: string, tagCase: TagCase): string {
   // Apply case transformation
   switch (tagCase) {
     case "uppercase":
-      cleaned = cleaned.toUpperCase();
+      cleaned = cleaned.toLocaleUpperCase();
       break;
     case "lowercase":
-      cleaned = cleaned.toLowerCase();
+      cleaned = cleaned.toLocaleLowerCase();
       break;
     case "original":
       // Keep original case

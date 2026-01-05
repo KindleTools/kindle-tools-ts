@@ -31,10 +31,10 @@ export interface ParseOptions {
   /**
    * Case transformation for extracted tags.
    * - 'original': Keep original case as typed in notes
-   * - 'uppercase': Convert to UPPERCASE
-   * - 'lowercase': Convert to lowercase (default)
+   * - 'uppercase': Convert to UPPERCASE (default)
+   * - 'lowercase': Convert to lowercase
    * Only applies when extractTags is enabled.
-   * Default: 'lowercase'
+   * Default: 'uppercase'
    */
   tagCase?: "original" | "uppercase" | "lowercase";
 

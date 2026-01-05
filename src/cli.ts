@@ -206,9 +206,9 @@ function parseArgs(args: string[]): ParsedArgs {
     } else if (arg === "--extract-tags") {
       result.extractTags = true;
     } else if (arg === "--tag-case") {
-      result.tagCase = (args[++i] ?? "lowercase") as TagCase;
+      result.tagCase = (args[++i] ?? "uppercase") as TagCase;
     } else if (arg.startsWith("--tag-case=")) {
-      result.tagCase = (arg.split("=")[1] ?? "lowercase") as TagCase;
+      result.tagCase = (arg.split("=")[1] ?? "uppercase") as TagCase;
     } else if (arg === "--highlights-only" || arg === "--merged") {
       result.highlightsOnly = true;
     }
@@ -655,7 +655,7 @@ ${c.bold("OPTIONS:")}
 ${c.bold("PROCESSING OPTIONS:")}
   --highlights-only     Return only highlights with embedded notes (no separate notes/bookmarks)
   --extract-tags        Extract tags from notes during parsing
-  --tag-case <case>     Tag case: original (as typed), uppercase, lowercase (default)
+  --tag-case <case>     Tag case: original (as typed), uppercase (default), lowercase
 
 ${c.bold("EXPORT OPTIONS (Obsidian/Joplin):")}
   --structure <type>    Folder structure: flat, by-book, by-author, by-author-book
