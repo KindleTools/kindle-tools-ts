@@ -2,6 +2,7 @@
  * Tests for page-utils module.
  */
 
+import { describe, expect, it } from "vitest";
 import {
   estimatePageFromLocation,
   formatPage,
@@ -10,8 +11,7 @@ import {
   getPageInfo,
   LOCATIONS_PER_PAGE,
   PAGE_PADDING_LENGTH,
-} from "@domain/page-utils.js";
-import { describe, expect, it } from "vitest";
+} from "#domain/page-utils.js";
 
 describe("page-utils", () => {
   describe("constants", () => {

@@ -370,3 +370,34 @@ Ideas to push the boundaries of what a clipping manager can do.
   - The "Holy Grail" for PKM users (Obsidian, Logseq).
   - Maintain a state file (hashes of previously imported clips).
   - Run imports in "Additive Mode": Only create files for *new* highlights, preventing overwrite of manual edits in existing notes.
+
+## 🏗️ Scalability & Robustness Improvements (Post-Refactor)
+
+Enhancements to solidify the architecture after the migration to Native Node Subpath Imports.
+
+- [ ] **Architectural Separation (Monorepo)**:
+  - Migrate project structure to a **pnpm workspace** to strictly separate concerns.
+  - `packages/core`: Pure business logic, parsers, and exporters (Environment agnostic).
+  - `packages/cli`: Command Line Interface implementation.
+  - `packages/gui`: Browser-based application (Vite).
+  - **Goal**: Completely prevent leakage of Node.js modules (`fs`, `path`) into the browser environment and manage dependencies granularly.
+
+- [ ] **Explicit Browser Entry Point**:
+  - Add a `"browser"` field or correct `exports` condition in `package.json` pointing to a browser-specific bundle.
+  - Ensure users consuming the library in web frameworks (React, Vue, etc.) automatically get the version without `fs` dependencies (using the new `file-parser.ts` logic) without extra configuration.
+
+- [ ] **E2E Testing for GUI**:
+  - Integrate **Playwright** or **Cypress** to automate GUI testing.
+  - Automated flows: Page load, Drag & Drop simulation, DOM verification of parsed cards.
+  - **Goal**: Ensure UI stability alongside Core logic tests.
+
+- [ ] **Performance Benchmarking**:
+  - Create a benchmark script to generate synthetic files with 10k-50k clippings.
+  - Measure parsing and deduplication time to detect regressions before they affect users with large libraries.
+
+- [ ] **Architecture Decision Records (ADR)**:
+  - Document key architectural decisions:
+    - Adoption of `NodeNext` and Native Subpath Imports.
+    - Strategy for separating Node/Browser logic (`file-parser.ts`).
+    - Usage of relative imports in GUI to avoid bundler issues.
+  - Create `docs/adr/` to maintain this context for future contributors.

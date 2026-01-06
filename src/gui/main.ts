@@ -3,14 +3,16 @@
  * Main entry point for the browser-based testing interface
  */
 
-import { process } from "../core/processor.js";
-import * as GeoUtils from "../domain/geo-location.js";
-import * as StatUtils from "../domain/stats.js";
+import type { Clipping, ClippingType } from "#app-types/clipping.js";
+import type { ParseOptions, ParseResult } from "#app-types/config.js";
+import type { SupportedLanguage } from "#app-types/language.js";
+import { process } from "#core/processor.js";
+import * as GeoUtils from "#domain/geo-location.js";
+import * as StatUtils from "#domain/stats.js";
 import {
   type AuthorCase,
   CsvExporter,
   type ExportedFile,
-  type Exporter,
   type FolderStructure,
   HtmlExporter,
   JoplinExporter,
@@ -18,17 +20,14 @@ import {
   MarkdownExporter,
   ObsidianExporter,
   type TagCase,
-} from "../exporters/index.js";
-import { CsvImporter, type Importer, JsonImporter, TxtImporter } from "../importers/index.js";
-import type { Clipping, ClippingType } from "../types/clipping.js";
-import type { ParseOptions, ParseResult } from "../types/config.js";
-import type { SupportedLanguage } from "../types/language.js";
-import * as DateUtils from "../utils/dates.js";
-import * as TextUtils from "../utils/normalizers.js";
-import type { TarEntry } from "../utils/tar.js";
-import * as TarUtils from "../utils/tar.js";
-import type { ZipEntry } from "../utils/zip.js";
-import * as ZipUtils from "../utils/zip.js";
+} from "#exporters/index.js";
+import { CsvImporter, type Importer, JsonImporter, TxtImporter } from "#importers/index.js";
+import * as DateUtils from "#utils/dates.js";
+import * as TextUtils from "#utils/normalizers.js";
+import type { TarEntry } from "#utils/tar.js";
+import * as TarUtils from "#utils/tar.js";
+import type { ZipEntry } from "#utils/zip.js";
+import * as ZipUtils from "#utils/zip.js";
 
 const Utils = {
   ...DateUtils,

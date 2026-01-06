@@ -19,7 +19,7 @@ import type {
   Exporter,
   ExporterOptions,
   ExportResult,
-} from "../index.js";
+} from "../types.js";
 import {
   applyCase as applyCaseUtil,
   collectAllTags as collectAllTagsUtil,

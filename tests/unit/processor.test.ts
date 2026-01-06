@@ -4,15 +4,15 @@
  * Tests deduplication, tag merging, note linking, and quality flags.
  */
 
-import type { Clipping } from "@app-types/clipping.js";
+import { describe, expect, it } from "vitest";
+import type { Clipping } from "#app-types/clipping.js";
 import {
   filterToHighlightsOnly,
   linkNotesToHighlights,
   process,
   removeDuplicates,
   smartMergeHighlights,
-} from "@core/processor.js";
-import { describe, expect, it } from "vitest";
+} from "#core/processor.js";
 
 /**
  * Create a minimal clipping for testing.

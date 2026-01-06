@@ -310,8 +310,10 @@ The GUI (`src/gui/`) uses Vite for development and demonstrates browser usage.
 
 ## Dependencies
 
-**Runtime** (only 2):
+**Runtime**:
 - `date-fns`: Multi-locale date parsing
+- `handlebars`: Template engine for exports
+- `jszip`: Archive creation (Joplin JEX, etc.)
 - `zod`: Schema validation
 
 **Development**:
@@ -341,12 +343,12 @@ The project is structured to separate "Business Rules" from "Infrastructure" and
 #### 3. Strict Layer Boundaries (Path Aliases)
 We enforce structure via TypeScript path aliases:
 
-- `@domain/*`: **Pure Business Logic**. No dependencies on Core or Importers.
-- `@core/*`: **Orchestration Logic**. Connects Domain, Importers, and Exporters.
-- `@importers/*`: **Adapters** for external data formats.
-- `@exporters/*`: **Adapters** for output formats.
-- `@utils/*`: **Generic Tools**. Zero dependencies on app logic.
-- `@app-types/*`: **Shared Domain Types**.
+- `#domain/*`: **Pure Business Logic**. No dependencies on Core or Importers.
+- `#core/*`: **Orchestration Logic**. Connects Domain, Importers, and Exporters.
+- `#importers/*`: **Adapters** for external data formats.
+- `#exporters/*`: **Adapters** for output formats.
+- `#utils/*`: **Generic Tools**. Zero dependencies on app logic.
+- `#app-types/*`: **Shared Domain Types**.
 
 #### 4. Unified Processing Pipeline
 Regardless of the input source (Raw Text, JSON backup, CSV), all data flows through the same **Pipeline**:

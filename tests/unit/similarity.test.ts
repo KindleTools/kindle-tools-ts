@@ -2,8 +2,8 @@
  * Tests for the similarity module.
  */
 
-import { compareTexts, isSubset, jaccardSimilarity } from "@utils/similarity.js";
 import { describe, expect, it } from "vitest";
+import { compareTexts, isSubset, jaccardSimilarity } from "#utils/similarity.js";
 
 describe("similarity", () => {
   describe("jaccardSimilarity", () => {

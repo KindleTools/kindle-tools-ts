@@ -2,8 +2,8 @@
  * Tests for the parser module.
  */
 
-import { parse, parseString } from "@importers/txt/core/parser.js";
 import { describe, expect, it } from "vitest";
+import { parse, parseString } from "#importers/txt/core/parser.js";
 import { SAMPLE_CLIPPINGS_EN, SAMPLE_CLIPPINGS_ES } from "../fixtures/sample-clippings.js";
 
 describe("parser", () => {

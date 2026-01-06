@@ -2,6 +2,7 @@
  * Tests for geo-location module.
  */
 
+import { describe, expect, it } from "vitest";
 import {
   distanceBetween,
   formatGeoLocation,
@@ -9,8 +10,7 @@ import {
   parseGeoLocation,
   toGoogleMapsUrl,
   toOpenStreetMapUrl,
-} from "@domain/geo-location.js";
-import { describe, expect, it } from "vitest";
+} from "#domain/geo-location.js";
 
 describe("geo-location", () => {
   describe("isValidGeoLocation", () => {

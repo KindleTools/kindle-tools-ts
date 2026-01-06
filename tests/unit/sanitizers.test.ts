@@ -2,8 +2,8 @@
  * Tests for the sanitizers module.
  */
 
-import { extractAuthor, isSideloaded, sanitizeContent, sanitizeTitle } from "@domain/sanitizers.js";
 import { describe, expect, it } from "vitest";
+import { extractAuthor, isSideloaded, sanitizeContent, sanitizeTitle } from "#domain/sanitizers.js";
 
 describe("sanitizers", () => {
   describe("sanitizeTitle", () => {

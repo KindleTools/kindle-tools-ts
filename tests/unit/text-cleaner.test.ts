@@ -2,8 +2,8 @@
  * Tests for the text-cleaner module.
  */
 
-import { cleanText, needsCleaning } from "@utils/text-cleaner.js";
 import { describe, expect, it } from "vitest";
+import { cleanText, needsCleaning } from "#utils/text-cleaner.js";
 
 describe("text-cleaner", () => {
   describe("cleanText", () => {

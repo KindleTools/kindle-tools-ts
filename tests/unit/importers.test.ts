@@ -2,8 +2,8 @@
  * Tests for JSON and CSV importers
  */
 
-import { CsvImporter, JsonImporter } from "@importers/index.js";
 import { describe, expect, it } from "vitest";
+import { CsvImporter, JsonImporter } from "#importers/index.js";
 
 describe("importers", () => {
   describe("JsonImporter", () => {
