@@ -4,7 +4,7 @@ export default defineConfig({
   // Entry points
   entry: {
     index: "src/index.ts",
-    cli: "src/cli.ts",
+    cli: "src/cli/index.ts",
   },
 
   // Output formats: ESM and CommonJS

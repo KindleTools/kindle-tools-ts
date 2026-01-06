@@ -4,7 +4,7 @@
  * @packageDocumentation
  */
 
-import type { ClippingType } from "@app-types/clipping.js";
+import type { ClippingType } from "#app-types/clipping.js";
 
 /**
  * Simple hash function that works in both Node.js and browser.

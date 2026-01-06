@@ -10,7 +10,7 @@ export type {
   Exporter,
   ExporterOptions,
   ExportResult,
-} from "@exporters/types.js";
+} from "#exporters/types.js";
 // Clipping types
 export type {
   Clipping,

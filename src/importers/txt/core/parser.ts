@@ -7,17 +7,15 @@
  * @packageDocumentation
  */
 
-import * as fs from "node:fs/promises";
-import type { Clipping, ClippingLocation, ClippingType } from "@app-types/clipping.js";
-import type { ParseOptions, ParseResult, ParseWarning } from "@app-types/config.js";
-import type { SupportedLanguage } from "@app-types/language.js";
-import { process } from "@core/processor.js";
-import { extractAuthor, isSideloaded, sanitizeContent, sanitizeTitle } from "@domain/sanitizers.js";
-import { calculateStats, countWords } from "@domain/stats.js";
-import { decodeWithFallback, detectEncoding } from "@utils/encoding.js";
-import { generateClippingId } from "@utils/hashing.js";
-import { normalizeWhitespace, removeBOM } from "@utils/normalizers.js";
-import { cleanText } from "@utils/text-cleaner.js";
+import type { Clipping, ClippingLocation, ClippingType } from "#app-types/clipping.js";
+import type { ParseOptions, ParseResult, ParseWarning } from "#app-types/config.js";
+import type { SupportedLanguage } from "#app-types/language.js";
+import { process } from "#core/processor.js";
+import { extractAuthor, isSideloaded, sanitizeContent, sanitizeTitle } from "#domain/sanitizers.js";
+import { calculateStats, countWords } from "#domain/stats.js";
+import { generateClippingId } from "#utils/hashing.js";
+import { normalizeWhitespace, removeBOM } from "#utils/normalizers.js";
+import { cleanText } from "#utils/text-cleaner.js";
 import { parseKindleDate } from "../utils/date-parser.js";
 import { LANGUAGE_MAP } from "./constants.js";
 import { detectLanguage } from "./language-detector.js";
@@ -43,59 +41,6 @@ interface MetadataParseResult {
   dateRaw: string;
 }
 
-/**
- * Parse a Kindle clippings file from a file path.
-
- *
- * Supports multiple encodings:
- * - UTF-8 (with or without BOM)
- * - UTF-16 LE/BE
- * - Latin-1/ISO-8859-1 (fallback for Windows files)
- *
- * @param filePath - Path to My Clippings.txt
- * @param options - Parse options
- * @returns Parse result with clippings and stats
- *
- * @example
- * ```typescript
- * const result = await parseFile("My Clippings.txt");
- * console.log(`Parsed ${result.clippings.length} clippings`);
- * ```
- */
-export async function parseFile(filePath: string, options?: ParseOptions): Promise<ParseResult> {
-  // Read as buffer first to detect encoding
-  const buffer = await fs.readFile(filePath);
-  const detectedEncoding = detectEncoding(buffer);
-  const content = decodeWithFallback(buffer, detectedEncoding);
-  const fileSize = buffer.length;
-
-  const startTime = performance.now();
-  const result = parseString(content, options);
-  const parseTime = performance.now() - startTime;
-
-  return {
-    ...result,
-    meta: {
-      ...result.meta,
-      fileSize,
-      parseTime,
-    },
-  };
-}
-
-/**
- * Parse Kindle clippings from a string.
- *
- * @param content - Raw file content
- * @param options - Parse options
- * @returns Parse result with clippings and stats
- *
- * @example
- * ```typescript
- * const content = fs.readFileSync("My Clippings.txt", "utf-8");
- * const result = parseString(content);
- * ```
- */
 export function parseString(content: string, options?: ParseOptions): ParseResult {
   const startTime = performance.now();
   const warnings: ParseWarning[] = [];

@@ -4,8 +4,8 @@
  * @packageDocumentation
  */
 
-import type { Clipping } from "@app-types/clipping.js";
-import type { BookStats, ClippingsStats } from "@app-types/stats.js";
+import type { Clipping } from "#app-types/clipping.js";
+import type { BookStats, ClippingsStats } from "#app-types/stats.js";
 
 /**
  * Calculate comprehensive statistics for clippings.

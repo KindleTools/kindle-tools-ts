@@ -3,31 +3,41 @@
  * Main entry point for the browser-based testing interface
  */
 
+import { process } from "../core/processor.js";
+import * as GeoUtils from "../domain/geo-location.js";
+import * as StatUtils from "../domain/stats.js";
 import {
   type AuthorCase,
-  type Clipping,
-  type ClippingType,
   CsvExporter,
-  CsvImporter,
   type ExportedFile,
+  type Exporter,
   type FolderStructure,
   HtmlExporter,
-  type Importer,
   JoplinExporter,
   JsonExporter,
-  JsonImporter,
   MarkdownExporter,
   ObsidianExporter,
-  type ParseOptions,
-  type ParseResult,
-  process,
-  type SupportedLanguage,
   type TagCase,
-  type TarEntry,
-  TxtImporter,
-  Utils,
-  type ZipEntry,
-} from "../index.js";
+} from "../exporters/index.js";
+import { CsvImporter, type Importer, JsonImporter, TxtImporter } from "../importers/index.js";
+import type { Clipping, ClippingType } from "../types/clipping.js";
+import type { ParseOptions, ParseResult } from "../types/config.js";
+import type { SupportedLanguage } from "../types/language.js";
+import * as DateUtils from "../utils/dates.js";
+import * as TextUtils from "../utils/normalizers.js";
+import type { TarEntry } from "../utils/tar.js";
+import * as TarUtils from "../utils/tar.js";
+import type { ZipEntry } from "../utils/zip.js";
+import * as ZipUtils from "../utils/zip.js";
+
+const Utils = {
+  ...DateUtils,
+  ...GeoUtils,
+  ...TextUtils,
+  ...StatUtils,
+  ...TarUtils,
+  ...ZipUtils,
+};
 
 // =============================================================================
 // State
@@ -248,7 +258,7 @@ async function parseFile(): Promise<void> {
     const uiOptions = getParseOptions();
 
     // Use detected language from importer if available, otherwise default
-    const detectedLanguage = (importResult.meta?.detectedLanguage as string) || "en";
+    const detectedLanguage = (importResult.meta?.detectedLanguage as SupportedLanguage) || "en";
 
     const processResult = process(importResult.clippings, {
       ...uiOptions,
@@ -277,7 +287,7 @@ async function parseFile(): Promise<void> {
       meta: {
         fileSize: state.fileContent.length,
         parseTime,
-        detectedLanguage: detectedLanguage as any,
+        detectedLanguage: detectedLanguage,
         totalBlocks:
           importResult.clippings.length +
           processResult.duplicatesRemoved +

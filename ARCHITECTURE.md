@@ -373,3 +373,14 @@ We prioritize tools written in Rust/Go for sub-second feedback loops:
 
 #### 3. Monorepo-Lite Structure
 Even though it's a single library, we treat it as a monorepo (Library + GUI + Docs) using **pnpm workspaces** + **Turbo**. This allows us to scale the "ecosystem" (e.g. adding a VSCode extension or a Web App later) without restructuring the repo.
+
+#### 4. Import Strategy: Native Node Subpath Imports
+To ensure rock-solid compatibility with modern Node.js ESM standards (`NodeNext`), we strictly avoid fragile `tsconfig` `paths`. Instead, we use **Native Node Subpath Imports** (`#alias` prefix).
+
+- **Mechanism:** Mapped in `package.json` under `"imports"`.
+  ```json
+  "imports": {
+    "#core/*.js": "./src/core/*.ts"
+  }
+  ```
+- **Benefit:** This is supported natively by Node.js, and correctly resolved by TypeScript, Esbuild, and Vite without relying on brittle build-time path transformations. It guarantees that our internal aliases behave identically in dev, test, and production builds.

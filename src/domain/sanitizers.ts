@@ -4,9 +4,9 @@
  * @packageDocumentation
  */
 
-import { DRM_LIMIT_MESSAGES, TITLE_NOISE_PATTERNS } from "@core/constants.js";
-import { PATTERNS } from "@importers/txt/core/constants.js";
-import { normalizeWhitespace } from "@utils/normalizers.js";
+import { DRM_LIMIT_MESSAGES, TITLE_NOISE_PATTERNS } from "#core/constants.js";
+import { PATTERNS } from "#importers/txt/core/constants.js";
+import { normalizeWhitespace } from "#utils/normalizers.js";
 
 /**
  * Result of title/author extraction.

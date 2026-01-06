@@ -9,9 +9,9 @@
  * @packageDocumentation
  */
 
-import type { Clipping } from "@app-types/clipping.js";
-import { groupByBook } from "@domain/stats.js";
-import { getTemplatePreset, TemplateEngine, type TemplatePreset } from "@templates/index.js";
+import type { Clipping } from "#app-types/clipping.js";
+import { groupByBook } from "#domain/stats.js";
+import { getTemplatePreset, TemplateEngine, type TemplatePreset } from "#templates/index.js";
 import type { ExportedFile, ExporterOptions, ExportResult } from "./index.js";
 import { BaseExporter } from "./shared/index.js";
 

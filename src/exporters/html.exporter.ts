@@ -11,9 +11,9 @@
  * @packageDocumentation
  */
 
-import type { Clipping } from "@app-types/clipping.js";
-import { groupByBook } from "@domain/stats.js";
-import { formatDateHuman } from "@utils/dates.js";
+import type { Clipping } from "#app-types/clipping.js";
+import { groupByBook } from "#domain/stats.js";
+import { formatDateHuman } from "#utils/dates.js";
 import type { ExportedFile, ExporterOptions, ExportResult } from "./index.js";
 import { BaseExporter } from "./shared/index.js";
 

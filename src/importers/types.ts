@@ -4,7 +4,7 @@
  * @packageDocumentation
  */
 
-import type { Clipping } from "@app-types/clipping.js";
+import type { Clipping } from "#app-types/clipping.js";
 
 /**
  * Result of importing clippings from a file.

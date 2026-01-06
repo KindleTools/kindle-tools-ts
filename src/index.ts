@@ -47,7 +47,8 @@ export {
   TxtImporter,
 } from "./importers/index.js";
 // Core Parsing & Processing
-export { parse, parseFile, parseString } from "./importers/txt/core/parser.js";
+export { parseFile } from "./importers/txt/core/file-parser.js";
+export { parse, parseString } from "./importers/txt/core/parser.js";
 
 export type { Importer, ImportResult } from "./importers/types.js";
 // Types

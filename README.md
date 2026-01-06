@@ -980,7 +980,7 @@ kindle-tools-ts/
 │   ├── types/          # TypeScript interfaces and type definitions
 │   ├── utils/          # Utility functions (dates, hashing, similarity, etc.)
 │   ├── index.ts        # Library entry point (all public exports)
-│   └── cli.ts          # CLI implementation
+│   └── cli/            # CLI implementation
 ├── tests/
 │   ├── unit/           # Unit tests per module
 │   ├── integration/    # Full pipeline tests
@@ -988,6 +988,16 @@ kindle-tools-ts/
 ├── dist/               # Built output (ESM + CJS + DTS)
 └── package.json
 ```
+
+### Strict ESM & Imports
+
+This project enforces **NodeNext** module resolution for strict compliance with modern Node.js ESM standards.
+
+- **Internal Imports**: We use **Native Node Subpath Imports** (`#core/processor.js`) instead of fragile tsconfig paths.
+- **Extensions**: All imports must include the `.js` extension (e.g., `import ... from "./utils.js"`).
+- **Validation**: The `check:exports` script runs `arethetypeswrong` to ensure our package exports are valid for all consumers.
+
+See [ARCHITECTURE.md](ARCHITECTURE.md) for deeper technical details.
 
 ---
 

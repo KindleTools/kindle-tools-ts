@@ -31,6 +31,15 @@
       }
     }
   },
+  "imports": {
+    "#core/*.js": "./src/core/*.ts",
+    "#importers/*.js": "./src/importers/*.ts",
+    "#exporters/*.js": "./src/exporters/*.ts",
+    "#utils/*.js": "./src/utils/*.ts",
+    "#app-types/*.js": "./src/types/*.ts",
+    "#templates/*.js": "./src/templates/*.ts",
+    "#domain/*.js": "./src/domain/*.ts"
+  },
   "files": [
     "dist",
     "README.md",
@@ -41,6 +50,7 @@
     "build": "tsup",
     "build:watch": "tsup --watch",
     "dev": "tsup --watch",
+    "cli:dev": "tsx src/cli/index.ts",
     "gui": "vite --config vite.config.gui.ts",
     "gui:build": "vite build --config vite.config.gui.ts",
     "test": "vitest run",
@@ -51,13 +61,14 @@
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
     "check": "biome check --write . && pnpm test",
+    "check:exports": "attw --pack . --ignore-rules=node10",
     "typecheck": "tsc --noEmit && tsc --noEmit -p src/gui/tsconfig.json",
     "prepare": "husky",
     "changeset": "changeset",
     "version": "changeset version",
     "release": "pnpm build && changeset publish",
     "clean": "rimraf dist coverage .turbo",
-    "ci": "turbo run build test lint check",
+    "ci": "turbo run build test lint check check:exports",
     "prepublishOnly": "pnpm build"
   },
   "keywords": [
@@ -97,6 +108,7 @@
     ]
   },
   "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.2",
     "@biomejs/biome": "^2.3.10",
     "@changesets/cli": "^2.29.8",
     "@types/handlebars": "^4.1.0",
@@ -107,6 +119,7 @@
     "lint-staged": "^16.2.7",
     "rimraf": "^6.1.2",
     "tsup": "^8.5.1",
+    "tsx": "^4.21.0",
     "turbo": "^2.7.3",
     "typescript": "^5.9.3",
     "vite": "^6.0.7",

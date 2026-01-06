@@ -6,9 +6,9 @@
  * @packageDocumentation
  */
 
-import type { Clipping, ClippingLocation, ClippingType } from "@app-types/clipping.js";
-import type { SupportedLanguage } from "@app-types/language.js";
 import { z } from "zod";
+import type { Clipping, ClippingLocation, ClippingType } from "#app-types/clipping.js";
+import type { SupportedLanguage } from "#app-types/language.js";
 import { BaseImporter } from "./shared/base-importer.js";
 import { generateImportId, parseLocationString } from "./shared/index.js";
 import type { ImportResult } from "./types.js";

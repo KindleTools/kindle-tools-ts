@@ -16,12 +16,12 @@
 
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
-import type { Clipping } from "@app-types/clipping.js";
-import type { ParseResult, ProcessOptions } from "@app-types/config.js";
-import type { SupportedLanguage } from "@app-types/language.js";
-import type { ClippingsStats } from "@app-types/stats.js";
-import { process as processClippings } from "@core/processor.js";
-import { calculateStats } from "@domain/stats.js";
+import type { Clipping } from "#app-types/clipping.js";
+import type { ParseResult, ProcessOptions } from "#app-types/config.js";
+import type { SupportedLanguage } from "#app-types/language.js";
+import type { ClippingsStats } from "#app-types/stats.js";
+import { process as processClippings } from "#core/processor.js";
+import { calculateStats } from "#domain/stats.js";
 import type {
   AuthorCase,
   Exporter,
@@ -29,14 +29,14 @@ import type {
   ExportResult,
   FolderStructure,
   TagCase,
-} from "@exporters/index.js";
-import { ExporterFactory } from "@exporters/index.js";
-import { ImporterFactory } from "@importers/index.js";
-import { parseString } from "@importers/txt/core/parser.js";
-import { tokenize } from "@importers/txt/core/tokenizer.js";
-import { decodeWithFallback, detectEncoding } from "@utils/encoding.js";
-import { createTarArchive } from "@utils/tar.js";
-import { createZipArchive } from "@utils/zip.js";
+} from "#exporters/index.js";
+import { ExporterFactory } from "#exporters/index.js";
+import { ImporterFactory } from "#importers/index.js";
+import { parseString } from "#importers/txt/core/parser.js";
+import { tokenize } from "#importers/txt/core/tokenizer.js";
+import { decodeWithFallback, detectEncoding } from "#utils/encoding.js";
+import { createTarArchive } from "#utils/tar.js";
+import { createZipArchive } from "#utils/zip.js";
 
 // CLI uses console for output - this is intentional
 const log = console.log.bind(console);
@@ -291,8 +291,10 @@ async function parseClippingsFile(filePath: string, args: ParsedArgs): Promise<P
       fileSize: fileStats.size,
       parseTime: elapsed,
       detectedLanguage: (importResult.meta?.detectedLanguage as SupportedLanguage) || "en",
+      // biome-ignore lint/complexity/useLiteralKeys: TS requires indexed access
       totalBlocks: (importResult.meta?.["totalBlocks"] as number) || importResult.clippings.length,
       parsedBlocks:
+        // biome-ignore lint/complexity/useLiteralKeys: TS requires indexed access
         (importResult.meta?.["parsedBlocks"] as number) || importResult.clippings.length,
     },
   };

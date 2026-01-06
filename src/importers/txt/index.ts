@@ -7,8 +7,8 @@
  * @packageDocumentation
  */
 
-import type { ImportResult } from "@types.js";
 import { BaseImporter } from "../shared/base-importer.js";
+import type { ImportResult } from "../types.js";
 import { parseString } from "./core/parser.js";
 
 /**
