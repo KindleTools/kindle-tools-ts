@@ -96,7 +96,7 @@ export class ObsidianExporter extends BaseExporter {
       const content = this.generateBookNote(bookClippings, options);
       const safeTitle = this.sanitizeFilename(title);
       const safeAuthor = this.sanitizeFilename(
-        this.applyCase(first.author || "Unknown Author", authorCase),
+        this.applyCase(first.author || this.DEFAULT_UNKNOWN_AUTHOR, authorCase),
       );
 
       // Determine file path based on folder structure
@@ -125,16 +125,7 @@ export class ObsidianExporter extends BaseExporter {
     const estimatePages = options?.estimatePages ?? true;
 
     // Collect all unique tags from clippings
-    const allTags = new Set<string>(defaultTags);
-    if (includeClippingTags) {
-      for (const clipping of clippings) {
-        if (clipping.tags) {
-          for (const tag of clipping.tags) {
-            allTags.add(tag);
-          }
-        }
-      }
-    }
+    const allTags = this.collectAllTags(clippings, defaultTags, includeClippingTags);
 
     const lines: string[] = [];
 

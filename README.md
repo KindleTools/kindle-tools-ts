@@ -14,17 +14,41 @@ A robust TypeScript library to parse and process Amazon Kindle `My Clippings.txt
 
 ## 📑 Table of Contents
 
+- [💡 Why This Library?](#-why-this-library)
 - [✨ Features](#-features)
 - [🧠 Technical Details](#-technical-details)
 - [📦 Installation](#-installation)
 - [🚀 Quick Start](#-quick-start)
 - [💻 CLI Usage](#-cli-usage)
+- [🖥️ GUI (Graphical Interface)](#️-gui-graphical-interface)
 - [📚 API Reference](#-api-reference)
 - [📤 Export Formats](#-export-formats)
 - [🌍 Supported Languages](#-supported-languages)
+- [🌐 Browser Compatibility](#-browser-compatibility)
+- [❓ FAQ](#-faq)
 - [🛠️ Development](#️-development)
 - [🤝 Contributing](#-contributing)
 - [📄 License](#-license)
+
+---
+
+## 💡 Why This Library?
+
+| Problem | Solution |
+|---------|----------|
+| **Duplicate entries** when you re-highlight or edit highlights | Smart deduplication with deterministic IDs |
+| **Overlapping highlights** when extending a selection in Kindle | Automatic merging keeps the longest version |
+| **Notes disconnected** from their highlights | Intelligent linking based on location proximity |
+| **Messy titles** with `_EBOK`, `(Spanish Edition)`, `.mobi` noise | Advanced cleaning preserves original in `titleRaw` |
+| **Multi-language files** (device language changes) | Automatic detection for 11 languages |
+| **PDF artifacts** like `pro-\nblem` word breaks | De-hyphenation and text cleaning |
+| **Export lock-in** to a single format | 6 formats: JSON, CSV, Markdown, Obsidian, Joplin, HTML |
+
+**Perfect for:**
+- 📚 **Obsidian/Joplin users** — Import highlights directly into your vault/notebooks
+- 🤖 **Automation enthusiasts** — Pipe CLI output to scripts with `--json` flag
+- 💻 **Developers** — Full TypeScript types, tree-shakeable, dual ESM/CJS build
+- 🌐 **Multilingual readers** — Works with Kindle devices in any supported language
 
 ---
 
@@ -46,7 +70,7 @@ A robust TypeScript library to parse and process Amazon Kindle `My Clippings.txt
 - 📊 **Extended statistics** — Avg words/highlight, avg highlights/book, and more
 - 🖥️ **CLI included** — Full command-line interface for quick operations
 - 📘 **TypeScript-first** — Full type definitions with strict mode
-- 🪶 **Lightweight** — Only 2 runtime dependencies (date-fns, zod)
+- 🪶 **Lightweight** — Minimal runtime dependencies (date-fns, zod, handlebars, jszip)
 - 🔒 **Non-destructive** — Always preserves original data (titleRaw, contentRaw) for user review
 
 ---
@@ -351,6 +375,8 @@ Output:
 | `--tag-case <case>` | | Tag case: `original` (as typed), `uppercase`, `lowercase` (default) |
 | `--include-tags` | | Include clipping tags in exports |
 | `--no-tags` | | Exclude tags from output |
+| `--title <text>` | | HTML page title or Joplin notebook name |
+| `--creator <text>` | | Author attribution for notes (Joplin) |
 | `--help` | `-h` | Show help message |
 | `--version` | `-v` | Show version |
 
@@ -387,6 +413,32 @@ if kindle-tools validate "My Clippings.txt" --json | jq -e '.valid' > /dev/null;
   echo "File is valid!"
 fi
 ```
+
+---
+
+## 🖥️ GUI (Graphical Interface)
+
+A browser-based GUI is included for testing and demonstration purposes:
+
+```bash
+# Clone the repository
+git clone https://github.com/KindleTools/kindle-tools-ts.git
+cd kindle-tools-ts
+
+# Install dependencies
+pnpm install
+
+# Start the GUI development server
+pnpm gui
+```
+
+This opens a local Vite server where you can:
+- 📤 Drag and drop your `My Clippings.txt` file
+- 👀 Preview parsed clippings with search and filter
+- 📊 View statistics about your reading habits
+- 💾 Export to any supported format
+
+> **Note**: The GUI is for development/testing. For production use, integrate the library directly or use the CLI.
 
 ---
 
@@ -811,6 +863,108 @@ Language is auto-detected by analyzing the clippings file content.
 
 ---
 
+## 🌐 Browser Compatibility
+
+The library is **isomorphic** — it works in both Node.js and browsers:
+
+| Environment | Parsing | Exporting | File System Access |
+|-------------|---------|-----------|--------------------|
+| **Node.js** | ✅ `parseFile()` + `parseString()` | ✅ All formats | ✅ Native fs |
+| **Browser** | ✅ `parseString()` only | ✅ All formats (output as string/Blob) | ❌ Use File API |
+
+**Browser usage example:**
+
+```typescript
+import { parseString, JsonExporter } from 'kindle-tools-ts';
+
+// Get file content from <input type="file">
+const file = inputElement.files[0];
+const content = await file.text();
+
+// Parse and export
+const result = parseString(content);
+const exporter = new JsonExporter();
+const json = await exporter.export(result.clippings);
+```
+
+---
+
+## ❓ FAQ
+
+<details>
+<summary><strong>Where is my <code>My Clippings.txt</code> file?</strong></summary>
+
+Connect your Kindle via USB. The file is at:
+- **Kindle e-reader**: `Kindle/documents/My Clippings.txt`
+- **Kindle for PC/Mac**: Check `Documents/My Kindle Content/`
+
+</details>
+
+<details>
+<summary><strong>Why are some highlights marked as "suspicious"?</strong></summary>
+
+The library flags potentially problematic highlights:
+- **`too_short`**: Less than 5 characters (accidental tap?)
+- **`fragment`**: Starts with lowercase (mid-sentence selection)
+- **`incomplete`**: No terminal punctuation (cut off)
+
+These are NOT deleted — just flagged for your review via `isSuspiciousHighlight`.
+
+</details>
+
+<details>
+<summary><strong>Can I edit exported files and re-import them?</strong></summary>
+
+Yes! Export to JSON or CSV, edit in your favorite tool, then re-import:
+
+```bash
+# Export → Edit → Re-export to different format
+kindle-tools export "My Clippings.txt" -f json -o clippings.json
+# ... edit clippings.json ...
+kindle-tools export clippings.json -f obsidian -o ./vault/
+```
+
+</details>
+
+<details>
+<summary><strong>How do I extract tags from my notes?</strong></summary>
+
+Add tags to your Kindle notes in these formats:
+- Hashtags: `#productivity #habits`
+- Comma-separated: `productivity, habits`
+- Newline-separated (one tag per line)
+
+Then enable tag extraction:
+```bash
+kindle-tools export "My Clippings.txt" -f obsidian --extract-tags -o ./vault/
+```
+
+Tags will appear in the YAML frontmatter of Obsidian files.
+
+</details>
+
+<details>
+<summary><strong>What's the difference between <code>mergeNotes</code> and <code>highlightsOnly</code>?</strong></summary>
+
+- **`mergeNotes: true`** (default): Links notes to their associated highlights. Both remain as separate entries, but highlights gain a `note` field and `linkedNoteId`.
+- **`highlightsOnly: true`**: Returns ONLY highlights with their notes embedded. Notes and bookmarks are excluded from the output entirely.
+
+Use `highlightsOnly` when you want a clean "what I highlighted + thought" view.
+
+</details>
+
+<details>
+<summary><strong>Can I use this in a Cloudflare Worker / Deno / Bun?</strong></summary>
+
+The library is designed for Node.js 18+ but should work in:
+- **Bun**: Fully compatible ✅
+- **Deno**: Use with `npm:` specifier ✅
+- **Cloudflare Workers**: `parseString()` works, but `parseFile()` requires fs module ⚠️
+
+</details>
+
+---
+
 ## 🛠️ Development
 
 ```bash
@@ -845,17 +999,21 @@ pnpm format
 ```
 kindle-tools-ts/
 ├── src/
-│   ├── core/           # Parser, processor, tokenizer
-│   ├── exporters/      # All export format implementations
-│   ├── importers/      # JSON and CSV importers for re-processing
-│   ├── types/          # TypeScript interfaces
-│   ├── utils/          # Utility functions
-│   ├── index.ts        # Library entry point
+│   ├── core/           # Parser, processor, tokenizer, language detection
+│   ├── exporters/      # Export format implementations (JSON, CSV, MD, Obsidian, Joplin, HTML)
+│   │   └── shared/     # Base exporter class and shared utilities
+│   ├── importers/      # JSON and CSV importers for re-processing exported files
+│   │   └── shared/     # Base importer utilities
+│   ├── gui/            # Browser-based testing GUI (Vite)
+│   ├── templates/      # Handlebars template presets
+│   ├── types/          # TypeScript interfaces and type definitions
+│   ├── utils/          # Utility functions (dates, hashing, similarity, etc.)
+│   ├── index.ts        # Library entry point (all public exports)
 │   └── cli.ts          # CLI implementation
 ├── tests/
-│   ├── unit/           # Unit tests
-│   ├── integration/    # Integration tests
-│   └── fixtures/       # Test data
+│   ├── unit/           # Unit tests per module
+│   ├── integration/    # Full pipeline tests
+│   └── fixtures/       # Test data and sample clippings
 ├── dist/               # Built output (ESM + CJS + DTS)
 └── package.json
 ```

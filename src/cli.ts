@@ -67,6 +67,8 @@ interface ParsedArgs {
   includeTags?: boolean;
   extractTags?: boolean;
   highlightsOnly?: boolean;
+  title?: string;
+  creator?: string;
 }
 
 type ExportFormat = "json" | "csv" | "md" | "markdown" | "obsidian" | "joplin" | "html";
@@ -212,6 +214,14 @@ function parseArgs(args: string[]): ParsedArgs {
       result.tagCase = (arg.split("=")[1] ?? "uppercase") as TagCase;
     } else if (arg === "--highlights-only" || arg === "--merged") {
       result.highlightsOnly = true;
+    } else if (arg === "--title") {
+      result.title = args[++i] ?? "";
+    } else if (arg.startsWith("--title=")) {
+      result.title = arg.split("=")[1] ?? "";
+    } else if (arg === "--creator" || arg === "--author") {
+      result.creator = args[++i] ?? "";
+    } else if (arg.startsWith("--creator=") || arg.startsWith("--author=")) {
+      result.creator = arg.split("=")[1] ?? "";
     }
   }
 
@@ -400,6 +410,10 @@ async function handleExport(args: string[]): Promise<void> {
       pretty: parsed.pretty ?? true,
       includeStats: true,
       includeClippingTags: parsed.includeTags ?? true,
+      // Pass CLI args to exporter options
+      ...(parsed.title && { title: parsed.title }), // For HTML
+      ...(parsed.title && { notebookName: parsed.title }), // For Joplin (mapped from title)
+      ...(parsed.creator && { creator: parsed.creator }), // For Joplin (author attribution)
     };
 
     // Run export
@@ -663,6 +677,8 @@ ${c.bold("EXPORT OPTIONS (Obsidian/Joplin):")}
   --author-case <case>  Author folder case: original, uppercase (default), lowercase
   --include-tags        Include clipping tags in export (default: true)
   --no-tags             Exclude clipping tags from export
+  --title <text>        HTML page title or Jex notebook name
+  --creator <text>      Author attribution for notes (e.g. your name)
 
 ${c.bold("EXAMPLES:")}
   ${c.dim("# Parse and see summary")}

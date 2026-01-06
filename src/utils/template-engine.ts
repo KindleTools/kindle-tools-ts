@@ -116,6 +116,8 @@ export interface ExportContext {
   exportDate: string;
   /** Export date (ISO) */
   exportDateIso: string;
+  /** Custom title provided by user */
+  title?: string;
 }
 
 // Import shared types (re-export for backwards compatibility)
@@ -174,7 +176,7 @@ export const DEFAULT_BOOK_TEMPLATE = `# {{title}}
 /**
  * Default template for a full export.
  */
-export const DEFAULT_EXPORT_TEMPLATE = `# Kindle Highlights
+export const DEFAULT_EXPORT_TEMPLATE = `# {{#if title}}{{title}}{{else}}Kindle Highlights{{/if}}
 
 *{{totalClippings}} clippings from {{bookCount}} books*
 *Exported on {{exportDate}}*
@@ -577,7 +579,7 @@ export class TemplateEngine {
   /**
    * Create an ExportContext from a grouped map of clippings.
    */
-  toExportContext(grouped: Map<string, Clipping[]>): ExportContext {
+  toExportContext(grouped: Map<string, Clipping[]>, title?: string): ExportContext {
     const books: BookContext[] = [];
     let totalClippings = 0;
     let totalHighlights = 0;
@@ -608,6 +610,7 @@ export class TemplateEngine {
         day: "numeric",
       }),
       exportDateIso: now.toISOString(),
+      ...(title !== undefined && { title }),
     };
   }
 
@@ -631,8 +634,8 @@ export class TemplateEngine {
   /**
    * Render a full export (all books).
    */
-  renderExport(grouped: Map<string, Clipping[]>): string {
-    const context = this.toExportContext(grouped);
+  renderExport(grouped: Map<string, Clipping[]>, title?: string): string {
+    const context = this.toExportContext(grouped, title);
     return this.exportTemplate(context).trim();
   }
 
@@ -746,6 +749,7 @@ export class TemplateEngine {
         "totalBookmarks",
         "exportDate",
         "exportDateIso",
+        "title",
       ],
     };
   }

@@ -86,7 +86,7 @@ export class MarkdownExporter extends BaseExporter {
       return this.exportGrouped(clippings, engine, options);
     }
 
-    return this.exportSingle(clippings, engine);
+    return this.exportSingle(clippings, engine, options?.title);
   }
 
   /**
@@ -111,9 +111,13 @@ export class MarkdownExporter extends BaseExporter {
   /**
    * Export all clippings to a single Markdown file.
    */
-  private exportSingle(clippings: Clipping[], engine: TemplateEngine): ExportResult {
+  private exportSingle(
+    clippings: Clipping[],
+    engine: TemplateEngine,
+    title?: string,
+  ): ExportResult {
     const grouped = groupByBook(clippings);
-    const output = engine.renderExport(grouped);
+    const output = engine.renderExport(grouped, title);
 
     return this.success(output);
   }
@@ -143,7 +147,7 @@ export class MarkdownExporter extends BaseExporter {
       // Create safe filename using inherited utility
       const safeTitle = this.sanitizeFilename(first.title);
       const safeAuthor = this.sanitizeFilename(
-        this.applyCase(first.author || "Unknown Author", authorCase),
+        this.applyCase(first.author || this.DEFAULT_UNKNOWN_AUTHOR, authorCase),
       );
 
       const filePath = this.generateFilePath(baseFolder, safeAuthor, safeTitle, folderStructure);

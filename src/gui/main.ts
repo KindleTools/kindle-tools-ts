@@ -83,6 +83,8 @@ const elements = {
   clippingsFilterBook: document.getElementById("clippings-filter-book") as HTMLSelectElement,
 
   // Export
+  exportTitle: document.getElementById("export-title") as HTMLInputElement,
+  exportCreator: document.getElementById("export-creator") as HTMLInputElement,
   exportGroupByBook: document.getElementById("export-groupByBook") as HTMLInputElement,
   exportIncludeStats: document.getElementById("export-includeStats") as HTMLInputElement,
   exportIncludeClippingTags: document.getElementById(
@@ -566,6 +568,8 @@ async function renderExports(): Promise<void> {
   const includeClippingTags = elements.exportIncludeClippingTags.checked;
   const folderStructure = elements.exportFolderStructure.value as FolderStructure;
   const authorCase = elements.exportAuthorCase.value as AuthorCase;
+  const title = elements.exportTitle.value.trim() || undefined;
+  const creator = elements.exportCreator.value.trim() || undefined;
 
   // JSON Export
   const jsonExporter = new JsonExporter();
@@ -686,6 +690,8 @@ async function renderExports(): Promise<void> {
     folderStructure,
     authorCase,
     includeClippingTags,
+    notebookName: title,
+    creator,
   });
 
   if (joplinResult.files && joplinResult.files.length > 0) {
@@ -723,7 +729,7 @@ async function renderExports(): Promise<void> {
 
   // HTML Export
   const htmlExporter = new HtmlExporter();
-  const htmlResult = await htmlExporter.export(result.clippings, { includeStats });
+  const htmlResult = await htmlExporter.export(result.clippings, { includeStats, title });
   if (typeof htmlResult.output === "string") {
     const blob = new Blob([htmlResult.output], { type: "text/html" });
     elements.exportHtmlContent.src = URL.createObjectURL(blob);
@@ -846,7 +852,7 @@ function downloadExport(): void {
   const fileName = `kindle-clippings${exportData.extension}`;
   const blob =
     exportData.content instanceof Uint8Array
-      ? new Blob([exportData.content], { type: exportData.mimeType })
+      ? new Blob([exportData.content as unknown as BlobPart], { type: exportData.mimeType })
       : new Blob([exportData.content as string], { type: exportData.mimeType });
   const url = URL.createObjectURL(blob);
 

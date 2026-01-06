@@ -78,6 +78,11 @@ export class JsonExporter extends BaseExporter {
         prepared.tags = c.tags ?? [];
       }
 
+      // Ensure author matches default if missing
+      if (!prepared.author) {
+        prepared.author = this.DEFAULT_UNKNOWN_AUTHOR;
+      }
+
       return prepared;
     });
   }

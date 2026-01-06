@@ -83,6 +83,21 @@ export interface ExporterOptions {
    * Default: true
    */
   includeClippingTags?: boolean;
+
+  /**
+   * Title for the export (e.g., HTML page title, Joplin root notebook).
+   */
+  title?: string;
+
+  /**
+   * Alias for title (specific to Joplin).
+   */
+  notebookName?: string;
+
+  /**
+   * Creator/Author attribution for the export.
+   */
+  creator?: string;
 }
 
 /**

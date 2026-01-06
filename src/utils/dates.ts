@@ -125,7 +125,7 @@ export function formatDateISO(date: Date): string {
  */
 export function formatDateHuman(date: Date): string {
   // Use date-fns isValid for consistency if imported, or strict check
-  if (isNaN(date.getTime())) return "Invalid Date";
+  if (Number.isNaN(date.getTime())) return "Invalid Date";
 
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");

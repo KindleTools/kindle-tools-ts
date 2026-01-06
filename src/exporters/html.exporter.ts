@@ -13,6 +13,7 @@
 
 import type { Clipping } from "../types/clipping.js";
 import type { ExportedFile, ExporterOptions, ExportResult } from "../types/exporter.js";
+import { formatDateHuman } from "../utils/dates.js";
 import { groupByBook } from "../utils/stats.js";
 import { BaseExporter } from "./shared/index.js";
 
@@ -48,7 +49,7 @@ export class HtmlExporter extends BaseExporter {
     clippings: Clipping[],
     options?: HtmlExporterOptions,
   ): Promise<ExportResult> {
-    const title = options?.title ?? "Kindle Highlights";
+    const title = options?.title ?? this.DEFAULT_EXPORT_TITLE;
     const includeSearch = options?.includeSearch ?? true;
     const includeDarkMode = options?.includeDarkMode ?? true;
 
@@ -182,7 +183,7 @@ ${this.getStyles(customCss)}
     const typeClass = `clipping-${clipping.type}`;
     const typeEmoji = clipping.type === "highlight" ? "📖" : clipping.type === "note" ? "📝" : "🔖";
     const locationInfo = `Page ${clipping.page ?? "?"} • Location ${clipping.location.raw}`;
-    const dateStr = clipping.date ? clipping.date.toLocaleDateString() : "";
+    const dateStr = clipping.date ? formatDateHuman(clipping.date) : "";
 
     let contentHtml = "";
     if (clipping.type === "highlight") {

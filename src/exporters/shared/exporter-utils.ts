@@ -7,8 +7,47 @@
  * @packageDocumentation
  */
 
+import type { Clipping } from "../../types/clipping.js";
 import type { AuthorCase, ExportedFile, ExportResult } from "../../types/exporter.js";
 import { toError } from "../../utils/errors.js";
+
+/**
+ * Default value for unknown authors.
+ */
+export const DEFAULT_UNKNOWN_AUTHOR = "Unknown Author";
+
+/**
+ * Default title for export collections.
+ */
+export const DEFAULT_EXPORT_TITLE = "Kindle Highlights";
+
+/**
+ * Collect all unique tags from clippings and default tags.
+ *
+ * @param clippings - Array of clippings to extract tags from
+ * @param defaultTags - Default tags to include
+ * @param includeClippingTags - Whether to include tags from clippings
+ * @returns Set of unique tags
+ */
+export function collectAllTags(
+  clippings: Clipping[],
+  defaultTags: string[] = [],
+  includeClippingTags: boolean = true,
+): Set<string> {
+  const tags = new Set<string>(defaultTags);
+
+  if (includeClippingTags) {
+    for (const clipping of clippings) {
+      if (clipping.tags) {
+        for (const tag of clipping.tags) {
+          tags.add(tag);
+        }
+      }
+    }
+  }
+
+  return tags;
+}
 
 /**
  * Create a successful export result.

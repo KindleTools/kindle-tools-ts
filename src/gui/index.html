@@ -146,7 +146,20 @@
           <button class="tab" data-tab="export-html">HTML</button>
         </div>
 
-        <div class="export-options">
+        <div class="export-options" style="flex-wrap: wrap;">
+          <div style="width: 100%; display: flex; gap: 20px; margin-bottom: 10px;">
+            <label style="flex: 1;">
+              Export Title / Notebook Name:
+              <input type="text" id="export-title" placeholder="Kindle Highlights"
+                style="width: 100%; background: var(--bg-tertiary); border: 1px solid var(--border); padding: 8px; border-radius: 6px; color: var(--text-primary);">
+            </label>
+            <label style="flex: 1;">
+              Creator / Author Attribution:
+              <input type="text" id="export-creator" placeholder="Unknown Author"
+                style="width: 100%; background: var(--bg-tertiary); border: 1px solid var(--border); padding: 8px; border-radius: 6px; color: var(--text-primary);">
+            </label>
+          </div>
+
           <label><input type="checkbox" id="export-groupByBook"> Group by book</label>
           <label><input type="checkbox" id="export-includeStats" checked> Include stats</label>
           <label><input type="checkbox" id="export-includeClippingTags" checked> Include clipping tags</label>

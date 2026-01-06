@@ -111,12 +111,12 @@ function createTarHeader(name: string, size: number, mtime?: Date): Uint8Array {
 
   // Size (124-135, 12 bytes) - octal
   const sizeOctal = size.toString(8).padStart(11, "0");
-  writeString(header, sizeOctal + "\0", 124);
+  writeString(header, `${sizeOctal}\0`, 124);
 
   // Mtime (136-147, 12 bytes) - octal seconds since epoch
   const mtimeSeconds = Math.floor((mtime?.getTime() ?? Date.now()) / 1000);
   const mtimeOctal = mtimeSeconds.toString(8).padStart(11, "0");
-  writeString(header, mtimeOctal + "\0", 136);
+  writeString(header, `${mtimeOctal}\0`, 136);
 
   // Checksum placeholder (148-155, 8 bytes) - spaces for calculation
   writeString(header, "        ", 148);
@@ -143,7 +143,7 @@ function createTarHeader(name: string, size: number, mtime?: Date): Uint8Array {
   }
   const checksumOctal = checksum.toString(8).padStart(6, "0");
   // Checksum field is 8 bytes. `000000\0 ` is common format (6 digits + null + space)
-  writeString(header, checksumOctal + "\0 ", 148);
+  writeString(header, `${checksumOctal}\0 `, 148);
 
   return header;
 }

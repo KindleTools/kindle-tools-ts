@@ -50,7 +50,7 @@ export class CsvExporter extends BaseExporter {
       const row = [
         this.escapeCSV(clipping.id),
         this.escapeCSV(clipping.title),
-        this.escapeCSV(clipping.author),
+        this.escapeCSV(clipping.author || this.DEFAULT_UNKNOWN_AUTHOR),
         this.escapeCSV(clipping.type),
         clipping.page?.toString() ?? "",
         this.escapeCSV(clipping.location.raw),

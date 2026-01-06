@@ -240,4 +240,46 @@ Minor refactoring opportunities identified to improve maintainability.
 - [ ] **Shared Clipping Sanitizer**:
   - Move `JsonExporter`'s `prepareClippings` logic (removing raw fields, ensuring tags) to a shared utility `sanitizeClippingForExport`.
   - This allows other exporters to easily offer "clean" output modes.
+
+- [ ] **Folder Hierarchy Abstraction**:
+  - The logic for determining folder structures (`by-author`, `by-book`) is duplicated between `ObsidianExporter` and `JoplinExporter`.
+  - Create a shared `PathHierarchyBuilder` or similar utility to centralize this logic.
+
+- [ ] **Creator Metadata in Data Formats**:
+  - Currently, `JSON` and `CSV` exporters do not include the `creator` (user attribution) field.
+  - Consider adding this metadata to ensure full parity with Joplin/HTML exports.
+
+## 🌟 Project Evolution & Ecosystem
+
+Strategic improvements to elevate the project from a library to a complete solution.
+
+- [ ] **Real-World Stress Testing**:
+  - Create a test suite with "ugly" `My Clippings.txt` files (mixed languages, legacy formats, corruption).
+  - Ensure robustness against malformed separators or missing lines.
+
+- [ ] **"Cookbook" Documentation**:
+  - Create a "Recipes" section in the documentation.
+  - Examples: "Obsidian Flashcards Setup", "Programming Notes Workflow".
+  - Showcases practical use of `customTemplates`.
+
+- [ ] **Automated Release Pipeline**:
+  - Implement functional GitHub Actions for publishing to NPM.
+  - Use `semantic-release` or `changesets` for automated versioning and changelog generation.
+
+## 🚀 Advanced Power Features (Long Term)
+
+High-value features to transform the reading analysis experience.
+
+- [ ] **Metadata Enrichment (fetch-meta)**:
+  - Optional integration with OpenLibrary or Google Books APIs.
+  - Auto-correct book titles, fetch ISBNs, and download cover images for HTML/Obsidian exports.
+
+- [ ] **Incremental Exports (Diff Mode)**:
+  - Add `--diff-against=<previous_export.json>` flag.
+  - Export only new highlights added since the last run.
+  - Perfect for syncing with DBs (Notion, Airtable) without re-uploading everything.
+
+- [ ] **Reading Habits Visualization**:
+  - Enhance HTML export and GUI with "Spotify Wrapped" style charts.
+  - Heatmaps (highlights per day), Reading Timeline (start/finish dates), and Time-of-Day analysis.
 ```

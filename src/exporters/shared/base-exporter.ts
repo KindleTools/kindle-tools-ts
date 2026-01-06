@@ -22,8 +22,11 @@ import type {
 } from "../../types/exporter.js";
 import {
   applyCase as applyCaseUtil,
+  collectAllTags as collectAllTagsUtil,
   createErrorResult,
   createSuccessResult,
+  DEFAULT_EXPORT_TITLE,
+  DEFAULT_UNKNOWN_AUTHOR,
   escapeCSV as escapeCSVUtil,
   escapeHtml as escapeHtmlUtil,
   escapeYaml as escapeYamlUtil,
@@ -160,4 +163,22 @@ export abstract class BaseExporter implements Exporter {
   ): string {
     return generateFilePathUtil(baseFolder, author, title, structure, extension || this.extension);
   }
+
+  /**
+   * Collect all unique tags from clippings and default tags.
+   */
+  protected collectAllTags(
+    clippings: Clipping[],
+    defaultTags: string[] = [],
+    includeClippingTags: boolean = true,
+  ): Set<string> {
+    return collectAllTagsUtil(clippings, defaultTags, includeClippingTags);
+  }
+
+  // ========================
+  // Constants
+  // ========================
+
+  protected readonly DEFAULT_UNKNOWN_AUTHOR = DEFAULT_UNKNOWN_AUTHOR;
+  protected readonly DEFAULT_EXPORT_TITLE = DEFAULT_EXPORT_TITLE;
 }

@@ -34,9 +34,6 @@ import { BaseExporter } from "./shared/index.js";
 // Constants
 // ============================================================================
 
-/** Default Kindle locations per page for estimation */
-const LOCATIONS_PER_PAGE = 16.69;
-
 // ============================================================================
 // Types
 // ============================================================================
@@ -205,7 +202,7 @@ export class JoplinExporter extends BaseExporter {
     const now = Date.now();
 
     // Extract options with defaults
-    const rootNotebookName = options?.notebookName ?? "Kindle Highlights";
+    const rootNotebookName = options?.notebookName ?? this.DEFAULT_EXPORT_TITLE;
     const defaultTags = options?.tags ?? [];
     const folderStructure = options?.folderStructure ?? "by-author";
     const authorCase = options?.authorCase ?? "uppercase"; // Python default
@@ -236,16 +233,7 @@ export class JoplinExporter extends BaseExporter {
     });
 
     // Collect all unique tags (default + clipping tags)
-    const allTagNames = new Set<string>(defaultTags);
-    if (includeClippingTags) {
-      for (const clipping of clippings) {
-        if (clipping.tags) {
-          for (const tag of clipping.tags) {
-            allTagNames.add(tag);
-          }
-        }
-      }
-    }
+    const allTagNames = this.collectAllTags(clippings, defaultTags, includeClippingTags);
 
     // Create tags and track their IDs
     const tagMap = new Map<string, string>();
@@ -281,7 +269,7 @@ export class JoplinExporter extends BaseExporter {
 
       // Create author notebook if using 3-level hierarchy
       if (useAuthorLevel) {
-        const authorName = this.applyCase(first.author || "Unknown Author", authorCase);
+        const authorName = this.applyCase(first.author || this.DEFAULT_UNKNOWN_AUTHOR, authorCase);
         let authorNotebookId = authorNotebookIds.get(authorName);
 
         if (!authorNotebookId) {
