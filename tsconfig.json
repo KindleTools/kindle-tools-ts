@@ -42,7 +42,16 @@
     "baseUrl": ".",
     "resolveJsonModule": true,
     // Skip Lib Check for faster builds
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    // Path Aliases
+    "paths": {
+      "@core/*": ["./src/core/*"],
+      "@importers/*": ["./src/importers/*"],
+      "@exporters/*": ["./src/exporters/*"],
+      "@utils/*": ["./src/utils/*"],
+      "@types/*": ["./src/types/*"],
+      "@templates/*": ["./src/templates/*"]
+    }
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "coverage", "**/*.test.ts", "**/*.spec.ts", "src/gui"]

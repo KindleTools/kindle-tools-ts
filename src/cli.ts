@@ -16,8 +16,7 @@
 
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
-import { CsvExporter } from "./exporters/csv.exporter.js";
-import { HtmlExporter } from "./exporters/html.exporter.js";
+import { process as processClippings } from "./core/processor.js";
 import type {
   AuthorCase,
   Exporter,
@@ -26,18 +25,15 @@ import type {
   FolderStructure,
   TagCase,
 } from "./exporters/index.js";
-import { JoplinExporter } from "./exporters/joplin.exporter.js";
-import { JsonExporter } from "./exporters/json.exporter.js";
-import { MarkdownExporter } from "./exporters/markdown.exporter.js";
-import { ObsidianExporter } from "./exporters/obsidian.exporter.js";
-import { CsvImporter, JsonImporter } from "./importers/index.js";
-import { parseFile, parseString } from "./importers/txt/core/parser.js";
-// Note: process() from processor.js is used internally by parseFile, not needed here directly
+import { ExporterFactory } from "./exporters/index.js";
+import { ImporterFactory } from "./importers/index.js";
+import { parseString } from "./importers/txt/core/parser.js";
 import { tokenize } from "./importers/txt/core/tokenizer.js";
 import type { Clipping } from "./types/clipping.js";
-import type { ParseOptions, ParseResult } from "./types/config.js";
+import type { ParseResult, ProcessOptions } from "./types/config.js";
 import type { SupportedLanguage } from "./types/language.js";
 import type { ClippingsStats } from "./types/stats.js";
+import { decodeWithFallback, detectEncoding } from "./utils/encoding.js";
 import { calculateStats } from "./utils/stats.js";
 import { createTarArchive } from "./utils/tar.js";
 import { createZipArchive } from "./utils/zip.js";
@@ -70,8 +66,6 @@ interface ParsedArgs {
   title?: string;
   creator?: string;
 }
-
-type ExportFormat = "json" | "csv" | "md" | "markdown" | "obsidian" | "joplin" | "html";
 
 // =============================================================================
 // CLI Version (read from package.json at build time)
@@ -229,64 +223,32 @@ function parseArgs(args: string[]): ParsedArgs {
 }
 
 /**
- * Detect input file format from extension.
- */
-function detectInputFormat(filePath: string): "txt" | "json" | "csv" {
-  const ext = path.extname(filePath).toLowerCase();
-  switch (ext) {
-    case ".json":
-      return "json";
-    case ".csv":
-      return "csv";
-    default:
-      return "txt";
-  }
-}
-
-/**
- * Parse a clippings file with the given options.
- * Supports TXT (Kindle format), JSON, and CSV input formats.
+ * Parse a clippings file using the ImporterFactory and unified processing pipeline.
+ *
+ * This enables consistent handling (encoding detection, deduping, processing)
+ * regardless of the input format (TXT, JSON, CSV).
  */
 async function parseClippingsFile(filePath: string, args: ParsedArgs): Promise<ParseResult> {
-  const inputFormat = detectInputFormat(filePath);
   const startTime = Date.now();
 
-  // For JSON and CSV imports, use the importers
-  if (inputFormat === "json" || inputFormat === "csv") {
-    const content = await fs.readFile(filePath, "utf-8");
-    const fileStats = await fs.stat(filePath);
+  // 1. Read and decode content (robust encoding detection)
+  const buffer = await fs.readFile(filePath);
+  const fileStats = await fs.stat(filePath);
+  const detectedEncoding = detectEncoding(buffer);
+  const content = decodeWithFallback(buffer, detectedEncoding);
 
-    const importer = inputFormat === "json" ? new JsonImporter() : new CsvImporter();
-    const result = await importer.import(content);
+  // 2. Import using Factory
+  const importer = ImporterFactory.getImporter(filePath);
+  const importResult = await importer.import(content);
 
-    if (!result.success || result.clippings.length === 0) {
-      throw result.error || new Error(`Failed to import ${inputFormat.toUpperCase()} file`);
-    }
-
-    // Calculate stats for imported clippings
-    const stats = calculateStats(result.clippings);
-    const elapsed = Date.now() - startTime;
-
-    return {
-      clippings: result.clippings,
-      stats,
-      warnings: result.warnings.map((msg, idx) => ({
-        type: "unknown_format" as const,
-        message: msg,
-        blockIndex: idx,
-      })),
-      meta: {
-        fileSize: fileStats.size,
-        parseTime: elapsed,
-        detectedLanguage: "en",
-        totalBlocks: result.clippings.length,
-        parsedBlocks: result.clippings.length,
-      },
-    };
+  if (!importResult.success || importResult.clippings.length === 0) {
+    if (importResult.error) throw importResult.error;
+    throw new Error(`Failed to import file using ${importer.name} importer`);
   }
 
-  // For TXT files, use the standard parser
-  const options: ParseOptions = {
+  // 3. Process clippings (Dedupe, Merge, Link Notes, etc.)
+  // We process ALL formats to ensure consistency (e.g. valid JSON export from raw data)
+  const processOptions: ProcessOptions = {
     language: args.lang || "auto",
     removeDuplicates: !args.noDedup,
     mergeOverlapping: !args.noMerge,
@@ -297,9 +259,43 @@ async function parseClippingsFile(filePath: string, args: ParsedArgs): Promise<P
     extractTags: args.extractTags ?? false,
     ...(args.tagCase && { tagCase: args.tagCase }),
     highlightsOnly: args.highlightsOnly ?? false,
+    detectedLanguage:
+      (importResult.meta?.detectedLanguage as SupportedLanguage) ||
+      (args.lang as SupportedLanguage) ||
+      "en",
   };
 
-  return await parseFile(filePath, options);
+  const processResult = processClippings(importResult.clippings, processOptions);
+
+  // 4. Calculate final stats
+  const finalClippings = processResult.clippings;
+  const stats = calculateStats(finalClippings);
+
+  // Merge processing stats
+  stats.duplicatesRemoved = processResult.duplicatesRemoved;
+  stats.mergedHighlights = processResult.mergedHighlights;
+  stats.linkedNotes = processResult.linkedNotes;
+  stats.emptyRemoved = processResult.emptyRemoved;
+
+  const elapsed = Date.now() - startTime;
+
+  return {
+    clippings: finalClippings,
+    stats,
+    warnings: importResult.warnings.map((msg, idx) => ({
+      type: "unknown_format" as const,
+      message: msg,
+      blockIndex: idx,
+    })),
+    meta: {
+      fileSize: fileStats.size,
+      parseTime: elapsed,
+      detectedLanguage: (importResult.meta?.detectedLanguage as SupportedLanguage) || "en",
+      totalBlocks: (importResult.meta?.["totalBlocks"] as number) || importResult.clippings.length,
+      parsedBlocks:
+        (importResult.meta?.["parsedBlocks"] as number) || importResult.clippings.length,
+    },
+  };
 }
 
 // =============================================================================
@@ -394,7 +390,7 @@ async function handleExport(args: string[]): Promise<void> {
     const result = await parseClippingsFile(parsed.file, parsed);
 
     // Get exporter
-    const exporter = getExporter(parsed.format as ExportFormat);
+    const exporter = ExporterFactory.getExporter(parsed.format as string);
     if (!exporter) {
       error(c.error(`Unknown format: ${parsed.format}`));
       log(c.dim("Available formats: json, csv, md, obsidian, joplin, html"));
@@ -861,29 +857,6 @@ function printDetailedStats(stats: ClippingsStats, clippings: Clipping[]): void 
 // =============================================================================
 // Utilities
 // =============================================================================
-
-/**
- * Get exporter instance by format name.
- */
-function getExporter(format: ExportFormat): Exporter | null {
-  switch (format) {
-    case "json":
-      return new JsonExporter();
-    case "csv":
-      return new CsvExporter();
-    case "md":
-    case "markdown":
-      return new MarkdownExporter();
-    case "obsidian":
-      return new ObsidianExporter();
-    case "joplin":
-      return new JoplinExporter();
-    case "html":
-      return new HtmlExporter();
-    default:
-      return null;
-  }
-}
 
 /**
  * Write export result to file(s).

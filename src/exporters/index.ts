@@ -5,6 +5,7 @@
  */
 
 export { CsvExporter } from "./csv.exporter.js";
+export { ExporterFactory } from "./factory.js";
 export { HtmlExporter } from "./html.exporter.js";
 export { JoplinExporter } from "./joplin.exporter.js";
 export { JsonExporter } from "./json.exporter.js";

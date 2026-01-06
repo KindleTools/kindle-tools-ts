@@ -287,3 +287,31 @@ High-value features to transform the reading analysis experience.
   - Enhance HTML export and GUI with "Spotify Wrapped" style charts.
   - Heatmaps (highlights per day), Reading Timeline (start/finish dates), and Time-of-Day analysis.
 ```
+
+## 🛠️ Enterprise & Architecture Improvements
+
+Features to align with enterprise-grade TypeScript tooling standards.
+
+- [ ] **Factored Configuration**:
+  - Implement a configuration loader (e.g., `cosmiconfig`) to support `.kindletoolsrc` or `kindle-tools.config.js`.
+  - Allow users to persist preferences (e.g., `author-case`, `folder-structure`) instead of repeated CLI flags.
+
+- [ ] **Structured Logging & Observability**:
+  - Replace direct `console.log` calls with a proper `Logger` interface.
+  - Support levels (`debug`, `info`, `warn`, `error`).
+  - Add `--json` output flag for machine-consumable logs (useful for pipeline integrations).
+  - Enable `--quiet` mode easily via the logger abstraction.
+
+- [ ] **Streaming Architecture (Scalability)**:
+  - Refactor `importers` to accept Node.js Streams instead of loading entire files into memory.
+  - Critical for future-proofing against massive clipping libraries (500MB+).
+  - Update `cli.ts` to pipe input file streams to importers.
+
+- [ ] **Data Validation Strategy**:
+  - Integrate `zod` for rigorous schema validation.
+  - Create schemas for generic JSON imports to ensure type safety at runtime.
+  - Implement a configuration schema to validate `.kindletoolsrc`.
+
+- [ ] **Centralized Error Handling**:
+  - Create a unified `AppError` class with error codes (e.g., `ERR_IO`, `ERR_PARSE`).
+  - Refactor `cli.ts` to implement a "panic handler" that distinguishes expected operational errors (print nice message) from unexpected bugs (print stack trace).
