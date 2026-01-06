@@ -16,9 +16,6 @@
 
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
-import { parseFile, parseString } from "./core/parser.js";
-// Note: process() from processor.js is used internally by parseFile, not needed here directly
-import { tokenize } from "./core/tokenizer.js";
 import { CsvExporter } from "./exporters/csv.exporter.js";
 import { HtmlExporter } from "./exporters/html.exporter.js";
 import type {
@@ -34,6 +31,9 @@ import { JsonExporter } from "./exporters/json.exporter.js";
 import { MarkdownExporter } from "./exporters/markdown.exporter.js";
 import { ObsidianExporter } from "./exporters/obsidian.exporter.js";
 import { CsvImporter, JsonImporter } from "./importers/index.js";
+import { parseFile, parseString } from "./importers/txt/core/parser.js";
+// Note: process() from processor.js is used internally by parseFile, not needed here directly
+import { tokenize } from "./importers/txt/core/tokenizer.js";
 import type { Clipping } from "./types/clipping.js";
 import type { ParseOptions, ParseResult } from "./types/config.js";
 import type { SupportedLanguage } from "./types/language.js";

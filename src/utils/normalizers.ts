@@ -4,7 +4,7 @@
  * @packageDocumentation
  */
 
-import { PATTERNS } from "../core/constants.js";
+import { PATTERNS } from "../importers/txt/core/constants.js";
 
 /**
  * Apply Unicode NFC normalization to text.

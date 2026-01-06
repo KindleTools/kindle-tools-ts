@@ -9,9 +9,6 @@ import {
   type ClippingType,
   CsvExporter,
   CsvImporter,
-  calculateStats,
-  createTarArchive,
-  createZipArchive,
   type ExportedFile,
   type FolderStructure,
   HtmlExporter,
@@ -24,9 +21,11 @@ import {
   type ParseOptions,
   type ParseResult,
   process,
+  type SupportedLanguage,
   type TagCase,
   type TarEntry,
   TxtImporter,
+  Utils,
   type ZipEntry,
 } from "../index.js";
 
@@ -249,7 +248,7 @@ async function parseFile(): Promise<void> {
     const uiOptions = getParseOptions();
 
     // Use detected language from importer if available, otherwise default
-    const detectedLanguage = (importResult.meta?.detectedLanguage as any) || "en";
+    const detectedLanguage = (importResult.meta?.detectedLanguage as string) || "en";
 
     const processResult = process(importResult.clippings, {
       ...uiOptions,
@@ -257,7 +256,7 @@ async function parseFile(): Promise<void> {
     });
 
     // 3. Stats calculation
-    const stats = calculateStats(processResult.clippings);
+    const stats = Utils.calculateStats(processResult.clippings);
 
     // Augment based on processing results
     stats.duplicatesRemoved = processResult.duplicatesRemoved;
@@ -633,7 +632,7 @@ async function renderExports(): Promise<void> {
         date: new Date(),
       }));
 
-      const zipData = await createZipArchive(entries);
+      const zipData = await Utils.createZipArchive(entries);
 
       exportResults.md = {
         content: zipData,
@@ -675,7 +674,7 @@ async function renderExports(): Promise<void> {
         date: new Date(),
       }));
 
-      const zipData = await createZipArchive(entries);
+      const zipData = await Utils.createZipArchive(entries);
 
       exportResults.obsidian = {
         content: zipData,
@@ -725,7 +724,7 @@ async function renderExports(): Promise<void> {
         content: f.content,
       }));
 
-      const tarData = createTarArchive(entries);
+      const tarData = Utils.createTarArchive(entries);
 
       exportResults.joplin = {
         content: tarData,

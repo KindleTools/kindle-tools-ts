@@ -588,48 +588,19 @@ const csvResult = await csvImporter.import(csvContent);
 ### Utility Functions
 
 ```typescript
-// Statistics
-import { calculateStats, groupByBook, countWords } from 'kindle-tools-ts';
+// Basic stats
+import { calculateStats } from 'kindle-tools-ts';
 
-// Hashing
-import { generateClippingId, generateDuplicateHash } from 'kindle-tools-ts';
+// Detailed utilities are now grouped under the Utils namespace
+import { Utils } from 'kindle-tools-ts';
 
-// Normalization
-import { normalizeText, normalizeUnicode, removeBOM } from 'kindle-tools-ts';
+// Access specific utilities through the namespace
+const cleanText = Utils.normalizeText("Some   text");
+const distance = Utils.distanceBetween(locA, locB);
+const pageInfo = Utils.getPageInfo(150);
 
-// Sanitization
-import { extractAuthor, sanitizeTitle, sanitizeContent } from 'kindle-tools-ts';
-
-// Date parsing
-import { parseKindleDate, parseKindleDateAuto } from 'kindle-tools-ts';
-
-// Tag extraction from notes
-import { extractTagsFromNote, looksLikeTagNote } from 'kindle-tools-ts';
-
-// Page utilities
-import { 
-  formatPage,              // "[0042]" format
-  formatPageOrPlaceholder, // with fallback
-  estimatePageFromLocation,// ~16 locations per page
-  getEffectivePage,        // actual or estimated
-  getPageInfo              // complete info with status
-} from 'kindle-tools-ts';
-
-// Geo-location utilities
-import {
-  isValidGeoLocation,
-  formatGeoLocation,
-  parseGeoLocation,
-  toGoogleMapsUrl,
-  toOpenStreetMapUrl,
-  distanceBetween
-} from 'kindle-tools-ts';
-
-// Text cleaning (PDF artifacts)
-import { cleanText, needsCleaning } from 'kindle-tools-ts';
-
-// Similarity detection
-import { jaccardSimilarity, compareTexts, isSubset } from 'kindle-tools-ts';
+// Or import specific sub-modules if you prefer deep linking (not recommended)
+// import { normalizeText } from 'kindle-tools-ts/dist/utils/normalizers'; // Requires checking specific paths
 ```
 
 ---

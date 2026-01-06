@@ -249,6 +249,10 @@ Minor refactoring opportunities identified to improve maintainability.
   - Currently, `JSON` and `CSV` exporters do not include the `creator` (user attribution) field.
   - Consider adding this metadata to ensure full parity with Joplin/HTML exports.
 
+- [ ] **Robust CSV Parsing**:
+  - The current `CsvImporter` uses a manual parsing strategy which may be fragile with complex CSVs (e.g. quoted newlines, escaped quotes).
+  - Migrate to a robust library like `csv-parse/sync` or `papaparse` for production-grade reliability, or implement a comprehensive test suite for "torture cases".
+
 ## 🌟 Project Evolution & Ecosystem
 
 Strategic improvements to elevate the project from a library to a complete solution.
