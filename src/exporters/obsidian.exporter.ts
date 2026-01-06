@@ -18,6 +18,7 @@ import type {
   ExportResult,
   FolderStructure,
 } from "../types/exporter.js";
+import { getPageInfo } from "../utils/page-utils.js";
 import { groupByBook } from "../utils/stats.js";
 import { BaseExporter } from "./shared/index.js";
 
@@ -53,6 +54,12 @@ export interface ObsidianExporterOptions extends ExporterOptions {
    * Tags are merged with default tags. (default: true)
    */
   includeClippingTags?: boolean;
+  /**
+   * Estimate page numbers from Kindle locations when not available.
+   * Uses ~16 locations per page as a heuristic.
+   * Default: true
+   */
+  estimatePages?: boolean;
 }
 
 /**
@@ -135,6 +142,7 @@ export class ObsidianExporter extends BaseExporter {
     const useWikilinks = options?.wikilinks ?? true;
     const defaultTags = options?.tags ?? [];
     const includeClippingTags = options?.includeClippingTags ?? true;
+    const estimatePages = options?.estimatePages ?? true;
 
     // Collect all unique tags from clippings
     const allTags = new Set<string>(defaultTags);
@@ -158,7 +166,14 @@ export class ObsidianExporter extends BaseExporter {
     lines.push(`type: book`);
     lines.push(`total_highlights: ${clippings.filter((c) => c.type === "highlight").length}`);
     lines.push(`total_notes: ${clippings.filter((c) => c.type === "note").length}`);
+
+    // Add creation date from the first clipping (book start) or current date
+    const createdDate = first.date
+      ? first.date.toISOString().split("T")[0]
+      : new Date().toISOString().split("T")[0];
+    lines.push(`created: ${createdDate}`);
     lines.push(`date_imported: ${new Date().toISOString().split("T")[0]}`);
+
     lines.push(`tags:`);
     for (const tag of allTags) {
       lines.push(`  - ${tag}`);
@@ -196,7 +211,7 @@ export class ObsidianExporter extends BaseExporter {
       lines.push("");
 
       for (const clipping of highlights) {
-        this.appendHighlight(lines, clipping, useCallouts);
+        this.appendHighlight(lines, clipping, useCallouts, estimatePages);
       }
     }
 
@@ -207,7 +222,7 @@ export class ObsidianExporter extends BaseExporter {
       lines.push("");
 
       for (const clipping of standaloneNotes) {
-        this.appendNote(lines, clipping, useCallouts);
+        this.appendNote(lines, clipping, useCallouts, estimatePages);
       }
     }
 
@@ -217,7 +232,8 @@ export class ObsidianExporter extends BaseExporter {
       lines.push("");
 
       for (const clipping of bookmarks) {
-        lines.push(`- Location ${clipping.location.raw} (Page ${clipping.page ?? "?"})`);
+        const pageInfo = this.getPageDisplay(clipping, estimatePages);
+        lines.push(`- Location ${clipping.location.raw} (${pageInfo})`);
       }
       lines.push("");
     }
@@ -226,10 +242,30 @@ export class ObsidianExporter extends BaseExporter {
   }
 
   /**
+   * Helper to get display string for page number
+   */
+  private getPageDisplay(clipping: Clipping, estimate: boolean): string {
+    if (clipping.page !== null) {
+      return `Page ${clipping.page}`;
+    }
+    if (estimate && clipping.location.start > 0) {
+      const info = getPageInfo(null, clipping.location);
+      return `Page ~${info.page}`;
+    }
+    return "Page ?";
+  }
+
+  /**
    * Append a highlight to the content lines.
    */
-  private appendHighlight(lines: string[], clipping: Clipping, useCallouts: boolean): void {
-    const locationInfo = `Page ${clipping.page ?? "?"}, Location ${clipping.location.raw}`;
+  private appendHighlight(
+    lines: string[],
+    clipping: Clipping,
+    useCallouts: boolean,
+    estimate: boolean,
+  ): void {
+    const pageInfo = this.getPageDisplay(clipping, estimate);
+    const locationInfo = `${pageInfo}, Location ${clipping.location.raw}`;
 
     if (useCallouts) {
       lines.push(`> [!quote] ${locationInfo}`);
@@ -264,8 +300,15 @@ export class ObsidianExporter extends BaseExporter {
   /**
    * Append a standalone note to the content lines.
    */
-  private appendNote(lines: string[], clipping: Clipping, useCallouts: boolean): void {
-    const locationInfo = `Location ${clipping.location.raw}`;
+  private appendNote(
+    lines: string[],
+    clipping: Clipping,
+    useCallouts: boolean,
+    estimate: boolean,
+  ): void {
+    const pageInfo = this.getPageDisplay(clipping, estimate);
+    // For standalone notes, location is more relevant, but page is nice too
+    const locationInfo = `Location ${clipping.location.raw} (${pageInfo})`;
 
     if (useCallouts) {
       lines.push(`> [!note] ${locationInfo}`);

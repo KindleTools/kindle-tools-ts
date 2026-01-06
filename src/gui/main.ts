@@ -11,6 +11,7 @@ import {
   CsvImporter,
   calculateStats,
   createTarArchive,
+  createZipArchive,
   type ExportedFile,
   type FolderStructure,
   HtmlExporter,
@@ -24,6 +25,7 @@ import {
   parseString,
   type TagCase,
   type TarEntry,
+  type ZipEntry,
 } from "../index.js";
 
 // =============================================================================
@@ -587,12 +589,46 @@ async function renderExports(): Promise<void> {
   exportResults.csv = { content: csvContent, extension: ".csv", mimeType: "text/csv" };
 
   // Markdown Export
+  // Markdown Export
   const mdExporter = new MarkdownExporter();
   const mdResult = await mdExporter.export(result.clippings, { groupByBook });
-  const mdContent = typeof mdResult.output === "string" ? mdResult.output : "[Binary output]";
-  elements.exportMdContent.textContent = mdContent;
-  elements.exportMdContent.classList.remove("placeholder");
-  exportResults.md = { content: mdContent, extension: ".md", mimeType: "text/markdown" };
+
+  if (mdResult.files && mdResult.files.length > 0) {
+    // Multi-file output
+    // Assuming you have a renderMultiFilePreview call or similar, otherwise fallback to text prev but allow zip download
+    // For markdown generic tab, we might just show concat text preview but offer zip download
+    const mdContent = typeof mdResult.output === "string" ? mdResult.output : "[Binary output]";
+    elements.exportMdContent.textContent = mdContent;
+    elements.exportMdContent.classList.remove("placeholder");
+
+    try {
+      const entries: ZipEntry[] = mdResult.files.map((f) => ({
+        name: f.path,
+        content: f.content,
+        date: new Date(),
+      }));
+
+      const zipData = await createZipArchive(entries);
+
+      exportResults.md = {
+        content: zipData,
+        extension: ".zip",
+        mimeType: "application/zip",
+      };
+    } catch (err) {
+      console.error("ZIP generation error for MD:", err);
+      exportResults.md = {
+        content: mdContent,
+        extension: ".md",
+        mimeType: "text/markdown",
+      };
+    }
+  } else {
+    const mdContent = typeof mdResult.output === "string" ? mdResult.output : "[Binary output]";
+    elements.exportMdContent.textContent = mdContent;
+    elements.exportMdContent.classList.remove("placeholder");
+    exportResults.md = { content: mdContent, extension: ".md", mimeType: "text/markdown" };
+  }
 
   // Obsidian Export
   const obsidianExporter = new ObsidianExporter();
@@ -605,20 +641,43 @@ async function renderExports(): Promise<void> {
 
   if (obsidianResult.files && obsidianResult.files.length > 0) {
     renderMultiFilePreview(elements.exportObsidianContent, obsidianResult.files);
+
+    try {
+      // Create ZIP archive for multiple files
+      const entries: ZipEntry[] = obsidianResult.files.map((f) => ({
+        name: f.path,
+        content: f.content,
+        date: new Date(),
+      }));
+
+      const zipData = await createZipArchive(entries);
+
+      exportResults.obsidian = {
+        content: zipData,
+        extension: ".zip",
+        mimeType: "application/zip",
+      };
+    } catch (err) {
+      console.error("ZIP generation error:", err);
+      // Fallback
+      exportResults.obsidian = {
+        content: `Error generating ZIP: ${err}`,
+        extension: ".txt",
+        mimeType: "text/plain",
+      };
+    }
   } else {
     const obsidianContent =
       typeof obsidianResult.output === "string" ? obsidianResult.output : "[Binary output]";
     elements.exportObsidianContent.textContent = obsidianContent;
     elements.exportObsidianContent.classList.remove("placeholder");
-  }
 
-  const obsidianDownloadContent =
-    typeof obsidianResult.output === "string" ? obsidianResult.output : "[Binary output]";
-  exportResults.obsidian = {
-    content: obsidianDownloadContent,
-    extension: ".md",
-    mimeType: "text/markdown",
-  };
+    exportResults.obsidian = {
+      content: obsidianContent,
+      extension: ".md",
+      mimeType: "text/markdown",
+    };
+  }
 
   // Joplin Export
   const joplinExporter = new JoplinExporter();
@@ -787,7 +846,7 @@ function downloadExport(): void {
   const fileName = `kindle-clippings${exportData.extension}`;
   const blob =
     exportData.content instanceof Uint8Array
-      ? new Blob([exportData.content as any], { type: exportData.mimeType })
+      ? new Blob([exportData.content], { type: exportData.mimeType })
       : new Blob([exportData.content as string], { type: exportData.mimeType });
   const url = URL.createObjectURL(blob);
 

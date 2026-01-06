@@ -40,6 +40,7 @@ import type { SupportedLanguage } from "./types/language.js";
 import type { ClippingsStats } from "./types/stats.js";
 import { calculateStats } from "./utils/stats.js";
 import { createTarArchive } from "./utils/tar.js";
+import { createZipArchive } from "./utils/zip.js";
 
 // CLI uses console for output - this is intentional
 const log = console.log.bind(console);
@@ -895,6 +896,25 @@ async function writeExportResult(
     }
 
     await fs.writeFile(jexPath, tarBuffer);
+    return;
+  }
+
+  // Handle ZIP export request for any exporter that produces multiple files
+  if (outputPath.endsWith(".zip") && result.files && result.files.length > 0) {
+    const zipBuffer = await createZipArchive(
+      result.files.map((f) => ({
+        name: f.path, // Keeps relative paths/folders
+        content: f.content,
+        date: new Date(), // Could be improved if we had clipping dates
+      })),
+    );
+
+    const dir = path.dirname(outputPath);
+    if (dir && dir !== ".") {
+      await fs.mkdir(dir, { recursive: true });
+    }
+
+    await fs.writeFile(outputPath, zipBuffer);
     return;
   }
 

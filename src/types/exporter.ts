@@ -106,7 +106,12 @@ export interface ExportResult {
   /** Generated content (for single-file exports) */
   output: string | Uint8Array;
 
-  /** Generated files (for multi-file exports) */
+  /**
+   * Generated files (for multi-file exports).
+   *
+   * This is always populated for Obsidian and Joplin exporters,
+   * providing access to the raw files before any optional compression/archiving.
+   */
   files?: ExportedFile[];
 
   /** Error if export failed */

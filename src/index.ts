@@ -126,6 +126,7 @@ export {
 } from "./utils/tar.js";
 export { createHandlebarsInstance, TemplateEngine } from "./utils/template-engine.js";
 export { cleanText, needsCleaning } from "./utils/text-cleaner.js";
+export { createZipArchive, type ZipEntry } from "./utils/zip.js";
 
 // =============================================================================
 // Processor Exports (advanced processing functions)
