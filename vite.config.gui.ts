@@ -1,10 +1,12 @@
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
+import tsconfigPaths from "vite-tsconfig-paths";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
+  plugins: [tsconfigPaths()],
   root: resolve(__dirname, "src/gui"),
   publicDir: resolve(__dirname, "src/gui/public"),
   build: {
@@ -14,11 +16,6 @@ export default defineConfig({
   server: {
     port: 3000,
     open: true,
-  },
-  resolve: {
-    alias: {
-      "@": resolve(__dirname, "src"),
-    },
   },
   optimizeDeps: {
     include: ["date-fns"],

@@ -152,7 +152,7 @@ kindle-tools --help
 
 ### Requirements
 
-- Node.js 18.18.0 or higher
+- Node.js 18.18.0 or higher (use `.nvmrc` to ensure consistency)
 - Works on Windows, macOS, and Linux
 
 ---

@@ -16,6 +16,7 @@ export default defineConfig({
       "@utils": "./src/utils",
       "@app-types": "./src/types",
       "@templates": "./src/templates",
+      "@domain": "./src/domain",
     },
 
     // Include patterns for test files

@@ -34,6 +34,6 @@ export default defineConfig({
   // Shims for ESM/CJS interop
   shims: true,
 
-  // External dependencies (don't bundle)
-  external: ["date-fns", "zod"],
+  // No need to manually specify external dependencies;
+  // tsup automatically externalizes dependencies and peerDependencies from package.json
 });

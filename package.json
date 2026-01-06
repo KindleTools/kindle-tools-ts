@@ -108,6 +108,7 @@
     "tsup": "^8.5.1",
     "typescript": "^5.9.3",
     "vite": "^6.0.7",
+    "vite-tsconfig-paths": "^6.0.3",
     "vitest": "^4.0.16"
   },
   "dependencies": {
