@@ -10,9 +10,9 @@ export type {
   Exporter,
   ExporterOptions,
   ExportResult,
-} from "#exporters/types.js";
+} from "#exporters/exporter.types.js";
 // Importer types
-export type { Importer, ImportResult } from "#importers/types.js";
+export type { Importer, ImportResult } from "#importers/importer.types.js";
 // Clipping types
 export type {
   Clipping,

@@ -21,14 +21,14 @@ import { formatPage, getEffectivePage } from "#domain/page-utils.js";
 import { groupByBook } from "#domain/stats.js";
 import { formatDateHuman } from "#utils/dates.js";
 import { sha256Sync } from "#utils/hashing.js";
-import { BaseExporter } from "./shared/base-exporter.js";
 import type {
   AuthorCase,
   ExportedFile,
   ExporterOptions,
   ExportResult,
   FolderStructure,
-} from "./types.js";
+} from "./exporter.types.js";
+import { BaseExporter } from "./shared/base-exporter.js";
 
 // ============================================================================
 // Constants

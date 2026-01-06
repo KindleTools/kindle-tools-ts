@@ -14,14 +14,14 @@ import type { Clipping } from "#app-types/clipping.js";
 import { getPageInfo } from "#domain/page-utils.js";
 import { groupByBook } from "#domain/stats.js";
 import { formatDateISO } from "#utils/dates.js";
-import { BaseExporter } from "./shared/base-exporter.js";
 import type {
   AuthorCase,
   ExportedFile,
   ExporterOptions,
   ExportResult,
   FolderStructure,
-} from "./types.js";
+} from "./exporter.types.js";
+import { BaseExporter } from "./shared/base-exporter.js";
 
 /**
  * Extended options for Obsidian export.

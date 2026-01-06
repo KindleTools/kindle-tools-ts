@@ -7,9 +7,9 @@
  */
 
 import type { Clipping, ClippingType } from "#app-types/clipping.js";
+import type { ImportResult } from "./importer.types.js";
 import { BaseImporter } from "./shared/base-importer.js";
 import { generateImportId, parseLocationString } from "./shared/index.js";
-import type { ImportResult } from "./types.js";
 
 /**
  * Parse CSV content, handling quoted fields with embedded commas and newlines.

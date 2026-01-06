@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { CsvExporter } from "#exporters/csv.exporter.js";
-import { ExporterFactory } from "#exporters/factory.js";
+import { ExporterFactory } from "#exporters/exporter.factory.js";
 import { HtmlExporter } from "#exporters/html.exporter.js";
 import { JoplinExporter } from "#exporters/joplin.exporter.js";
 import { JsonExporter } from "#exporters/json.exporter.js";
 import { MarkdownExporter } from "#exporters/markdown.exporter.js";
 import { ObsidianExporter } from "#exporters/obsidian.exporter.js";
 import { CsvImporter } from "#importers/csv.importer.js";
-import { ImporterFactory } from "#importers/factory.js";
+import { ImporterFactory } from "#importers/importer.factory.js";
 import { JsonImporter } from "#importers/json.importer.js";
 import { TxtImporter } from "#importers/txt/index.js";
 

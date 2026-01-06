@@ -12,6 +12,7 @@ kindle-tools-ts/
 │   │   └── processor.ts    # Dedup, merge, link notes (The "Processor")
 │   │
 │   ├── domain/             # Pure Business Logic (Entities & Rules)
+│   │   ├── index.ts        # Barrel export for all domain modules
 │   │   ├── stats.ts        # Statistics logic
 │   │   ├── geo-location.ts # Coordinates & Distance
 │   │   ├── tag-extractor.ts # Business rules for cleaning tags
@@ -19,19 +20,27 @@ kindle-tools-ts/
 │   │   └── sanitizers.ts   # Title/Author cleaning rules
 │   │
 │   ├── importers/          # Data Ingestion
+│   │   ├── index.ts        # Barrel export
+│   │   ├── importer.factory.ts  # Factory (creates importer based on file type)
+│   │   ├── importer.types.ts    # Importer interface & ImportResult
+│   │   ├── csv.importer.ts
+│   │   ├── json.importer.ts
 │   │   ├── txt/            # Kindle TXT parser details
 │   │   │   ├── core/       # Tokenizer, Parser, Language Detector
 │   │   │   └── utils/      # Parser-specific utils (e.g. date-parser)
-│   │   ├── json/           # JSON Importer
-│   │   └── csv/            # CSV Importer
+│   │   └── shared/         # Base classes & utilities
 │   │
 │   ├── exporters/          # Export Adapters
+│   │   ├── index.ts        # Barrel export
+│   │   ├── exporter.factory.ts  # Factory (creates exporter based on format)
+│   │   ├── exporter.types.ts    # Exporter interface & ExportResult
 │   │   ├── json.exporter.ts
 │   │   ├── csv.exporter.ts
 │   │   ├── markdown.exporter.ts
 │   │   ├── obsidian.exporter.ts
 │   │   ├── joplin.exporter.ts
-│   │   └── html.exporter.ts
+│   │   ├── html.exporter.ts
+│   │   └── shared/         # Base classes & utilities
 │   │
 │   ├── utils/              # Generic, App-Agnostic Utilities
 │   │   ├── normalizers.ts  # String normalization
@@ -44,8 +53,8 @@ kindle-tools-ts/
 │   ├── types/              # Shared Types
 │   ├── gui/                # Browser Testing GUI
 │   ├── templates/          # Handlebars templates
-│   ├── index.ts            # Public API
-│   └── cli.ts              # Command Line Interface
+│   ├── cli/                # Command Line Interface
+│   └── index.ts            # Public API
 │
 ├── tests/
 │   ├── unit/               # Unit tests

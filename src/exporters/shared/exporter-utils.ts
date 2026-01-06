@@ -8,7 +8,7 @@
  */
 
 import type { Clipping } from "#app-types/clipping.js";
-import type { AuthorCase, ExportedFile, ExportResult } from "#exporters/types.js";
+import type { AuthorCase, ExportedFile, ExportResult } from "#exporters/exporter.types.js";
 import { toError } from "#utils/errors.js";
 
 /**
@@ -198,7 +198,7 @@ export function generateFilePath(
   baseFolder: string,
   author: string,
   title: string,
-  structure: import("#exporters/types.js").FolderStructure,
+  structure: import("#exporters/exporter.types.js").FolderStructure,
   extension = ".md",
 ): string {
   // Ensure extension has dot

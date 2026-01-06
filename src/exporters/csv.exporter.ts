@@ -5,8 +5,8 @@
  */
 
 import type { Clipping } from "#app-types/clipping.js";
+import type { ExporterOptions, ExportResult } from "./exporter.types.js";
 import { BaseExporter } from "./shared/base-exporter.js";
-import type { ExporterOptions, ExportResult } from "./types.js";
 
 /**
  * Export clippings to CSV format.

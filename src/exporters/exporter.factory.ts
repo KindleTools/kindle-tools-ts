@@ -5,12 +5,12 @@
  */
 
 import { CsvExporter } from "./csv.exporter.js";
+import type { Exporter } from "./exporter.types.js";
 import { HtmlExporter } from "./html.exporter.js";
 import { JoplinExporter } from "./joplin.exporter.js";
 import { JsonExporter } from "./json.exporter.js";
 import { MarkdownExporter } from "./markdown.exporter.js";
 import { ObsidianExporter } from "./obsidian.exporter.js";
-import type { Exporter } from "./types.js";
 
 /**
  * Factory for creating exporters.

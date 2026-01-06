@@ -6,8 +6,8 @@
 
 import type { Clipping } from "#app-types/clipping.js";
 import { groupByBook } from "#domain/stats.js";
+import type { ExporterOptions, ExportResult } from "./exporter.types.js";
 import { BaseExporter } from "./shared/base-exporter.js";
-import type { ExporterOptions, ExportResult } from "./types.js";
 
 /**
  * Export clippings to JSON format.

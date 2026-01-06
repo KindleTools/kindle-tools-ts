@@ -39,6 +39,7 @@ export {
   MarkdownExporter,
   ObsidianExporter,
 } from "./exporters/index.js";
+export type { Importer, ImportResult } from "./importers/index.js";
 // Importers & Factory
 export {
   CsvImporter,
@@ -49,8 +50,6 @@ export {
 // Core Parsing & Processing
 export { parseFile } from "./importers/txt/core/file-parser.js";
 export { parse, parseString } from "./importers/txt/core/parser.js";
-
-export type { Importer, ImportResult } from "./importers/types.js";
 // Types
 export type {
   Clipping,
