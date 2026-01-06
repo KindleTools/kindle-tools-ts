@@ -322,3 +322,31 @@ The GUI (`src/gui/`) uses Vite for development and demonstrates browser usage.
 - `biome`: Linting/formatting
 - `husky`: Git hooks
 - `changesets`: Versioning
+
+### Architecture Principles (Refactor 2026)
+
+This project strictly adheres to Clean Architecture principles to ensure scalability and maintainability.
+
+#### 1. Factory Pattern & Dependency Injection
+We use **Factory Method** patterns to instantiate Importers and Exporters. This decouples the CLI/Consumer from concrete implementations.
+
+- **ImporterFactory:** Dynamically selects the correct parser based on file signature/extension.
+- **ExporterFactory:** Provides the requested `Exporter` implementation based on the format string.
+
+#### 2. Clean Layer Boundaries (Path Aliases)
+The project structure is enforced via TypeScript path aliases to prevent tight coupling and circular dependencies.
+
+- `@core/*`: Pure domain logic (Processing, Tokenizing). Zero dependencies on I/O.
+- `@importers/*`: Adapters that convert external formats (TXT, JSON, CSV) into our Domain Entity (`Clipping`).
+- `@exporters/*`: Adapters that convert Domain Entities into external formats.
+- `@utils/*`: Shared, pure helper functions (Dates, Hashing, Sanitization).
+- `@app-types/*`: **Shared Domain Types** (`Clipping`, `Stats`). These are the "language" spoken across the entire app.
+- `@exporters/types`: **Module-Specific Types** (Options, Structures) relevant *only* for export logic.
+
+#### 3. Unified Processing Pipeline
+Regardless of the input source (Raw Text, JSON backup, CSV), all data flows through the same **Pipeline**:
+1. **Import** (Normalize into `Clipping[]`)
+2. **Process** (Deduplicate, Merge, Link Notes) -> *This logic is centralized in `@core/processor`*
+3. **Export** (Transform into target format)
+
+This ensures that a JSON backup, when re-imported, undergoes the same rigorous cleanup and deduplication as a raw Kindle file.
