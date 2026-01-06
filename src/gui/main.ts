@@ -15,6 +15,7 @@ import {
   type ExportedFile,
   type FolderStructure,
   HtmlExporter,
+  type Importer,
   JoplinExporter,
   JsonExporter,
   JsonImporter,
@@ -22,9 +23,10 @@ import {
   ObsidianExporter,
   type ParseOptions,
   type ParseResult,
-  parseString,
+  process,
   type TagCase,
   type TarEntry,
+  TxtImporter,
   type ZipEntry,
 } from "../index.js";
 
@@ -230,42 +232,61 @@ async function parseFile(): Promise<void> {
   const startTime = performance.now();
 
   try {
-    // For JSON and CSV imports, use the importers
-    if (inputFormat === "json" || inputFormat === "csv") {
-      const importer = inputFormat === "json" ? new JsonImporter() : new CsvImporter();
-      const result = await importer.import(state.fileContent);
+    // Unified pipeline: Importer -> Processor -> Display
+    let importer: Importer;
+    if (inputFormat === "json") importer = new JsonImporter();
+    else if (inputFormat === "csv") importer = new CsvImporter();
+    else importer = new TxtImporter();
 
-      if (!result.success || result.clippings.length === 0) {
-        throw result.error || new Error(`Failed to import ${inputFormat.toUpperCase()} file`);
-      }
+    // 1. Import phase (raw parsing)
+    const importResult = await importer.import(state.fileContent);
 
-      // Calculate stats for imported clippings
-      const stats = calculateStats(result.clippings);
-      const parseTime = performance.now() - startTime;
-
-      state.parseResult = {
-        clippings: result.clippings,
-        stats,
-        warnings: result.warnings.map((msg, idx) => ({
-          type: "unknown_format" as const,
-          message: msg,
-          blockIndex: idx,
-        })),
-        meta: {
-          fileSize: state.fileContent.length,
-          parseTime,
-          detectedLanguage: "en",
-          totalBlocks: result.clippings.length,
-          parsedBlocks: result.clippings.length,
-        },
-      };
-    } else {
-      // For TXT files, use the standard parser
-      const options = getParseOptions();
-      state.parseResult = parseString(state.fileContent, options);
+    if (!importResult.success) {
+      throw importResult.error || new Error(`Failed to import ${inputFormat.toUpperCase()} file`);
     }
 
+    // 2. Processing phase (clean, dedup, link, filter)
+    const uiOptions = getParseOptions();
+
+    // Use detected language from importer if available, otherwise default
+    const detectedLanguage = (importResult.meta?.detectedLanguage as any) || "en";
+
+    const processResult = process(importResult.clippings, {
+      ...uiOptions,
+      detectedLanguage,
+    });
+
+    // 3. Stats calculation
+    const stats = calculateStats(processResult.clippings);
+
+    // Augment based on processing results
+    stats.duplicatesRemoved = processResult.duplicatesRemoved;
+    stats.mergedHighlights = processResult.mergedHighlights;
+    stats.linkedNotes = processResult.linkedNotes;
+    stats.emptyRemoved = processResult.emptyRemoved;
+
     const parseTime = performance.now() - startTime;
+
+    state.parseResult = {
+      clippings: processResult.clippings,
+      stats,
+      warnings: importResult.warnings.map((msg: string, idx: number) => ({
+        type: "unknown_format" as const,
+        message: msg,
+        blockIndex: idx,
+      })),
+      meta: {
+        fileSize: state.fileContent.length,
+        parseTime,
+        detectedLanguage: detectedLanguage as any,
+        totalBlocks:
+          importResult.clippings.length +
+          processResult.duplicatesRemoved +
+          processResult.emptyRemoved,
+        parsedBlocks: importResult.clippings.length,
+      },
+    };
+
     console.log("Parse result:", state.parseResult);
     console.log(`Parsed in ${parseTime.toFixed(2)}ms`);
 

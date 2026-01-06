@@ -120,10 +120,11 @@ export interface ExportContext {
   title?: string;
 }
 
-// Import shared types (re-export for backwards compatibility)
-export type { CustomTemplates, TemplateType } from "../types/template.js";
+// Import shared types
+import type { CustomTemplates, TemplateType } from "./types.js";
 
-import type { CustomTemplates, TemplateType } from "../types/template.js";
+// Re-export for convenience
+export type { CustomTemplates, TemplateType } from "./types.js";
 
 // ============================================================================
 // Default Templates

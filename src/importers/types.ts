@@ -21,6 +21,12 @@ export interface ImportResult {
 
   /** Error if import failed */
   error?: Error;
+
+  /** Additional metadata from the import process */
+  meta?: {
+    detectedLanguage?: string;
+    [key: string]: unknown;
+  };
 }
 
 /**

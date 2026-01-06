@@ -28,31 +28,29 @@ export { tokenize } from "./core/tokenizer.js";
 // Exporter Exports
 // =============================================================================
 
-export { CsvExporter } from "./exporters/csv.exporter.js";
-export { HtmlExporter } from "./exporters/html.exporter.js";
-export { JoplinExporter } from "./exporters/joplin.exporter.js";
-export { JsonExporter } from "./exporters/json.exporter.js";
-export { MarkdownExporter } from "./exporters/markdown.exporter.js";
-export { ObsidianExporter } from "./exporters/obsidian.exporter.js";
-
-// Base exporter and shared utilities for creating custom exporters
-export { BaseExporter } from "./exporters/shared/base-exporter.js";
 export {
   applyCase,
+  BaseExporter,
+  CsvExporter,
   createErrorResult,
   createSuccessResult,
   escapeCSV,
   escapeHtml,
   escapeYaml,
+  HtmlExporter,
+  JoplinExporter,
+  JsonExporter,
+  MarkdownExporter,
+  ObsidianExporter,
   sanitizeFilename,
   withExportErrorHandling,
-} from "./exporters/shared/exporter-utils.js";
+} from "./exporters/index.js";
 
 // =============================================================================
 // Importer Exports
 // =============================================================================
 
-export { CsvImporter, JsonImporter } from "./importers/index.js";
+export { CsvImporter, JsonImporter, TxtImporter } from "./importers/index.js";
 
 // Importer utilities for custom importer creation
 export {
@@ -79,12 +77,13 @@ export {
   CLIPPING_DEFAULT,
   CLIPPING_MINIMAL,
   CLIPPING_VERBOSE,
+  createHandlebarsInstance,
   // Export templates
   EXPORT_DEFAULT,
   EXPORT_INDEX,
   EXPORT_SUMMARY,
-  getAvailablePresets,
   getTemplatePreset,
+  TemplateEngine,
 } from "./templates/index.js";
 export { parseKindleDate, parseKindleDateAuto } from "./utils/dates.js";
 export { getErrorMessage, toError } from "./utils/errors.js";
@@ -124,7 +123,6 @@ export {
   createTarArchive,
   type TarEntry,
 } from "./utils/tar.js";
-export { createHandlebarsInstance, TemplateEngine } from "./utils/template-engine.js";
 export { cleanText, needsCleaning } from "./utils/text-cleaner.js";
 export { createZipArchive, type ZipEntry } from "./utils/zip.js";
 
@@ -146,8 +144,25 @@ export {
 // =============================================================================
 
 export type { ProcessResult } from "./core/processor.js";
+export type {
+  AuthorCase,
+  ExportedFile,
+  Exporter,
+  ExporterOptions,
+  ExportResult,
+  FolderStructure,
+  TagCase,
+} from "./exporters/index.js";
 export type { Importer, ImportResult } from "./importers/types.js";
-export type { TemplateCollection, TemplatePreset } from "./templates/index.js";
+export type {
+  BookContext,
+  ClippingContext,
+  CustomTemplates,
+  ExportContext,
+  TemplateCollection,
+  TemplatePreset,
+  TemplateType,
+} from "./templates/index.js";
 export type {
   Clipping,
   ClippingLocation,
@@ -160,15 +175,6 @@ export type {
   ParseWarning,
   ProcessOptions,
 } from "./types/config.js";
-export type {
-  AuthorCase,
-  ExportedFile,
-  Exporter,
-  ExporterOptions,
-  ExportResult,
-  FolderStructure,
-  TagCase,
-} from "./types/exporter.js";
 export type { LanguagePatterns, SupportedLanguage } from "./types/language.js";
 export type { BookStats, ClippingsStats } from "./types/stats.js";
 export type { GeoLocation } from "./utils/geo-location.js";
@@ -176,13 +182,6 @@ export type { PageInfo } from "./utils/page-utils.js";
 export type { TitleSanitizeResult } from "./utils/sanitizers.js";
 export type { SimilarityResult } from "./utils/similarity.js";
 export type { TagExtractionOptions, TagExtractionResult } from "./utils/tag-extractor.js";
-export type {
-  BookContext,
-  ClippingContext,
-  CustomTemplates,
-  ExportContext,
-  TemplateType,
-} from "./utils/template-engine.js";
 export type { CleaningOperation, TextCleaningResult } from "./utils/text-cleaner.js";
 
 // =============================================================================

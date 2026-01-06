@@ -9,11 +9,10 @@
  * @packageDocumentation
  */
 
-import { getTemplatePreset, type TemplatePreset } from "../templates/index.js";
+import { getTemplatePreset, TemplateEngine, type TemplatePreset } from "../templates/index.js";
 import type { Clipping } from "../types/clipping.js";
-import type { ExportedFile, ExporterOptions, ExportResult } from "../types/exporter.js";
 import { groupByBook } from "../utils/stats.js";
-import { TemplateEngine } from "../utils/template-engine.js";
+import type { ExportedFile, ExporterOptions, ExportResult } from "./index.js";
 import { BaseExporter } from "./shared/index.js";
 
 /**

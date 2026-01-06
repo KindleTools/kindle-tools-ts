@@ -4,6 +4,13 @@
  * @packageDocumentation
  */
 
+// Exporter types
+export type {
+  ExportedFile,
+  Exporter,
+  ExporterOptions,
+  ExportResult,
+} from "../exporters/types.js";
 // Clipping types
 export type {
   Clipping,
@@ -11,7 +18,6 @@ export type {
   ClippingType,
   RawClipping,
 } from "./clipping.js";
-
 // Configuration types
 export type {
   ParseOptions,
@@ -19,13 +25,6 @@ export type {
   ParseWarning,
   ProcessOptions,
 } from "./config.js";
-// Exporter types
-export type {
-  ExportedFile,
-  Exporter,
-  ExporterOptions,
-  ExportResult,
-} from "./exporter.js";
 
 // Language types
 export type { LanguagePatterns, SupportedLanguage } from "./language.js";

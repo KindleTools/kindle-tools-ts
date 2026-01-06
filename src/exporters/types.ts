@@ -1,5 +1,5 @@
-import type { Clipping } from "./clipping.js";
-import type { CustomTemplates, TemplatePreset } from "./template.js";
+import type { CustomTemplates, TemplatePreset } from "../templates/types.js";
+import type { Clipping } from "../types/clipping.js";
 
 /**
  * Folder structure options for Markdown-based exporters.

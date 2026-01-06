@@ -90,6 +90,14 @@ export function process(clippings: Clipping[], options?: ProcessOptions): Proces
   let tagsExtracted = 0;
   let filteredForHighlightsOnly = 0;
 
+  // Step 0: Apply basic filtering (type, length, books)
+  if (options) {
+    const filterResult = filterClippings(result, options);
+    result = filterResult.clippings;
+    // We don't track excluded counts explicitly in the result stats yet,
+    // but this ensures consistency across all importers.
+  }
+
   // Step 1: Remove empty clippings
   const originalCount = result.length;
   result = result.filter((c) => !c.isEmpty || c.type === "bookmark");
@@ -152,6 +160,57 @@ export function process(clippings: Clipping[], options?: ProcessOptions): Proces
     tagsExtracted,
     filteredForHighlightsOnly,
   };
+}
+
+/**
+ * Filter clippings based on basic criteria (type, content length, book title).
+ *
+ * @param clippings - Clippings to filter
+ * @param options - Filtering options
+ * @returns Filtered clippings
+ */
+function filterClippings(
+  clippings: Clipping[],
+  options: ProcessOptions,
+): { clippings: Clipping[] } {
+  const result = clippings.filter((clipping) => {
+    // Filter by type
+    if (options.excludeTypes?.includes(clipping.type)) {
+      return false;
+    }
+
+    // Filter by content length
+    if (
+      options.minContentLength &&
+      clipping.content.length < options.minContentLength &&
+      clipping.type !== "bookmark"
+    ) {
+      return false;
+    }
+
+    // Filter excluded books
+    if (
+      options.excludeBooks?.some((book) =>
+        clipping.title.toLowerCase().includes(book.toLowerCase()),
+      )
+    ) {
+      return false;
+    }
+
+    // Filter only specific books
+    if (options.onlyBooks && options.onlyBooks.length > 0) {
+      const matchesAny = options.onlyBooks.some((book) =>
+        clipping.title.toLowerCase().includes(book.toLowerCase()),
+      );
+      if (!matchesAny) {
+        return false;
+      }
+    }
+
+    return true;
+  });
+
+  return { clippings: result };
 }
 
 /**

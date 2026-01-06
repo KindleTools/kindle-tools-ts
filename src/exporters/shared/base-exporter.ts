@@ -19,7 +19,7 @@ import type {
   Exporter,
   ExporterOptions,
   ExportResult,
-} from "../../types/exporter.js";
+} from "../index.js";
 import {
   applyCase as applyCaseUtil,
   collectAllTags as collectAllTagsUtil,
@@ -158,7 +158,7 @@ export abstract class BaseExporter implements Exporter {
     baseFolder: string,
     author: string,
     title: string,
-    structure: import("../../types/exporter.js").FolderStructure,
+    structure: import("../index.js").FolderStructure,
     extension?: string,
   ): string {
     return generateFilePathUtil(baseFolder, author, title, structure, extension || this.extension);

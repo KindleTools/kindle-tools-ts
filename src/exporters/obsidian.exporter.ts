@@ -11,16 +11,16 @@
  */
 
 import type { Clipping } from "../types/clipping.js";
+import { formatDateISO } from "../utils/dates.js";
+import { getPageInfo } from "../utils/page-utils.js";
+import { groupByBook } from "../utils/stats.js";
 import type {
   AuthorCase,
   ExportedFile,
   ExporterOptions,
   ExportResult,
   FolderStructure,
-} from "../types/exporter.js";
-import { formatDateISO } from "../utils/dates.js";
-import { getPageInfo } from "../utils/page-utils.js";
-import { groupByBook } from "../utils/stats.js";
+} from "./index.js";
 import { BaseExporter } from "./shared/index.js";
 
 /**

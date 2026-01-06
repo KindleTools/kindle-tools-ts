@@ -46,9 +46,22 @@ export function parseLocationString(loc: string | undefined | null): ClippingLoc
  *
  * @param clippings - Imported clippings
  * @param warnings - Optional warnings
+ * @param meta - Optional metadata
  * @returns ImportResult
  */
-export function createSuccessImport(clippings: Clipping[], warnings: string[] = []): ImportResult {
+export function createSuccessImport(
+  clippings: Clipping[],
+  warnings: string[] = [],
+  meta?: { [key: string]: unknown },
+): ImportResult {
+  if (meta) {
+    return {
+      success: true,
+      clippings,
+      warnings,
+      meta,
+    };
+  }
   return {
     success: true,
     clippings,

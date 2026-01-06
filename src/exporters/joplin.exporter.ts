@@ -16,18 +16,18 @@
  */
 
 import type { Clipping } from "../types/clipping.js";
+import { formatDateHuman } from "../utils/dates.js";
+import type { GeoLocation } from "../utils/geo-location.js";
+import { sha256Sync } from "../utils/hashing.js";
+import { formatPage, getEffectivePage } from "../utils/page-utils.js";
+import { groupByBook } from "../utils/stats.js";
 import type {
   AuthorCase,
   ExportedFile,
   ExporterOptions,
   ExportResult,
   FolderStructure,
-} from "../types/exporter.js";
-import { formatDateHuman } from "../utils/dates.js";
-import type { GeoLocation } from "../utils/geo-location.js";
-import { sha256Sync } from "../utils/hashing.js";
-import { formatPage, getEffectivePage } from "../utils/page-utils.js";
-import { groupByBook } from "../utils/stats.js";
+} from "./index.js";
 import { BaseExporter } from "./shared/index.js";
 
 // ============================================================================

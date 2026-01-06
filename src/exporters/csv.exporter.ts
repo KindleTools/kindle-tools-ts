@@ -5,7 +5,7 @@
  */
 
 import type { Clipping } from "../types/clipping.js";
-import type { ExporterOptions, ExportResult } from "../types/exporter.js";
+import type { ExporterOptions, ExportResult } from "./index.js";
 import { BaseExporter } from "./shared/index.js";
 
 /**

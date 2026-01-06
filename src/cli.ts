@@ -21,13 +21,6 @@ import { parseFile, parseString } from "./core/parser.js";
 import { tokenize } from "./core/tokenizer.js";
 import { CsvExporter } from "./exporters/csv.exporter.js";
 import { HtmlExporter } from "./exporters/html.exporter.js";
-import { JoplinExporter } from "./exporters/joplin.exporter.js";
-import { JsonExporter } from "./exporters/json.exporter.js";
-import { MarkdownExporter } from "./exporters/markdown.exporter.js";
-import { ObsidianExporter } from "./exporters/obsidian.exporter.js";
-import { CsvImporter, JsonImporter } from "./importers/index.js";
-import type { Clipping } from "./types/clipping.js";
-import type { ParseOptions, ParseResult } from "./types/config.js";
 import type {
   AuthorCase,
   Exporter,
@@ -35,7 +28,14 @@ import type {
   ExportResult,
   FolderStructure,
   TagCase,
-} from "./types/exporter.js";
+} from "./exporters/index.js";
+import { JoplinExporter } from "./exporters/joplin.exporter.js";
+import { JsonExporter } from "./exporters/json.exporter.js";
+import { MarkdownExporter } from "./exporters/markdown.exporter.js";
+import { ObsidianExporter } from "./exporters/obsidian.exporter.js";
+import { CsvImporter, JsonImporter } from "./importers/index.js";
+import type { Clipping } from "./types/clipping.js";
+import type { ParseOptions, ParseResult } from "./types/config.js";
 import type { SupportedLanguage } from "./types/language.js";
 import type { ClippingsStats } from "./types/stats.js";
 import { calculateStats } from "./utils/stats.js";
