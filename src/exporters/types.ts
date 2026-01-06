@@ -18,13 +18,9 @@ export type FolderStructure = "flat" | "by-book" | "by-author" | "by-author-book
  */
 export type AuthorCase = "original" | "uppercase" | "lowercase";
 
-/**
- * Case transformation for extracted tags.
- * - 'original': Keep original case as typed in notes
- * - 'uppercase': Convert to UPPERCASE
- * - 'lowercase': Convert to lowercase (default behavior)
- */
-export type TagCase = "original" | "uppercase" | "lowercase";
+import type { TagCase } from "#app-types/config.js";
+
+export type { TagCase };
 
 /**
  * Options for exporters.

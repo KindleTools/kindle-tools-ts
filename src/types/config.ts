@@ -1,7 +1,15 @@
-import type { GeoLocation } from "#domain/geo-location.js";
 import type { Clipping, ClippingType } from "./clipping.js";
+import type { GeoLocation } from "./geo.js";
 import type { SupportedLanguage } from "./language.js";
 import type { ClippingsStats } from "./stats.js";
+
+/**
+ * Case transformation for extracted tags.
+ * - 'original': Keep original case as typed in notes
+ * - 'uppercase': Convert to UPPERCASE
+ * - 'lowercase': Convert to lowercase (default behavior)
+ */
+export type TagCase = "original" | "uppercase" | "lowercase";
 
 /**
  * Options for parsing Kindle clippings.
@@ -36,7 +44,7 @@ export interface ParseOptions {
    * Only applies when extractTags is enabled.
    * Default: 'uppercase'
    */
-  tagCase?: "original" | "uppercase" | "lowercase";
+  tagCase?: TagCase;
 
   /** Merge overlapping/extended highlights. Default: true */
   mergeOverlapping?: boolean;

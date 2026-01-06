@@ -11,6 +11,8 @@ export type {
   ExporterOptions,
   ExportResult,
 } from "#exporters/types.js";
+// Importer types
+export type { Importer, ImportResult } from "#importers/types.js";
 // Clipping types
 export type {
   Clipping,
@@ -24,8 +26,10 @@ export type {
   ParseResult,
   ParseWarning,
   ProcessOptions,
+  TagCase,
 } from "./config.js";
-
+// Geo types
+export type { GeoLocation } from "./geo.js";
 // Language types
 export type { LanguagePatterns, SupportedLanguage } from "./language.js";
 // Statistics types

@@ -16,7 +16,7 @@
  */
 
 import type { Clipping } from "#app-types/clipping.js";
-import type { GeoLocation } from "#domain/geo-location.js";
+import type { GeoLocation } from "#app-types/geo.js";
 import { formatPage, getEffectivePage } from "#domain/page-utils.js";
 import { groupByBook } from "#domain/stats.js";
 import { formatDateHuman } from "#utils/dates.js";

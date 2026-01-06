@@ -401,3 +401,28 @@ Enhancements to solidify the architecture after the migration to Native Node Sub
     - Strategy for separating Node/Browser logic (`file-parser.ts`).
     - Usage of relative imports in GUI to avoid bundler issues.
   - Create `docs/adr/` to maintain this context for future contributors.
+
+
+## 🌟 2026 Competitive Edge (Market Alignment)
+
+Strategic features to bridge the gap with paid tools like Readwise and community plugins, focusing on privacy and local-first principles.
+
+- [ ] **Metadata Enrichment (The "Wow" Factor)**:
+  - Integrate public APIs (OpenLibrary, Google Books) to fetch covers, genres, and publication dates.
+  - Transform raw text exports into "Visual Libraries" with cover art in HTML/Obsidian views.
+
+- [ ] **Spaced Repetition Integration**:
+  - Add exporters for **Anki** (`.apkg`) and **Flashcards** (Obsidian/Logseq standard `#flashcard`).
+  - Convert passive highlights into active knowledge review systems.
+
+- [ ] **"Smart Watch" Mode**:
+  - Implement a daemon command (`kindle-tools watch`) that auto-detects Kindle USB connection.
+  - Trigger automatic backup and sync workflows without user intervention.
+
+- [ ] **WebAssembly (WASM) & Serverless Web App**:
+  - Leverage the isomorphic core to build a pure client-side web tool hosted on GitHub Pages.
+  - "Drag & Drop -> Download Vault": Zero servers, maximum privacy, instant utility for non-technical users.
+
+- [ ] **Plugin/Extension System**:
+  - Refactor `ExporterFactory` to specific plugin interfaces.
+  - Allow community-contributed exporters (e.g., `kindle-tools-notion`, `kindle-tools-roam`) to be loaded at runtime.
