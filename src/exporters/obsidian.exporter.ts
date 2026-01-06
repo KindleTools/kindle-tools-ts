@@ -18,6 +18,7 @@ import type {
   ExportResult,
   FolderStructure,
 } from "../types/exporter.js";
+import { formatDateISO } from "../utils/dates.js";
 import { getPageInfo } from "../utils/page-utils.js";
 import { groupByBook } from "../utils/stats.js";
 import { BaseExporter } from "./shared/index.js";
@@ -99,7 +100,7 @@ export class ObsidianExporter extends BaseExporter {
       );
 
       // Determine file path based on folder structure
-      const filePath = this.getFilePath(folder, safeAuthor, safeTitle, folderStructure);
+      const filePath = this.generateFilePath(folder, safeAuthor, safeTitle, folderStructure);
 
       files.push({
         path: filePath,
@@ -108,27 +109,6 @@ export class ObsidianExporter extends BaseExporter {
     }
 
     return this.success(files.map((f) => f.content).join("\n\n---\n\n"), files);
-  }
-
-  /**
-   * Get file path based on folder structure.
-   */
-  private getFilePath(
-    baseFolder: string,
-    author: string,
-    title: string,
-    structure: FolderStructure,
-  ): string {
-    switch (structure) {
-      case "by-book":
-        return `${baseFolder}/${title}/${title}.md`;
-      case "by-author":
-        return `${baseFolder}/${author}/${title}.md`;
-      case "by-author-book":
-        return `${baseFolder}/${author}/${title}/${title}.md`;
-      default:
-        return `${baseFolder}/${title}.md`;
-    }
   }
 
   /**
@@ -168,11 +148,9 @@ export class ObsidianExporter extends BaseExporter {
     lines.push(`total_notes: ${clippings.filter((c) => c.type === "note").length}`);
 
     // Add creation date from the first clipping (book start) or current date
-    const createdDate = first.date
-      ? first.date.toISOString().split("T")[0]
-      : new Date().toISOString().split("T")[0];
+    const createdDate = first.date ? formatDateISO(first.date) : formatDateISO(new Date());
     lines.push(`created: ${createdDate}`);
-    lines.push(`date_imported: ${new Date().toISOString().split("T")[0]}`);
+    lines.push(`date_imported: ${formatDateISO(new Date())}`);
 
     lines.push(`tags:`);
     for (const tag of allTags) {

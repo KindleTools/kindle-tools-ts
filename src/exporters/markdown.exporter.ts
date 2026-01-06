@@ -83,7 +83,7 @@ export class MarkdownExporter extends BaseExporter {
     const engine = this.createTemplateEngine(options);
 
     if (options?.groupByBook) {
-      return this.exportGrouped(clippings, engine);
+      return this.exportGrouped(clippings, engine, options);
     }
 
     return this.exportSingle(clippings, engine);
@@ -121,9 +121,18 @@ export class MarkdownExporter extends BaseExporter {
   /**
    * Export clippings grouped by book into separate files.
    */
-  private exportGrouped(clippings: Clipping[], engine: TemplateEngine): ExportResult {
+  private exportGrouped(
+    clippings: Clipping[],
+    engine: TemplateEngine,
+    options?: MarkdownExporterOptions,
+  ): ExportResult {
     const grouped = groupByBook(clippings);
     const files: ExportedFile[] = [];
+
+    // Default options for file structure
+    const folderStructure = options?.folderStructure ?? "flat";
+    const authorCase = options?.authorCase ?? "original";
+    const baseFolder = ""; // Markdown files usually exported to root unless specified otherwise
 
     for (const [_, bookClippings] of grouped) {
       const first = bookClippings[0];
@@ -133,9 +142,14 @@ export class MarkdownExporter extends BaseExporter {
 
       // Create safe filename using inherited utility
       const safeTitle = this.sanitizeFilename(first.title);
+      const safeAuthor = this.sanitizeFilename(
+        this.applyCase(first.author || "Unknown Author", authorCase),
+      );
+
+      const filePath = this.generateFilePath(baseFolder, safeAuthor, safeTitle, folderStructure);
 
       files.push({
-        path: `${safeTitle}.md`,
+        path: filePath,
         content,
       });
     }

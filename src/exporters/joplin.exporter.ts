@@ -23,9 +23,10 @@ import type {
   ExportResult,
   FolderStructure,
 } from "../types/exporter.js";
+import { formatDateHuman } from "../utils/dates.js";
 import type { GeoLocation } from "../utils/geo-location.js";
 import { sha256Sync } from "../utils/hashing.js";
-import { formatPage } from "../utils/page-utils.js";
+import { formatPage, getEffectivePage } from "../utils/page-utils.js";
 import { groupByBook } from "../utils/stats.js";
 import { BaseExporter } from "./shared/index.js";
 
@@ -165,29 +166,6 @@ interface JoplinNoteTag {
 // ============================================================================
 // Helper Functions
 // ============================================================================
-
-/**
- * Format a date for human-readable display (not for Joplin metadata).
- * Format: "2024-01-05 10:30:45"
- */
-function formatDateHuman(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  const hours = String(date.getHours()).padStart(2, "0");
-  const minutes = String(date.getMinutes()).padStart(2, "0");
-  const seconds = String(date.getSeconds()).padStart(2, "0");
-  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-}
-
-/**
- * Estimate page number from Kindle location.
- */
-function estimatePageFromLocation(location: number): number {
-  if (location <= 0) return 1;
-  const estimated = Math.floor(location / LOCATIONS_PER_PAGE);
-  return estimated < 1 ? 1 : estimated;
-}
 
 // ============================================================================
 // Exporter
@@ -439,13 +417,27 @@ export class JoplinExporter extends BaseExporter {
     // Determine page number
     let pageNum = 0;
 
-    // Strategy 1: Use actual page if available
+    if (estimate || clipping.page !== null) {
+      // If we are estimating or have an actual page, use getEffectivePage
+      // getEffectivePage handles both cases: returns actual if present, or estimates if not
+      // However, if estimate is false, we want to skip estimation.
+      // So logic:
+      if (clipping.page !== null) {
+        pageNum = clipping.page;
+      } else if (estimate) {
+        pageNum = getEffectivePage(null, clipping.location);
+      }
+    }
+
+    // Actually simpler:
+    // pageNum = estimate ? getEffectivePage(clipping.page, clipping.location) : (clipping.page ?? 0);
+    // But getEffectivePage handles the null check.
+
+    // Let's stick to explicit logic to match previous behavior exactly.
     if (clipping.page !== null) {
       pageNum = clipping.page;
-    }
-    // Strategy 2: Estimate from location
-    else if (estimate && clipping.location.start > 0) {
-      pageNum = estimatePageFromLocation(clipping.location.start);
+    } else if (estimate && clipping.location.start > 0) {
+      pageNum = getEffectivePage(null, clipping.location);
     }
 
     // Format the reference

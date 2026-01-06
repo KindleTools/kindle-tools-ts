@@ -10,8 +10,8 @@ Ensure the CLI and GUI offer the same set of powerful filtering and configuratio
   - Add `--filter-books` (allowlist) and `--exclude-books` (blocklist) flags.
 
 - [ ] **GUI Updates**:
-  - Add **Tag Case** selector (Original / Uppercase / Lowercase) to match CLI capabilities.
-  - Add **Exclude Books** text area (for blocklisting books).
+  - [x] Add **Tag Case** selector (Original / Uppercase / Lowercase) to match CLI capabilities.
+  - [ ] Add **Exclude Books** text area (for blocklisting books).
 
 ---
 
@@ -186,4 +186,58 @@ jobs:
       id-token: write
     steps:
       - uses: actions/deploy-pages@v4
+
+## 🚀 Phase 4 — Exporters & Security Hardening (Post-MVP)
+
+Improve robustness and security of data exports as the user base and data sizes grow.
+
+- [ ] **CSV Injection Protection**:
+  - Update `escapeCSV` utility to prevent "Formula Injection" attacks.
+  - Detect fields starting with `=`, `+`, `-`, `@`.
+  - Prefix dangerous fields with a single quote `'` or space to force text interpretation in Excel/LibreOffice.
+
+- [ ] **Large Dataset Handling (Memory Efficiency)**:
+  - Refactor `JsonExporter` to use **Streaming** (e.g., `fs.createWriteStream`) instead of building huge arrays in memory.
+  - Critical when user libraries exceed 50-100MB of text data.
+
+- [ ] **Consolidated Logic**:
+  - Ensure all file path generation logic (flat, by-book, by-author) uses the shared `generateFilePath` utility.
+  - Standardize error handling across all exporters using the Template Method pattern in `BaseExporter`.
+
+## 🏗️ Architecture & Flexibility Refactoring (Long Term)
+
+Ideas to make the library more modular and customizable for power users.
+
+- [ ] **Dynamic Path Templating**:
+  - Replace rigid `FolderStructure` enums (`by-author`, `by-book`) with a template string system.
+  - Example: `--path-format="{author}/{series}/{year} - {title}.md"`.
+  - Requires updating `generateFilePath` to use a micro-template engine.
+
+- [ ] **OS-Safe Filename Sanitization**:
+  - Update `sanitizeFilename` to handle Windows reserved names (`CON`, `PRN`, `AUX`, `NUL`, etc.) which currently cause write errors even if characters are valid.
+  - Ensure max path length (260 chars) compliance on Windows.
+
+- [ ] **Unified Archiver Interface**:
+  - Abstract `zip.ts` and `tar.ts` behind a common `Archiver` interface.
+  - Allow plugging in other formats (7z, Gzip) easily without changing CLI logic.
+
+- [ ] **Stream-First Architecture**:
+  - Update `BaseExporter` signature to write directly to a `WritableStream` instead of returning the full content string.
+  - Update `BaseExporter` signature to write directly to a `WritableStream` instead of returning the full content string.
+  - This solves the memory issue for large exports permanently at the architecture level.
+
+## 🧩 Code Unification & Cleanup (Low Priority)
+
+Minor refactoring opportunities identified to improve maintainability.
+
+- [ ] **Abstract Grouping Logic in BaseExporter**:
+  - `HtmlExporter`, `JsonExporter`, and `MarkdownExporter` all implement similar `groupByBook` loops.
+  - Create a `exportGroupedFiles(clippings, renderFn)` helper in `BaseExporter` to standardize file generation and path handling across all exporters.
+
+- [ ] **Externalize HTML Styles**:
+  - Move the large CSS string in `HtmlExporter` to a separate `html-styles.ts` or raw import to keep the exporter logic clean.
+
+- [ ] **Shared Clipping Sanitizer**:
+  - Move `JsonExporter`'s `prepareClippings` logic (removing raw fields, ensuring tags) to a shared utility `sanitizeClippingForExport`.
+  - This allows other exporters to easily offer "clean" output modes.
 ```

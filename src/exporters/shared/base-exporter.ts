@@ -27,6 +27,7 @@ import {
   escapeCSV as escapeCSVUtil,
   escapeHtml as escapeHtmlUtil,
   escapeYaml as escapeYamlUtil,
+  generateFilePath as generateFilePathUtil,
   sanitizeFilename as sanitizeFilenameUtil,
 } from "./exporter-utils.js";
 
@@ -145,5 +146,18 @@ export abstract class BaseExporter implements Exporter {
    */
   protected escapeCSV(value: string): string {
     return escapeCSVUtil(value);
+  }
+
+  /**
+   * Generate file path based on folder structure.
+   */
+  protected generateFilePath(
+    baseFolder: string,
+    author: string,
+    title: string,
+    structure: import("../../types/exporter.js").FolderStructure,
+    extension?: string,
+  ): string {
+    return generateFilePathUtil(baseFolder, author, title, structure, extension || this.extension);
   }
 }

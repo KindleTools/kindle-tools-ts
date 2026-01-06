@@ -144,3 +144,42 @@ export async function withExportErrorHandling(
     return createErrorResult(error);
   }
 }
+
+/**
+ * Generate a file path based on folder structure.
+ *
+ * @param baseFolder - Base output folder (e.g., "books")
+ * @param author - Sanitized author name
+ * @param title - Sanitized book title
+ * @param structure - Folder structure strategy
+ * @param extension - File extension (default: .md)
+ * @returns Relative file path
+ */
+export function generateFilePath(
+  baseFolder: string,
+  author: string,
+  title: string,
+  structure: import("../../types/exporter.js").FolderStructure,
+  extension = ".md",
+): string {
+  // Ensure extension has dot
+  const ext = extension.startsWith(".") ? extension : `.${extension}`;
+
+  // Clean inputs just in case, though they should be sanitized by caller
+  const cleanTitle = title.trim();
+  const cleanAuthor = author.trim();
+
+  // If baseFolder is ".", treat as empty (root)
+  const prefix = baseFolder && baseFolder !== "." ? `${baseFolder}/` : "";
+
+  switch (structure) {
+    case "by-book":
+      return `${prefix}${cleanTitle}/${cleanTitle}${ext}`;
+    case "by-author":
+      return `${prefix}${cleanAuthor}/${cleanTitle}${ext}`;
+    case "by-author-book":
+      return `${prefix}${cleanAuthor}/${cleanTitle}/${cleanTitle}${ext}`;
+    default: // flat
+      return `${prefix}${cleanTitle}${ext}`;
+  }
+}
