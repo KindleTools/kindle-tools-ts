@@ -9,7 +9,7 @@ import {
   parseGeoLocation,
   toGoogleMapsUrl,
   toOpenStreetMapUrl,
-} from "@utils/geo-location.js";
+} from "@domain/geo-location.js";
 import { describe, expect, it } from "vitest";
 
 describe("geo-location", () => {

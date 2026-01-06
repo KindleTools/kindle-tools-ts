@@ -1,0 +1,23 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "tasks": {
+    "build": {
+      "outputs": ["dist/**", "dist-gui/**"],
+      "dependsOn": ["^build"]
+    },
+    "test": {
+      "dependsOn": ["build"],
+      "outputs": ["coverage/**"],
+      "inputs": ["src/**/*.ts", "tests/**/*.ts", "vitest.config.ts"]
+    },
+    "gui:build": {
+      "outputs": ["dist-gui/**"],
+      "dependsOn": ["build"]
+    },
+    "lint": {},
+    "format": {},
+    "check": {
+      "dependsOn": ["build"]
+    }
+  }
+}

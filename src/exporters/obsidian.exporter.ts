@@ -11,9 +11,9 @@
  */
 
 import type { Clipping } from "@app-types/clipping.js";
+import { getPageInfo } from "@domain/page-utils.js";
+import { groupByBook } from "@domain/stats.js";
 import { formatDateISO } from "@utils/dates.js";
-import { getPageInfo } from "@utils/page-utils.js";
-import { groupByBook } from "@utils/stats.js";
 import type {
   AuthorCase,
   ExportedFile,

@@ -10,7 +10,7 @@ import {
   getPageInfo,
   LOCATIONS_PER_PAGE,
   PAGE_PADDING_LENGTH,
-} from "@utils/page-utils.js";
+} from "@domain/page-utils.js";
 import { describe, expect, it } from "vitest";
 
 describe("page-utils", () => {

@@ -65,10 +65,10 @@ export type { ZipEntry } from "./utils/zip.js";
 // Utilities Namespace (Optional usage)
 // =============================================================================
 
+import * as GeoUtils from "./domain/geo-location.js";
+import * as StatUtils from "./domain/stats.js";
 import * as DateUtils from "./utils/dates.js";
-import * as GeoUtils from "./utils/geo-location.js";
 import * as TextUtils from "./utils/normalizers.js";
-import * as StatUtils from "./utils/stats.js";
 import * as TarUtils from "./utils/tar.js";
 import * as ZipUtils from "./utils/zip.js";
 

@@ -7,14 +7,25 @@ Technical overview of kindle-tools-ts for contributors and developers who want t
 ```
 kindle-tools-ts/
 ├── src/
-│   ├── core/               # Core parsing and processing
-│   │   ├── constants.ts    # Language patterns, DRM messages
-│   │   ├── tokenizer.ts    # Splits file into blocks
-│   │   ├── language-detector.ts  # Auto-detects language
-│   │   ├── parser.ts       # Parses blocks into clippings
-│   │   └── processor.ts    # Dedup, merge, link notes
+│   ├── core/               # Orchestration & System-wide logic
+│   │   ├── constants.ts    # System constants
+│   │   └── processor.ts    # Dedup, merge, link notes (The "Processor")
 │   │
-│   ├── exporters/          # Export format implementations
+│   ├── domain/             # Pure Business Logic (Entities & Rules)
+│   │   ├── stats.ts        # Statistics logic
+│   │   ├── geo-location.ts # Coordinates & Distance
+│   │   ├── tag-extractor.ts # Business rules for cleaning tags
+│   │   ├── page-utils.ts   # Page estimation heuristics
+│   │   └── sanitizers.ts   # Title/Author cleaning rules
+│   │
+│   ├── importers/          # Data Ingestion
+│   │   ├── txt/            # Kindle TXT parser details
+│   │   │   ├── core/       # Tokenizer, Parser, Language Detector
+│   │   │   └── utils/      # Parser-specific utils (e.g. date-parser)
+│   │   ├── json/           # JSON Importer
+│   │   └── csv/            # CSV Importer
+│   │
+│   ├── exporters/          # Export Adapters
 │   │   ├── json.exporter.ts
 │   │   ├── csv.exporter.ts
 │   │   ├── markdown.exporter.ts
@@ -22,39 +33,26 @@ kindle-tools-ts/
 │   │   ├── joplin.exporter.ts
 │   │   └── html.exporter.ts
 │   │
-│   ├── utils/              # Utility functions
-│   │   ├── normalizers.ts  # Unicode, BOM, whitespace
-│   │   ├── sanitizers.ts   # Title/author extraction
-│   │   ├── dates.ts        # Multi-language date parsing
-│   │   ├── hashing.ts      # Deterministic ID generation
-│   │   ├── similarity.ts   # Jaccard similarity, fuzzy matching
-│   │   ├── stats.ts        # Statistics calculation
-│   │   ├── tag-extractor.ts # Extract tags from notes
-│   │   ├── text-cleaner.ts # PDF artifact removal
-│   │   ├── page-utils.ts   # Page formatting, estimation
-│   │   └── geo-location.ts # Optional location metadata
+│   ├── utils/              # Generic, App-Agnostic Utilities
+│   │   ├── normalizers.ts  # String normalization
+│   │   ├── dates.ts        # Date formatting
+│   │   ├── hashing.ts      # SHA-256 generation
+│   │   ├── similarity.ts   # Math/Algo (Jaccard)
+│   │   ├── tar.ts          # Archive creation
+│   │   └── zip.ts          # Archive creation
 │   │
-│   ├── types/              # TypeScript interfaces
-│   │   ├── clipping.ts     # Clipping, ClippingType
-│   │   ├── config.ts       # ParseOptions, ProcessOptions
-│   │   ├── exporter.ts     # Exporter, ExporterOptions
-│   │   ├── language.ts     # SupportedLanguage, patterns
-│   │   └── stats.ts        # ClippingsStats, BookStats
-│   │
-│   ├── gui/                # Browser-based testing GUI
-│   │   ├── index.html
-│   │   ├── main.ts
-│   │   └── styles.css
-│   │
-│   ├── index.ts            # Library entry point
-│   └── cli.ts              # CLI implementation
+│   ├── types/              # Shared Types
+│   ├── gui/                # Browser Testing GUI
+│   ├── templates/          # Handlebars templates
+│   ├── index.ts            # Public API
+│   └── cli.ts              # Command Line Interface
 │
 ├── tests/
-│   ├── unit/               # Unit tests per module
-│   ├── integration/        # Full pipeline tests
+│   ├── unit/               # Unit tests
+│   ├── integration/        # Pipeline tests
 │   └── fixtures/           # Test data
 │
-└── dist/                   # Build output (ESM + CJS + DTS)
+└── dist/                   # Build output
 ```
 
 ## Processing Pipeline
@@ -333,20 +331,45 @@ We use **Factory Method** patterns to instantiate Importers and Exporters. This 
 - **ImporterFactory:** Dynamically selects the correct parser based on file signature/extension.
 - **ExporterFactory:** Provides the requested `Exporter` implementation based on the format string.
 
-#### 2. Clean Layer Boundaries (Path Aliases)
-The project structure is enforced via TypeScript path aliases to prevent tight coupling and circular dependencies.
+#### 2. Domain-Driven Design & Clean Architecture
+The project is structured to separate "Business Rules" from "Infrastructure" and "Orchestration".
 
-- `@core/*`: Pure domain logic (Processing, Tokenizing). Zero dependencies on I/O.
-- `@importers/*`: Adapters that convert external formats (TXT, JSON, CSV) into our Domain Entity (`Clipping`).
-- `@exporters/*`: Adapters that convert Domain Entities into external formats.
-- `@utils/*`: Shared, pure helper functions (Dates, Hashing, Sanitization).
-- `@app-types/*`: **Shared Domain Types** (`Clipping`, `Stats`). These are the "language" spoken across the entire app.
-- `@exporters/types`: **Module-Specific Types** (Options, Structures) relevant *only* for export logic.
+- **`@domain/*` (The "What"):** Contains pure business logic and rules (e.g., *How do we calculate reading stats?*, *What defines a valid tag?*). These modules are completely independent of the rest of the system.
+- **`@core/*` (The "How"):** The application layer that orchestrates the data flow. It uses the Domain to process data but doesn't define the rules itself.
+- **`@utils/*` (The "Tools"):** Generic, app-agnostic utilities (e.g., *How to zip a file?*, *How to hash a string?*).
 
-#### 3. Unified Processing Pipeline
+#### 3. Strict Layer Boundaries (Path Aliases)
+We enforce structure via TypeScript path aliases:
+
+- `@domain/*`: **Pure Business Logic**. No dependencies on Core or Importers.
+- `@core/*`: **Orchestration Logic**. Connects Domain, Importers, and Exporters.
+- `@importers/*`: **Adapters** for external data formats.
+- `@exporters/*`: **Adapters** for output formats.
+- `@utils/*`: **Generic Tools**. Zero dependencies on app logic.
+- `@app-types/*`: **Shared Domain Types**.
+
+#### 4. Unified Processing Pipeline
 Regardless of the input source (Raw Text, JSON backup, CSV), all data flows through the same **Pipeline**:
 1. **Import** (Normalize into `Clipping[]`)
-2. **Process** (Deduplicate, Merge, Link Notes) -> *This logic is centralized in `@core/processor`*
+2. **Process** (Deduplicate, Merge, Link Notes) -> *Centralized in `@core/processor`*
 3. **Export** (Transform into target format)
 
 This ensures that a JSON backup, when re-imported, undergoes the same rigorous cleanup and deduplication as a raw Kindle file.
+
+### Toolchain & DevOps Strategy (2026 Standards)
+
+The project leverages a "Bleeding Edge, Yet Stable" stack to maximize developer velocity and correctness.
+
+#### 1. High-Performance Tooling
+We prioritize tools written in Rust/Go for sub-second feedback loops:
+- **Biome:** Replaces ESLint + Prettier. 20x faster, zero-config, handles formatting and linting in one pass.
+- **Tsup (esbuild):** Instant builds for the library. Zero config required for ESM/CJS interop.
+- **Vitest:** Instant test suite execution with Vite integration (replacing Jest).
+- **Turborepo:** Intelligent remote caching. If you only touch the GUI, the Library tests won't re-run in CI.
+
+#### 2. Strict Type Safety
+- **Strict Mode:** Enabled in `tsconfig`.
+- **`arethetypeswrong`:** Validates `package.json` exports to prevent "it works on my machine" issues for consumers using different module resolution strategies (NodeNext, Bundler, etc.).
+
+#### 3. Monorepo-Lite Structure
+Even though it's a single library, we treat it as a monorepo (Library + GUI + Docs) using **pnpm workspaces** + **Turbo**. This allows us to scale the "ecosystem" (e.g. adding a VSCode extension or a Web App later) without restructuring the repo.

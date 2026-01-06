@@ -21,6 +21,7 @@ import type { ParseResult, ProcessOptions } from "@app-types/config.js";
 import type { SupportedLanguage } from "@app-types/language.js";
 import type { ClippingsStats } from "@app-types/stats.js";
 import { process as processClippings } from "@core/processor.js";
+import { calculateStats } from "@domain/stats.js";
 import type {
   AuthorCase,
   Exporter,
@@ -34,7 +35,6 @@ import { ImporterFactory } from "@importers/index.js";
 import { parseString } from "@importers/txt/core/parser.js";
 import { tokenize } from "@importers/txt/core/tokenizer.js";
 import { decodeWithFallback, detectEncoding } from "@utils/encoding.js";
-import { calculateStats } from "@utils/stats.js";
 import { createTarArchive } from "@utils/tar.js";
 import { createZipArchive } from "@utils/zip.js";
 

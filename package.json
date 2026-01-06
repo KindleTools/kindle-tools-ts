@@ -57,6 +57,7 @@
     "version": "changeset version",
     "release": "pnpm build && changeset publish",
     "clean": "rimraf dist coverage .turbo",
+    "ci": "turbo run build test lint check",
     "prepublishOnly": "pnpm build"
   },
   "keywords": [
@@ -106,6 +107,7 @@
     "lint-staged": "^16.2.7",
     "rimraf": "^6.1.2",
     "tsup": "^8.5.1",
+    "turbo": "^2.7.3",
     "typescript": "^5.9.3",
     "vite": "^6.0.7",
     "vite-tsconfig-paths": "^6.0.3",

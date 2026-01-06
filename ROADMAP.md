@@ -13,6 +13,28 @@ Ensure the CLI and GUI offer the same set of powerful filtering and configuratio
   - [x] Add **Tag Case** selector (Original / Uppercase / Lowercase) to match CLI capabilities.
   - [ ] Add **Exclude Books** text area (for blocklisting books).
 
+## 🚀 Toolchain Optimizations (Recommended)
+
+Improvements identified during 2026 toolchain audit to modernize the development workflow.
+
+- [x] **Strict Type Checking (Immediate)**:
+  - Add `arethetypeswrong` to CI pipeline to ensure `package.json` exports are correct for all consumers.
+  - Status: Implemented check, package is valid.
+
+- [x] **Monorepo Build Caching (Short-term)**:
+  - Integrate **Turborepo** to cache `build` and `test` tasks.
+  - Ensures changes to GUI don't trigger library re-tests.
+  - Status: Implemented.
+
+- [ ] **Modern Documentation (Medium-term)**:
+  - Move from `README.md` to a dedicated documentation site.
+  - Use **VitePress** for guides ("How to export to Obsidian").
+  - Integrate **TypeDoc** for auto-generated API references.
+
+- [ ] **CI/CD Caching (Medium-term)**:
+  - Configure GitHub Actions to cache `pnpm` store and `biome` results.
+  - Combine with Turborepo for near-instant CI on minor changes.
+
 ---
 
 ## ✅ **Phase 1 — Add Snyk (Dependency & Code Security)**
@@ -311,7 +333,40 @@ Features to align with enterprise-grade TypeScript tooling standards.
   - Integrate `zod` for rigorous schema validation.
   - Create schemas for generic JSON imports to ensure type safety at runtime.
   - Implement a configuration schema to validate `.kindletoolsrc`.
-
+  
 - [ ] **Centralized Error Handling**:
   - Create a unified `AppError` class with error codes (e.g., `ERR_IO`, `ERR_PARSE`).
   - Refactor `cli.ts` to implement a "panic handler" that distinguishes expected operational errors (print nice message) from unexpected bugs (print stack trace).
+
+## 🔮 Visionary Features (The "Wow" Factor)
+
+Ideas to push the boundaries of what a clipping manager can do.
+
+- [ ] **Plugin Architecture (Extensibility)**:
+  - Create a public `ExporterPlugin` interface.
+  - Allow users/developers to register custom exporters at runtime: `kindleTools.registerExporter("notion", NotionExporter)`.
+  - Enables a community-driven ecosystem of adapters (e.g., `kindle-tools-roam`, `kindle-tools-logseq`) without bloating the core.
+
+- [ ] **AI Enrichment Integration (LLM)**:
+  - Add optional hook for API Keys (OpenAI/Anthropic/Local).
+  - **Auto-Tagging**: Analyze book highlights to suggest thematic tags.
+  - **Summarization**: Generate a "Key Takeaways" summary paragraph for each book based on user highlights.
+
+- [ ] **Property-Based Testing (Fuzzing)**:
+  - Implementation using `fast-check`.
+  - Generate thousands of semi-random, malformed clipping inputs to ensure the Parser never crashes (unhandled exceptions).
+  - Guarantee robust handling of corrupt files or edge-case encodings.
+
+- [ ] **"Spotify Wrapped" for Reading**:
+  - Enhance `HtmlExporter` with embedded visualizations (using lightweight libraries like Chart.js or pure SVG).
+  - Charts: "Highlights per Month", "Most Read Authors", "Reading Calendar Heatmap".
+  - Create shareable, visual summaries of reading habits.
+
+- [ ] **Flashcard Export (Spaced Repetition)**:
+  - **Anki Support**: Export directly to `.apkg` or Anki-optimized CSV.
+  - Automatically create "Cloze Deletion" cards from highlights for active recall.
+
+- [ ] **Incremental Sync ("Diffing Mode")**:
+  - The "Holy Grail" for PKM users (Obsidian, Logseq).
+  - Maintain a state file (hashes of previously imported clips).
+  - Run imports in "Additive Mode": Only create files for *new* highlights, preventing overwrite of manual edits in existing notes.

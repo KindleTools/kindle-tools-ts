@@ -50,7 +50,8 @@
       "@exporters/*": ["./src/exporters/*"],
       "@utils/*": ["./src/utils/*"],
       "@app-types/*": ["./src/types/*"],
-      "@templates/*": ["./src/templates/*"]
+      "@templates/*": ["./src/templates/*"],
+      "@domain/*": ["./src/domain/*"]
     }
   },
   "include": ["src/**/*"],
