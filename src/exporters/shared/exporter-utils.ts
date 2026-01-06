@@ -7,9 +7,9 @@
  * @packageDocumentation
  */
 
-import type { Clipping } from "../../types/clipping.js";
-import type { AuthorCase, ExportedFile, ExportResult } from "../../types/exporter.js";
-import { toError } from "../../utils/errors.js";
+import type { Clipping } from "@app-types/clipping.js";
+import type { AuthorCase, ExportedFile, ExportResult } from "@exporters/types.js";
+import { toError } from "@utils/errors.js";
 
 /**
  * Default value for unknown authors.
@@ -198,7 +198,7 @@ export function generateFilePath(
   baseFolder: string,
   author: string,
   title: string,
-  structure: import("../../types/exporter.js").FolderStructure,
+  structure: import("@exporters/types.js").FolderStructure,
   extension = ".md",
 ): string {
   // Ensure extension has dot

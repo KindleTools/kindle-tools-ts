@@ -10,10 +10,10 @@
  * @packageDocumentation
  */
 
-import type { Clipping } from "../types/clipping.js";
-import { formatDateISO } from "../utils/dates.js";
-import { getPageInfo } from "../utils/page-utils.js";
-import { groupByBook } from "../utils/stats.js";
+import type { Clipping } from "@app-types/clipping.js";
+import { formatDateISO } from "@utils/dates.js";
+import { getPageInfo } from "@utils/page-utils.js";
+import { groupByBook } from "@utils/stats.js";
 import type {
   AuthorCase,
   ExportedFile,

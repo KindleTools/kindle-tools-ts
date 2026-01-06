@@ -2,14 +2,14 @@
  * Tests for all exporters (JSON, CSV, Markdown, Obsidian, Joplin, HTML).
  */
 
+import type { Clipping } from "@app-types/clipping.js";
+import { CsvExporter } from "@exporters/csv.exporter.js";
+import { HtmlExporter } from "@exporters/html.exporter.js";
+import { JoplinExporter } from "@exporters/joplin.exporter.js";
+import { JsonExporter } from "@exporters/json.exporter.js";
+import { MarkdownExporter } from "@exporters/markdown.exporter.js";
+import { ObsidianExporter } from "@exporters/obsidian.exporter.js";
 import { describe, expect, it } from "vitest";
-import { CsvExporter } from "../../src/exporters/csv.exporter.js";
-import { HtmlExporter } from "../../src/exporters/html.exporter.js";
-import { JoplinExporter } from "../../src/exporters/joplin.exporter.js";
-import { JsonExporter } from "../../src/exporters/json.exporter.js";
-import { MarkdownExporter } from "../../src/exporters/markdown.exporter.js";
-import { ObsidianExporter } from "../../src/exporters/obsidian.exporter.js";
-import type { Clipping } from "../../src/types/clipping.js";
 import {
   EMPTY_CLIPPINGS,
   SAMPLE_CLIPPINGS,

@@ -1,4 +1,4 @@
-import type { GeoLocation } from "../utils/geo-location.js";
+import type { GeoLocation } from "@utils/geo-location.js";
 import type { Clipping, ClippingType } from "./clipping.js";
 import type { SupportedLanguage } from "./language.js";
 import type { ClippingsStats } from "./stats.js";

@@ -1,6 +1,6 @@
+import type { Clipping } from "@app-types/clipping.js";
+import { MarkdownExporter } from "@exporters/markdown.exporter.js";
 import { describe, expect, it } from "vitest";
-import { MarkdownExporter } from "../../src/exporters/markdown.exporter.js";
-import type { Clipping } from "../../src/types/clipping.js";
 
 // Helper to create a mock clipping
 function createMockClipping(overrides: Partial<Clipping> = {}): Clipping {

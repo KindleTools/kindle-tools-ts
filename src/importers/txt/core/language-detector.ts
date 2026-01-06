@@ -4,7 +4,7 @@
  * @packageDocumentation
  */
 
-import type { SupportedLanguage } from "../../../types/language.js";
+import type { SupportedLanguage } from "@app-types/language.js";
 import { LANGUAGE_MAP, SUPPORTED_LANGUAGES } from "./constants.js";
 import type { TokenizedBlock } from "./tokenizer.js";
 

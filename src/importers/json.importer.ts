@@ -6,9 +6,9 @@
  * @packageDocumentation
  */
 
+import type { Clipping, ClippingLocation, ClippingType } from "@app-types/clipping.js";
+import type { SupportedLanguage } from "@app-types/language.js";
 import { z } from "zod";
-import type { Clipping, ClippingLocation, ClippingType } from "../types/clipping.js";
-import type { SupportedLanguage } from "../types/language.js";
 import { BaseImporter } from "./shared/base-importer.js";
 import { generateImportId, parseLocationString } from "./shared/index.js";
 import type { ImportResult } from "./types.js";
@@ -249,7 +249,7 @@ export class JsonImporter extends BaseImporter {
 
     if (clippings.length === 0) {
       warnings.push("No clippings found in JSON file");
-      return this.success([], warnings);
+      return this.error(new Error("No clippings found in JSON file"));
     }
 
     return this.success(clippings, warnings);

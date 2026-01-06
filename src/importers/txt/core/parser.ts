@@ -8,22 +8,17 @@
  */
 
 import * as fs from "node:fs/promises";
-import { process } from "../../../core/processor.js";
-import type { Clipping, ClippingLocation, ClippingType } from "../../../types/clipping.js";
-import type { ParseOptions, ParseResult, ParseWarning } from "../../../types/config.js";
-import type { SupportedLanguage } from "../../../types/language.js";
-import { parseKindleDate } from "../../../utils/dates.js";
-import { decodeWithFallback, detectEncoding } from "../../../utils/encoding.js";
-import { generateClippingId } from "../../../utils/hashing.js";
-import { normalizeWhitespace, removeBOM } from "../../../utils/normalizers.js";
-import {
-  extractAuthor,
-  isSideloaded,
-  sanitizeContent,
-  sanitizeTitle,
-} from "../../../utils/sanitizers.js";
-import { calculateStats, countWords } from "../../../utils/stats.js";
-import { cleanText } from "../../../utils/text-cleaner.js";
+import type { Clipping, ClippingLocation, ClippingType } from "@app-types/clipping.js";
+import type { ParseOptions, ParseResult, ParseWarning } from "@app-types/config.js";
+import type { SupportedLanguage } from "@app-types/language.js";
+import { process } from "@core/processor.js";
+import { parseKindleDate } from "@utils/dates.js";
+import { decodeWithFallback, detectEncoding } from "@utils/encoding.js";
+import { generateClippingId } from "@utils/hashing.js";
+import { normalizeWhitespace, removeBOM } from "@utils/normalizers.js";
+import { extractAuthor, isSideloaded, sanitizeContent, sanitizeTitle } from "@utils/sanitizers.js";
+import { calculateStats, countWords } from "@utils/stats.js";
+import { cleanText } from "@utils/text-cleaner.js";
 import { LANGUAGE_MAP } from "./constants.js";
 import { detectLanguage } from "./language-detector.js";
 import { tokenize } from "./tokenizer.js";

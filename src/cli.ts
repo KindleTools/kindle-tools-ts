@@ -16,7 +16,11 @@
 
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
-import { process as processClippings } from "./core/processor.js";
+import type { Clipping } from "@app-types/clipping.js";
+import type { ParseResult, ProcessOptions } from "@app-types/config.js";
+import type { SupportedLanguage } from "@app-types/language.js";
+import type { ClippingsStats } from "@app-types/stats.js";
+import { process as processClippings } from "@core/processor.js";
 import type {
   AuthorCase,
   Exporter,
@@ -24,19 +28,15 @@ import type {
   ExportResult,
   FolderStructure,
   TagCase,
-} from "./exporters/index.js";
-import { ExporterFactory } from "./exporters/index.js";
-import { ImporterFactory } from "./importers/index.js";
-import { parseString } from "./importers/txt/core/parser.js";
-import { tokenize } from "./importers/txt/core/tokenizer.js";
-import type { Clipping } from "./types/clipping.js";
-import type { ParseResult, ProcessOptions } from "./types/config.js";
-import type { SupportedLanguage } from "./types/language.js";
-import type { ClippingsStats } from "./types/stats.js";
-import { decodeWithFallback, detectEncoding } from "./utils/encoding.js";
-import { calculateStats } from "./utils/stats.js";
-import { createTarArchive } from "./utils/tar.js";
-import { createZipArchive } from "./utils/zip.js";
+} from "@exporters/index.js";
+import { ExporterFactory } from "@exporters/index.js";
+import { ImporterFactory } from "@importers/index.js";
+import { parseString } from "@importers/txt/core/parser.js";
+import { tokenize } from "@importers/txt/core/tokenizer.js";
+import { decodeWithFallback, detectEncoding } from "@utils/encoding.js";
+import { calculateStats } from "@utils/stats.js";
+import { createTarArchive } from "@utils/tar.js";
+import { createZipArchive } from "@utils/zip.js";
 
 // CLI uses console for output - this is intentional
 const log = console.log.bind(console);

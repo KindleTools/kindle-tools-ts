@@ -4,15 +4,15 @@
  * Tests the full flow: Parse → Process → Export
  */
 
+import { process } from "@core/processor.js";
+import { CsvExporter } from "@exporters/csv.exporter.js";
+import { HtmlExporter } from "@exporters/html.exporter.js";
+import { JoplinExporter } from "@exporters/joplin.exporter.js";
+import { JsonExporter } from "@exporters/json.exporter.js";
+import { MarkdownExporter } from "@exporters/markdown.exporter.js";
+import { ObsidianExporter } from "@exporters/obsidian.exporter.js";
+import { parse } from "@importers/txt/core/parser.js";
 import { describe, expect, it } from "vitest";
-import { parse } from "../../src/core/parser.js";
-import { process } from "../../src/core/processor.js";
-import { CsvExporter } from "../../src/exporters/csv.exporter.js";
-import { HtmlExporter } from "../../src/exporters/html.exporter.js";
-import { JoplinExporter } from "../../src/exporters/joplin.exporter.js";
-import { JsonExporter } from "../../src/exporters/json.exporter.js";
-import { MarkdownExporter } from "../../src/exporters/markdown.exporter.js";
-import { ObsidianExporter } from "../../src/exporters/obsidian.exporter.js";
 import { SAMPLE_CLIPPINGS_EN } from "../fixtures/sample-clippings.js";
 
 describe("Integration: Full Pipeline", () => {

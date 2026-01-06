@@ -9,6 +9,15 @@ export default defineConfig({
     // Test environment
     environment: "node",
 
+    alias: {
+      "@core": "./src/core",
+      "@importers": "./src/importers",
+      "@exporters": "./src/exporters",
+      "@utils": "./src/utils",
+      "@app-types": "./src/types",
+      "@templates": "./src/templates",
+    },
+
     // Include patterns for test files
     include: ["tests/**/*.{test,spec}.{ts,js}", "src/**/*.{test,spec}.{ts,js}"],
 

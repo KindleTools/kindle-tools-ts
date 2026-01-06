@@ -4,7 +4,7 @@
  * @packageDocumentation
  */
 
-import type { LanguagePatterns, SupportedLanguage } from "../../../types/language.js";
+import type { LanguagePatterns, SupportedLanguage } from "@app-types/language.js";
 
 /**
  * List of all supported languages.

@@ -49,7 +49,7 @@
       "@importers/*": ["./src/importers/*"],
       "@exporters/*": ["./src/exporters/*"],
       "@utils/*": ["./src/utils/*"],
-      "@types/*": ["./src/types/*"],
+      "@app-types/*": ["./src/types/*"],
       "@templates/*": ["./src/templates/*"]
     }
   },

@@ -2,14 +2,14 @@
  * Tests for the normalizers module.
  */
 
-import { describe, expect, it } from "vitest";
 import {
   normalizeText,
   normalizeUnicode,
   normalizeWhitespace,
   removeBOM,
   removeControlCharacters,
-} from "../../src/utils/normalizers.js";
+} from "@utils/normalizers.js";
+import { describe, expect, it } from "vitest";
 
 describe("normalizers", () => {
   describe("normalizeUnicode", () => {

@@ -9,8 +9,8 @@
  * @packageDocumentation
  */
 
-import type { Clipping } from "../../types/clipping.js";
-import type { Importer, ImportResult } from "../types.js";
+import type { Clipping } from "@app-types/clipping.js";
+import type { Importer, ImportResult } from "@types.js";
 import { createErrorImport, createSuccessImport } from "./importer-utils.js";
 
 /**

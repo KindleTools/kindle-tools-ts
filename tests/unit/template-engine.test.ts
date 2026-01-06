@@ -1,13 +1,13 @@
-import { describe, expect, it } from "vitest";
-import { getAvailablePresets, getTemplatePreset } from "../../src/templates/index.js";
-import type { Clipping } from "../../src/types/clipping.js";
+import type { Clipping } from "@app-types/clipping.js";
 import {
   createHandlebarsInstance,
   DEFAULT_BOOK_TEMPLATE,
   DEFAULT_CLIPPING_TEMPLATE,
   DEFAULT_EXPORT_TEMPLATE,
   TemplateEngine,
-} from "../../src/utils/template-engine.js";
+} from "@templates/engine.js";
+import { getAvailablePresets, getTemplatePreset } from "@templates/index.js";
+import { describe, expect, it } from "vitest";
 
 // Helper to create a mock clipping
 function createMockClipping(overrides: Partial<Clipping> = {}): Clipping {

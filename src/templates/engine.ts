@@ -7,8 +7,8 @@
  * @packageDocumentation
  */
 
+import type { Clipping } from "@app-types/clipping.js";
 import Handlebars from "handlebars";
-import type { Clipping } from "../types/clipping.js";
 
 // ============================================================================
 // Types

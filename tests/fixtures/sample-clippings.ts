@@ -4,7 +4,7 @@
  * These fixtures provide sample data for testing the parser and exporters.
  */
 
-import type { Clipping } from "../../src/types/clipping.js";
+import type { Clipping } from "@app-types/clipping.js";
 
 /**
  * Sample English clippings file content.

@@ -6,9 +6,9 @@
  * @packageDocumentation
  */
 
-import type { Clipping, ClippingLocation } from "../../types/clipping.js";
-import { toError } from "../../utils/errors.js";
-import type { ImportResult } from "../types.js";
+import type { Clipping, ClippingLocation } from "@app-types/clipping.js";
+import type { ImportResult } from "@types.js";
+import { toError } from "@utils/errors.js";
 
 /**
  * Generate a unique ID for imported clippings that don't have one.

@@ -2,8 +2,8 @@
  * Tests for the tokenizer module.
  */
 
+import { tokenize } from "@importers/txt/core/tokenizer.js";
 import { describe, expect, it } from "vitest";
-import { tokenize } from "../../src/core/tokenizer.js";
 
 describe("tokenizer", () => {
   describe("tokenize", () => {

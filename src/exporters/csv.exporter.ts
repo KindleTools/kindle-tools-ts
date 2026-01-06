@@ -4,7 +4,7 @@
  * @packageDocumentation
  */
 
-import type { Clipping } from "../types/clipping.js";
+import type { Clipping } from "@app-types/clipping.js";
 import type { ExporterOptions, ExportResult } from "./index.js";
 import { BaseExporter } from "./shared/index.js";
 

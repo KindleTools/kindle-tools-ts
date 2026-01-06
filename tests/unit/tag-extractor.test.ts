@@ -2,8 +2,8 @@
  * Tests for the tag-extractor module.
  */
 
+import { extractTagsFromNote, looksLikeTagNote } from "@utils/tag-extractor.js";
 import { describe, expect, it } from "vitest";
-import { extractTagsFromNote, looksLikeTagNote } from "../../src/utils/tag-extractor.js";
 
 describe("tag-extractor", () => {
   describe("extractTagsFromNote", () => {
