@@ -46,6 +46,20 @@ describe("Factories", () => {
     it("should return null for unknown format", () => {
       expect(ExporterFactory.getExporter("unknown")).toBeNull();
     });
+    it("should allow registering new exporters", () => {
+      class MockExporter extends JsonExporter {
+        readonly name = "mock";
+      }
+
+      ExporterFactory.register("mock", MockExporter);
+      expect(ExporterFactory.getExporter("mock")).toBeInstanceOf(MockExporter);
+    });
+
+    it("should list registered formats", () => {
+      const formats = ExporterFactory.getRegisteredFormats();
+      expect(formats).toContain("json");
+      expect(formats).toContain("csv");
+    });
   });
 
   describe("ImporterFactory", () => {
@@ -68,6 +82,13 @@ describe("Factories", () => {
       // Kindle clippings files sometimes have no extension or other names
       expect(ImporterFactory.getImporter("My Clippings")).toBeInstanceOf(TxtImporter);
       expect(ImporterFactory.getImporter("clippings.dat")).toBeInstanceOf(TxtImporter);
+    });
+
+    it("should allow registering new importers", () => {
+      class MockImporter extends TxtImporter {}
+
+      ImporterFactory.register(".mock", MockImporter);
+      expect(ImporterFactory.getImporter("test.mock")).toBeInstanceOf(MockImporter);
     });
   });
 });
