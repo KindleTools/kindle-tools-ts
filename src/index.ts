@@ -58,8 +58,8 @@ export type {
 } from "./types/clipping.js";
 export type { ParseOptions, ParseResult, ProcessOptions } from "./types/config.js";
 export type { SupportedLanguage } from "./types/language.js";
-export type { TarEntry } from "./utils/fs/tar.js";
-export type { ZipEntry } from "./utils/fs/zip.js";
+
+// Removed internal file system types from public API
 
 // =============================================================================
 // Utilities Namespace (Optional usage)
@@ -67,8 +67,6 @@ export type { ZipEntry } from "./utils/fs/zip.js";
 
 import * as GeoUtils from "./domain/geo-location.js";
 import * as StatUtils from "./domain/stats.js";
-import * as TarUtils from "./utils/fs/tar.js";
-import * as ZipUtils from "./utils/fs/zip.js";
 import * as DateUtils from "./utils/system/dates.js";
 import * as TextUtils from "./utils/text/normalizers.js";
 
@@ -77,8 +75,6 @@ export const Utils = {
   ...GeoUtils,
   ...TextUtils,
   ...StatUtils,
-  ...TarUtils,
-  ...ZipUtils,
 };
 
 // Re-exporting specific core utilities that might be useful for advanced integration
