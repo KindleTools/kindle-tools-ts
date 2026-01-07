@@ -439,3 +439,11 @@ Tasks focused on long-term maintainability and developer experience.
 - [ ] **Strict Node/Browser Split (Tree Shaking)**:
   - Refactor `src/index.ts` to strictly separate Node.js dependencies (like `fs`) from the core logic.
   - Consider creating specific entry points: `kindle-tools-ts/node` vs `kindle-tools-ts/browser` (or `core`) to prevent bundler errors in frontend projects.
+
+ -   [   ]   * * U n i t   T e s t   C o v e r a g e * * :   C o n f i g u r e   c o v e r a g e   r e p o r t i n g   ( e . g . ,   w i t h   c 8   o r    8   i n   V i t e s t )   t o   r e v e a l   o b s c u r e   u t i l s   o r   e d g e   c a s e s   n o t   b e i n g   t e s t e d . 
+ 
+ -   [   ]   * * P e r f o r m a n c e   o n   L a r g e   F i l e s * * :   B e n c h m a r k   s m a r t M e r g e H i g h l i g h t s   a n d   f u z z y   d e d u p l i c a t i o n   l o g i c   w i t h   f i l e s   c o n t a i n i n g   2 0 k +   c l i p p i n g s   t o   i d e n t i f y   p o t e n t i a l   o p t i m i z a t i o n s . 
+ 
+ -   [   ]   * * P a r s e r s   f o r   o t h e r   i n p u t s * * :   E x p l o r e   s u p p o r t   f o r   K o b o   ( S Q L i t e )   o r   A p p l e   B o o k s   t o   e x p a n d   t h e   l i b r a r y ' s   u t i l i t y   b e y o n d   K i n d l e . 
+  
+ 

@@ -2,12 +2,13 @@ import { describe, expect, it } from "vitest";
 import type { Clipping } from "#app-types/clipping.js";
 import {
   createHandlebarsInstance,
-  DEFAULT_BOOK_TEMPLATE,
-  DEFAULT_CLIPPING_TEMPLATE,
-  DEFAULT_EXPORT_TEMPLATE,
+  BOOK_DEFAULT as DEFAULT_BOOK_TEMPLATE,
+  CLIPPING_DEFAULT as DEFAULT_CLIPPING_TEMPLATE,
+  EXPORT_DEFAULT as DEFAULT_EXPORT_TEMPLATE,
+  getAvailablePresets,
+  getTemplatePreset,
   TemplateEngine,
-} from "#templates/engine.js";
-import { getAvailablePresets, getTemplatePreset } from "#templates/index.js";
+} from "#templates/index.js";
 
 // Helper to create a mock clipping
 function createMockClipping(overrides: Partial<Clipping> = {}): Clipping {
@@ -246,8 +247,7 @@ describe("TemplateEngine", () => {
       const clipping = createMockClipping({ type: "note", content: "My note" });
       const output = engine.renderClipping(clipping);
 
-      expect(output).toContain("📝");
-      expect(output).toContain("Note");
+      expect(output).toContain("**Note");
       expect(output).toContain("My note");
     });
 
@@ -256,8 +256,7 @@ describe("TemplateEngine", () => {
       const clipping = createMockClipping({ type: "bookmark" });
       const output = engine.renderClipping(clipping);
 
-      expect(output).toContain("🔖");
-      expect(output).toContain("Bookmark");
+      expect(output).toContain("**Bookmark**");
     });
   });
 

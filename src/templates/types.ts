@@ -42,3 +42,113 @@ export interface CustomTemplates {
  * Available template types.
  */
 export type TemplateType = "clipping" | "book" | "export";
+
+// ============================================================================
+// Context Types
+// ============================================================================
+
+/**
+ * Context for rendering a single clipping.
+ */
+export interface ClippingContext {
+  /** Book title */
+  title: string;
+  /** Author name */
+  author: string;
+  /** Clipping content text */
+  content: string;
+  /** Clipping type: highlight, note, bookmark */
+  type: string;
+  /** Page number (or "?" if unknown) */
+  page: string;
+  /** Location raw string (e.g., "105-106") */
+  location: string;
+  /** Location start number */
+  locationStart: number;
+  /** Location end number (same as start if single) */
+  locationEnd: number;
+  /** Formatted date string */
+  date: string;
+  /** ISO date string */
+  dateIso: string;
+  /** Linked note content (if any) */
+  note: string;
+  /** Tags array */
+  tags: string[];
+  /** Tags as comma-separated string */
+  tagsString: string;
+  /** Tags as hashtags (e.g., "#tag1 #tag2") */
+  tagsHashtags: string;
+  /** Word count */
+  wordCount: number;
+  /** Character count */
+  charCount: number;
+  /** Book source: kindle or sideload */
+  source: string;
+  /** True if DRM limit was reached */
+  isLimitReached: boolean;
+  /** True if content is empty */
+  isEmpty: boolean;
+  /** True if has a linked note */
+  hasNote: boolean;
+  /** True if has tags */
+  hasTags: boolean;
+}
+
+/**
+ * Context for rendering a book (group of clippings).
+ */
+export interface BookContext {
+  /** Book title */
+  title: string;
+  /** Author name */
+  author: string;
+  /** All clippings for this book */
+  clippings: ClippingContext[];
+  /** Only highlights */
+  highlights: ClippingContext[];
+  /** Only notes */
+  notes: ClippingContext[];
+  /** Only bookmarks */
+  bookmarks: ClippingContext[];
+  /** Total clipping count */
+  totalClippings: number;
+  /** Highlight count */
+  highlightCount: number;
+  /** Note count */
+  noteCount: number;
+  /** Bookmark count */
+  bookmarkCount: number;
+  /** Current date (formatted) */
+  exportDate: string;
+  /** Current date (ISO) */
+  exportDateIso: string;
+  /** All unique tags from clippings */
+  tags: string[];
+  /** True if book has any tags */
+  hasTags: boolean;
+}
+
+/**
+ * Context for rendering a full export (all books).
+ */
+export interface ExportContext {
+  /** All books */
+  books: BookContext[];
+  /** Total book count */
+  bookCount: number;
+  /** Total clipping count */
+  totalClippings: number;
+  /** Total highlight count */
+  totalHighlights: number;
+  /** Total note count */
+  totalNotes: number;
+  /** Total bookmark count */
+  totalBookmarks: number;
+  /** Export date (formatted) */
+  exportDate: string;
+  /** Export date (ISO) */
+  exportDateIso: string;
+  /** Custom title provided by user */
+  title?: string;
+}
