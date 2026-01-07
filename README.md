@@ -163,7 +163,8 @@ kindle-tools --help
 ### Basic Usage
 
 ```typescript
-import { parseFile, JsonExporter } from 'kindle-tools-ts';
+import { JsonExporter } from 'kindle-tools-ts';
+import { parseFile } from 'kindle-tools-ts/node';
 
 // Parse your clippings file
 const result = await parseFile('./My Clippings.txt');
@@ -210,7 +211,8 @@ console.log(result.clippings[0]);
 ### Export to Different Formats
 
 ```typescript
-import { parseFile, MarkdownExporter, ObsidianExporter, JoplinExporter } from 'kindle-tools-ts';
+import { MarkdownExporter, ObsidianExporter, JoplinExporter } from 'kindle-tools-ts';
+import { parseFile } from 'kindle-tools-ts/node';
 
 const result = await parseFile('./My Clippings.txt');
 
@@ -449,7 +451,11 @@ This opens a local Vite server where you can:
 
 #### `parseFile(filePath, options?)`
 
-Parse a Kindle clippings file from disk.
+#### `parseFile(filePath, options?)`
+
+Parse a Kindle clippings file from disk (Node.js only).
+
+> **Note**: Import this from `kindle-tools-ts/node`.
 
 ```typescript
 const result = await parseFile('./My Clippings.txt', {

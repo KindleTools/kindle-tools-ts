@@ -23,6 +23,7 @@ src/
 ├── domain/               # 📦 Domain Entities & Pure Logic
 │   ├── stats.ts          # Statistics calculation
 │   ├── sanitizers.ts     # Data cleaning rules
+│   ├── languages.ts      # Language definitions & patterns
 │   └── geography.ts      # Geolocation extensions
 │
 ├── importers/            # 📥 Data Ingestion
@@ -42,6 +43,10 @@ src/
 │
 ├── templates/            # 🎨 Export Templates (Handlebars)
 │   └── default.ts        # Default layouts
+│
+│
+├── node/                 # 🟢 Node.js Entry Point
+│   └── index.ts          # Node-specific exports (FileSystem access)
 │
 └── gui/                  # 🖥️ Web Interface (Vite/Vanilla JS)
     └── main.ts
@@ -63,11 +68,19 @@ src/
 **Decision**: Moved `text-cleaner.ts` inside `importers/txt/core`.
 **Reason**: This file handles artifacts specific to the Kindle TXT format (PDF line breaks, etc.). It is not a general text utility and shouldn't be exposed as such. It is highly coupled to the TXT parser.
 
-### 4. Importer/Exporter Pattern
+### 4. Universal Core vs Node Adapters
+**Decision**: Split `src/index.ts` (Universal) and `src/node/index.ts` (Node.js).
+**Reason**: To ensure the library works in strictly non-Node environments (like Browsers or Edge Workers), the main entry point MUST NOT depend on 'fs' or 'path'. Node-specific functionality (like `parseFile`) is isolated in a separate entry point.
+
+### 5. Languages as a Domain Concept
+**Decision**: Moved `languages.ts` to `domain`.
+**Reason**:  Knowledge about what languages are supported and their specific patterns (date formats, keywords) is a core part of the "Kindle Domain", not just an implementation detail of the text parser. This decoupling allows other parts of the system to be language-aware without depending on the `txt` importer.
+
+### 6. Importer/Exporter Pattern
 **Decision**: Use a Strategy Pattern for Importers and Exporters.
 **Reason**: Allows easy extension. New formats (e.g., Readwise CSV, Notion API) can be added as new classes without modifying the core processing pipeline.
 
-### 5. Deterministic Processing
+### 7. Deterministic Processing
 **Decision**: The `process()` function in `core/processor.ts` is pure and deterministic.
 **Reason**: It takes raw clippings and returns processed clippings + stats. It does not perform I/O. This makes the core logic 100% testable without mocks.
 

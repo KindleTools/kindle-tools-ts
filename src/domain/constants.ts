@@ -81,3 +81,14 @@ export const SUSPICIOUS_HIGHLIGHT_THRESHOLDS = {
  * 0.8 means 80% word overlap is considered a possible duplicate.
  */
 export const DEFAULT_SIMILARITY_THRESHOLD = 0.8;
+
+/**
+ * Common file patterns used in Kindle ecosystem.
+ */
+export const COMMON_PATTERNS = {
+  /** Sideloaded book extensions (matches anywhere in title) */
+  SIDELOAD_EXTENSIONS: /\.(pdf|epub|mobi|azw3?|txt|doc|docx|html|fb2|rtf)/i,
+
+  /** Amazon _EBOK suffix */
+  EBOK_SUFFIX: /_EBOK$/i,
+} as const;

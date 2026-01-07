@@ -5,6 +5,7 @@ export default defineConfig({
   entry: {
     index: "src/index.ts",
     cli: "src/cli/index.ts",
+    node: "src/node/index.ts",
   },
 
   // Output formats: ESM and CommonJS

@@ -4,8 +4,7 @@
  * @packageDocumentation
  */
 
-import { DRM_LIMIT_MESSAGES, TITLE_NOISE_PATTERNS } from "#domain/constants.js";
-import { PATTERNS } from "#importers/formats/txt/constants.js";
+import { COMMON_PATTERNS, DRM_LIMIT_MESSAGES, TITLE_NOISE_PATTERNS } from "#domain/constants.js";
 import { normalizeWhitespace } from "#utils/text/normalizers.js";
 
 /**
@@ -57,10 +56,10 @@ export function sanitizeTitle(title: string): TitleSanitizeResult {
   const original = title;
 
   // Remove file extensions
-  clean = clean.replace(PATTERNS.SIDELOAD_EXTENSIONS, "");
+  clean = clean.replace(COMMON_PATTERNS.SIDELOAD_EXTENSIONS, "");
 
   // Remove _EBOK suffix
-  clean = clean.replace(PATTERNS.EBOK_SUFFIX, "");
+  clean = clean.replace(COMMON_PATTERNS.EBOK_SUFFIX, "");
 
   // Remove all noise patterns (editions, markers, etc)
   for (const pattern of TITLE_NOISE_PATTERNS) {
@@ -136,7 +135,7 @@ export function extractAuthor(rawTitle: string): TitleAuthorResult {
  * @returns True if the book appears to be sideloaded
  */
 export function isSideloaded(title: string): boolean {
-  return PATTERNS.SIDELOAD_EXTENSIONS.test(title) || PATTERNS.EBOK_SUFFIX.test(title);
+  return COMMON_PATTERNS.SIDELOAD_EXTENSIONS.test(title) || COMMON_PATTERNS.EBOK_SUFFIX.test(title);
 }
 
 /**

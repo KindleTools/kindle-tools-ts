@@ -40,7 +40,7 @@ export {
   ObsidianExporter,
 } from "./exporters/index.js";
 // Txt Importer Core (Direct access)
-export { parseFile } from "./importers/formats/txt/file-parser.js";
+// Txt Importer Core (Direct access)
 // Language
 export { detectLanguage } from "./importers/formats/txt/language-detector.js";
 export { parse, parseString } from "./importers/formats/txt/parser.js";
