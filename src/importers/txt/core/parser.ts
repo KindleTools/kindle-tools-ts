@@ -10,15 +10,15 @@
 import type { Clipping, ClippingLocation, ClippingType } from "#app-types/clipping.js";
 import type { ParseOptions, ParseResult, ParseWarning } from "#app-types/config.js";
 import type { SupportedLanguage } from "#app-types/language.js";
+import { generateClippingId } from "#core/hashing.js";
 import { process } from "#core/processor.js";
 import { extractAuthor, isSideloaded, sanitizeContent, sanitizeTitle } from "#domain/sanitizers.js";
 import { calculateStats, countWords } from "#domain/stats.js";
-import { generateClippingId } from "#utils/system/hashing.js";
 import { normalizeWhitespace, removeBOM } from "#utils/text/normalizers.js";
-import { cleanText } from "#utils/text/text-cleaner.js";
 import { parseKindleDate } from "../utils/date-parser.js";
 import { LANGUAGE_MAP } from "./constants.js";
 import { detectLanguage } from "./language-detector.js";
+import { cleanText } from "./text-cleaner.js";
 import { tokenize } from "./tokenizer.js";
 
 /**

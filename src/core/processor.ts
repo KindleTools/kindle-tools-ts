@@ -16,9 +16,9 @@ import type { Clipping } from "#app-types/clipping.js";
 import type { ProcessOptions } from "#app-types/config.js";
 import { groupByBook } from "#domain/stats.js";
 import { extractTagsFromNote } from "#domain/tag-extractor.js";
-import { generateDuplicateHash } from "#utils/system/hashing.js";
-import { jaccardSimilarity } from "#utils/text/similarity.js";
 import { DEFAULT_SIMILARITY_THRESHOLD, SUSPICIOUS_HIGHLIGHT_THRESHOLDS } from "./constants.js";
+import { generateDuplicateHash } from "./hashing.js";
+import { jaccardSimilarity } from "./similarity.js";
 
 /**
  * Result of the processing operation.
