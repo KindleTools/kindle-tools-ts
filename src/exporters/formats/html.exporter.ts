@@ -121,7 +121,7 @@ ${this.getStyles(customCss)}
   <header class="header">
     <h1>${this.escapeHtml(title)}</h1>
     <p class="stats">${totalBooks} book${totalBooks !== 1 ? "s" : ""} • ${totalClippings} highlight${totalClippings !== 1 ? "s" : ""}</p>
-    ${includeDarkMode ? '<button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">🌙</button>' : ""}
+    ${includeDarkMode ? '<button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">&#x1F319;</button>' : ""}
   </header>
 
   ${includeSearch ? this.generateSearchBox() : ""}
@@ -181,7 +181,12 @@ ${this.getStyles(customCss)}
    */
   private generateClippingHtml(clipping: Clipping): string {
     const typeClass = `clipping-${clipping.type}`;
-    const typeEmoji = clipping.type === "highlight" ? "📖" : clipping.type === "note" ? "📝" : "🔖";
+    const typeEmoji =
+      clipping.type === "highlight"
+        ? "\\u{1F4D6}"
+        : clipping.type === "note"
+          ? "\\u{1F4DD}"
+          : "\\u{1F516}";
     const locationInfo = `Page ${clipping.page ?? "?"} • Location ${clipping.location.raw}`;
     const dateStr = clipping.date ? formatDateHuman(clipping.date) : "";
 
@@ -519,13 +524,13 @@ ${this.getStyles(customCss)}
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
       document.body.classList.add('dark');
-      themeToggle.textContent = '☀️';
+      themeToggle.textContent = '\\u2600'; // Sun emoji
     }
 
     themeToggle.addEventListener('click', function() {
       document.body.classList.toggle('dark');
       const isDark = document.body.classList.contains('dark');
-      themeToggle.textContent = isDark ? '☀️' : '🌙';
+      themeToggle.textContent = isDark ? '\\u2600' : '\\u{1F319}'; // Sun or Crescent Moon emoji
       localStorage.setItem('theme', isDark ? 'dark' : 'light');
     });`
       : "";

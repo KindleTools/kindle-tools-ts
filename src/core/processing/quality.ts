@@ -54,7 +54,9 @@ export function flagSuspiciousHighlights(clippings: Clipping[]): {
     const firstChar = text[0];
     if (
       firstChar &&
-      /^[a-záéíóúñüàèìòùâêîôûäëïöç]/i.test(firstChar) &&
+      /^[a-z\u00E1\u00E9\u00ED\u00F3\u00FA\u00F1\u00FC\u00E0\u00E8\u00EC\u00F2\u00F9\u00E2\u00EA\u00EE\u00F4\u00FB\u00E4\u00EB\u00EF\u00F6\u00E7]/i.test(
+        firstChar,
+      ) &&
       firstChar === firstChar.toLowerCase()
     ) {
       flaggedCount++;

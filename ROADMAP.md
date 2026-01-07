@@ -1,7 +1,7 @@
 # KindleToolsTS Roadmap
 
 
-## 🔧 CLI & GUI Parity (Consistency Update)
+## &#x1F527; CLI & GUI Parity (Consistency Update)
 Ensure the CLI and GUI offer the same set of powerful filtering and configuration options to avoid user confusion.
 
 - [ ] **CLI Updates**:
@@ -13,7 +13,7 @@ Ensure the CLI and GUI offer the same set of powerful filtering and configuratio
   - [x] Add **Tag Case** selector (Original / Uppercase / Lowercase) to match CLI capabilities.
   - [ ] Add **Exclude Books** text area (for blocklisting books).
 
-## 🚀 Toolchain Optimizations (Recommended)
+## &#x1F680; Toolchain Optimizations (Recommended)
 
 Improvements identified during 2026 toolchain audit to modernize the development workflow.
 
@@ -37,7 +37,7 @@ Improvements identified during 2026 toolchain audit to modernize the development
 
 ---
 
-## ✅ **Phase 1 — Add Snyk (Dependency & Code Security)**
+## &#x2705; **Phase 1 — Add Snyk (Dependency & Code Security)**
 
 Introduce automated security scanning for dependencies and source code to detect vulnerabilities early.
 
@@ -81,7 +81,7 @@ jobs:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 ```
 
-## ✅ **Phase 2 — Add SonarQube (Static Analysis & Code Quality)**
+## &#x2705; **Phase 2 — Add SonarQube (Static Analysis & Code Quality)**
 
 Introduce deep static analysis, code smell detection, and long‑term quality metrics.
 
@@ -151,7 +151,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 ```
 
-## ✅ **Phase 3 — Add TypeDoc (Automatic API Documentation)**
+## &#x2705; **Phase 3 — Add TypeDoc (Automatic API Documentation)**
 
 Generate clean, navigable API documentation directly from TypeScript types and comments.
 
@@ -209,7 +209,7 @@ jobs:
     steps:
       - uses: actions/deploy-pages@v4
 
-## 🚀 Phase 4 — Exporters & Security Hardening (Post-MVP)
+## &#x1F680; Phase 4 — Exporters & Security Hardening (Post-MVP)
 
 Improve robustness and security of data exports as the user base and data sizes grow.
 
@@ -226,7 +226,7 @@ Improve robustness and security of data exports as the user base and data sizes 
   - Ensure all file path generation logic (flat, by-book, by-author) uses the shared `generateFilePath` utility.
   - Standardize error handling across all exporters using the Template Method pattern in `BaseExporter`.
 
-## 🏗️ Architecture & Flexibility Refactoring (Long Term)
+## &#x1F3D7;&#xFE0F; Architecture & Flexibility Refactoring (Long Term)
 
 Ideas to make the library more modular and customizable for power users.
 
@@ -248,7 +248,7 @@ Ideas to make the library more modular and customizable for power users.
   - Update `BaseExporter` signature to write directly to a `WritableStream` instead of returning the full content string.
   - This solves the memory issue for large exports permanently at the architecture level.
 
-## 🧩 Code Unification & Cleanup (Low Priority)
+## &#x1F9E9; Code Unification & Cleanup (Low Priority)
 
 Minor refactoring opportunities identified to improve maintainability.
 
@@ -275,7 +275,7 @@ Minor refactoring opportunities identified to improve maintainability.
   - The current `CsvImporter` uses a manual parsing strategy which may be fragile with complex CSVs (e.g. quoted newlines, escaped quotes).
   - Migrate to a robust library like `csv-parse/sync` or `papaparse` for production-grade reliability, or implement a comprehensive test suite for "torture cases".
 
-## 🌟 Project Evolution & Ecosystem
+## &#x1F31F; Project Evolution & Ecosystem
 
 Strategic improvements to elevate the project from a library to a complete solution.
 
@@ -292,7 +292,7 @@ Strategic improvements to elevate the project from a library to a complete solut
   - Implement functional GitHub Actions for publishing to NPM.
   - Use `semantic-release` or `changesets` for automated versioning and changelog generation.
 
-## 🚀 Advanced Power Features (Long Term)
+## &#x1F680; Advanced Power Features (Long Term)
 
 High-value features to transform the reading analysis experience.
 
@@ -339,7 +339,7 @@ Features to align with enterprise-grade TypeScript tooling standards.
   - Create a unified `AppError` class with error codes (e.g., `ERR_IO`, `ERR_PARSE`).
   - Refactor `cli.ts` to implement a "panic handler" that distinguishes expected operational errors (print nice message) from unexpected bugs (print stack trace).
 
-## 🔮 Visionary Features (The "Wow" Factor)
+## &#x1F52E; Visionary Features (The "Wow" Factor)
 
 Ideas to push the boundaries of what a clipping manager can do.
 
@@ -372,7 +372,7 @@ Ideas to push the boundaries of what a clipping manager can do.
   - Maintain a state file (hashes of previously imported clips).
   - Run imports in "Additive Mode": Only create files for *new* highlights, preventing overwrite of manual edits in existing notes.
 
-## 🏗️ Scalability & Robustness Improvements (Post-Refactor)
+## &#x1F3D7;&#xFE0F; Scalability & Robustness Improvements (Post-Refactor)
 
 Enhancements to solidify the architecture after the migration to Native Node Subpath Imports.
 
@@ -404,7 +404,7 @@ Enhancements to solidify the architecture after the migration to Native Node Sub
   - Create `docs/adr/` to maintain this context for future contributors.
 
 
-## 🌟 2026 Competitive Edge (Market Alignment)
+## &#x1F31F; 2026 Competitive Edge (Market Alignment)
 
 Strategic features to bridge the gap with paid tools like Readwise and community plugins, focusing on privacy and local-first principles.
 
@@ -428,7 +428,7 @@ Strategic features to bridge the gap with paid tools like Readwise and community
   - Refactor `ExporterFactory` to specific plugin interfaces.
   - Allow community-contributed exporters (e.g., `kindle-tools-notion`, `kindle-tools-roam`) to be loaded at runtime.
 
-## 🧹 API Cleanliness & Maintenance
+## &#x1F9F9; API Cleanliness & Maintenance
 
 Tasks focused on long-term maintainability and developer experience.
 
@@ -440,10 +440,8 @@ Tasks focused on long-term maintainability and developer experience.
   - Refactor `src/index.ts` to strictly separate Node.js dependencies (like `fs`) from the core logic.
   - Consider creating specific entry points: `kindle-tools-ts/node` vs `kindle-tools-ts/browser` (or `core`) to prevent bundler errors in frontend projects.
 
- -   [   ]   * * U n i t   T e s t   C o v e r a g e * * :   C o n f i g u r e   c o v e r a g e   r e p o r t i n g   ( e . g . ,   w i t h   c 8   o r    8   i n   V i t e s t )   t o   r e v e a l   o b s c u r e   u t i l s   o r   e d g e   c a s e s   n o t   b e i n g   t e s t e d . 
- 
- -   [   ]   * * P e r f o r m a n c e   o n   L a r g e   F i l e s * * :   B e n c h m a r k   s m a r t M e r g e H i g h l i g h t s   a n d   f u z z y   d e d u p l i c a t i o n   l o g i c   w i t h   f i l e s   c o n t a i n i n g   2 0 k +   c l i p p i n g s   t o   i d e n t i f y   p o t e n t i a l   o p t i m i z a t i o n s . 
- 
- -   [   ]   * * P a r s e r s   f o r   o t h e r   i n p u t s * * :   E x p l o r e   s u p p o r t   f o r   K o b o   ( S Q L i t e )   o r   A p p l e   B o o k s   t o   e x p a n d   t h e   l i b r a r y ' s   u t i l i t y   b e y o n d   K i n d l e . 
-  
- 
+- [ ] **Unit Test Coverage**: Configure coverage reporting (e.g., with `c8` or `v8` in Vitest) to reveal obscure `utils` or edge cases not being tested.
+
+- [ ] **Performance on Large Files**: Benchmark `smartMergeHighlights` and fuzzy deduplication logic with files containing 20k+ clippings to identify potential optimizations.
+
+- [ ] **Parsers for other inputs**: Explore support for Kobo (SQLite) or Apple Books to expand the library's utility beyond Kindle.

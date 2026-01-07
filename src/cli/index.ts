@@ -425,7 +425,7 @@ async function handleExport(args: string[]): Promise<void> {
     // Write output
     if (parsed.output) {
       await writeExportResult(exporter, exportResult, parsed.output);
-      log(c.success(`✓ Exported ${result.clippings.length} clippings to ${parsed.output}`));
+      log(c.success(`\\u2713 Exported ${result.clippings.length} clippings to ${parsed.output}`));
       log(c.dim(`  Format: ${exporter.name}, Time: ${elapsed}ms`));
     } else {
       // Output to stdout
@@ -587,7 +587,7 @@ async function handleValidate(args: string[]): Promise<void> {
       log("");
 
       if (issues.length === 0) {
-        log(`  ${c.success("✓")} ${c.bold("Valid Kindle clippings file")}`);
+        log(`  ${c.success("\\u2713")} ${c.bold("Valid Kindle clippings file")}`);
         log("");
         log(`  ${c.dim("•")} Total blocks: ${c.highlight(String(blocks.length))}`);
         log(`  ${c.dim("•")} Valid clippings: ${c.highlight(String(validBlocks))}`);
@@ -595,7 +595,7 @@ async function handleValidate(args: string[]): Promise<void> {
           log(`  ${c.dim("•")} Unparseable blocks: ${c.warn(String(invalidBlocks))}`);
         }
       } else {
-        log(`  ${c.error("✗")} ${c.bold("Invalid file")}`);
+        log(`  ${c.error("\\u2717")} ${c.bold("Invalid file")}`);
         log("");
         for (const issue of issues) {
           log(`  ${c.error("•")} ${issue}`);
@@ -730,7 +730,7 @@ function printParseSummary(result: ParseResult, elapsed: number, verbose?: boole
   const { stats, meta } = result;
 
   log("");
-  log(c.bold("  📚 Kindle Clippings Parsed Successfully"));
+  log(c.bold("  \\u{1F4DA} Kindle Clippings Parsed Successfully"));
   log(c.dim("  ────────────────────────────────────────"));
   log("");
   log(`  ${c.dim("•")} Total clippings: ${c.highlight(String(stats.total))}`);
@@ -750,7 +750,7 @@ function printParseSummary(result: ParseResult, elapsed: number, verbose?: boole
 
   if (verbose && stats.booksList.length > 0) {
     log("");
-    log(c.bold("  📖 Top Books by Highlights:"));
+    log(c.bold("  \\u{1F4D6} Top Books by Highlights:"));
     log(c.dim("  ───────────────────────────"));
     const topBooks = stats.booksList.slice(0, 10);
     for (const book of topBooks) {
@@ -761,7 +761,7 @@ function printParseSummary(result: ParseResult, elapsed: number, verbose?: boole
 
   if (result.warnings.length > 0 && verbose) {
     log("");
-    log(c.warn(`  ⚠ ${result.warnings.length} warnings during parsing`));
+    log(c.warn(`  \\u26A0 ${result.warnings.length} warnings during parsing`));
     for (const warning of result.warnings.slice(0, 5)) {
       log(c.dim(`    • ${warning.message}`));
     }
@@ -778,7 +778,7 @@ function printParseSummary(result: ParseResult, elapsed: number, verbose?: boole
  */
 function printDetailedStats(stats: ClippingsStats, clippings: Clipping[]): void {
   log("");
-  log(c.bold("  📊 Kindle Clippings Statistics"));
+  log(c.bold("  \\u{1F4CA} Kindle Clippings Statistics"));
   log(c.dim("  ════════════════════════════════════════════════════════════"));
   log("");
 
