@@ -31,6 +31,21 @@ pnpm install
 3. If you've added code that should be tested, add tests.
 4. **Changesets**: If you are making a valid change to the codebase (feature, fix, etc.), please run `pnpm changeset` to generate a changeset file. This helps us automate releases.
 
+## Adding a New Export Format
+ 
+1. **Create the file**: Add your new exporter in `src/exporters/formats/`.
+   - Name it `<format>.exporter.ts`.
+   - Implement the `Exporter` interface (usually by extending `BaseExporter`).
+
+2. **Register it**: Add the class to `src/exporters/index.ts`.
+   - Use `export { YourExporter } from "./formats/your.exporter.js";`.
+
+3. **Update Factory**: The `ExporterFactory` automatically supports new registered exporters if you use `ExporterFactory.register()`, but best practice for core formats is to add them to the default initialization block in `src/exporters/core/factory.ts`.
+
+4. **Update Imports**: Check `package.json` to ensure your new file is covered by the `exports` and `imports` mappings if specific access is needed (usually covered by wildcards).
+
+5. **Test**: Add a unit test in `tests/unit/exporters.test.ts` or create a new test file.
+
 ## License
 
 By contributing, you agree that your contributions will be licensed under its MIT License.

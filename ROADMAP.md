@@ -331,6 +331,7 @@ Features to align with enterprise-grade TypeScript tooling standards.
 
 - [ ] **Data Validation Strategy**:
   - Integrate `zod` for rigorous schema validation.
+  - **Exporter Options Validation**: Implement Zod schemas for `ExporterOptions` (e.g., `MarkdownOptionsSchema`) to validate runtime configuration and provide user-friendly CLI errors.
   - Create schemas for generic JSON imports to ensure type safety at runtime.
   - Implement a configuration schema to validate `.kindletoolsrc`.
   

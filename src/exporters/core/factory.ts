@@ -14,9 +14,37 @@ import type { Exporter } from "./types.js";
 
 /**
  * Factory for creating exporters.
+ *
+ * Implements the Registry pattern to allow dynamic registration of new exporter formats.
  */
 // biome-ignore lint/complexity/noStaticOnlyClass: Factory pattern preference
 export class ExporterFactory {
+  // Registry map to store exporter constructors
+  // biome-ignore lint/suspicious/noExplicitAny: Generic constructor type is complex
+  private static registry = new Map<string, new () => Exporter>();
+
+  // Initialize default exporters
+  static {
+    ExporterFactory.register("json", JsonExporter);
+    ExporterFactory.register("csv", CsvExporter);
+    ExporterFactory.register("md", MarkdownExporter);
+    ExporterFactory.register("markdown", MarkdownExporter); // Alias
+    ExporterFactory.register("obsidian", ObsidianExporter);
+    ExporterFactory.register("joplin", JoplinExporter);
+    ExporterFactory.register("html", HtmlExporter);
+  }
+
+  /**
+   * Register a new exporter implementation.
+   *
+   * @param format - Format identifier (case-insensitive)
+   * @param exporterClass - Constructor for the exporter class
+   */
+  // biome-ignore lint/suspicious/noExplicitAny: Generic constructor type is complex
+  static register(format: string, exporterClass: new () => Exporter): void {
+    ExporterFactory.registry.set(format.toLowerCase(), exporterClass);
+  }
+
   /**
    * Get an exporter instance for the given format.
    *
@@ -25,23 +53,19 @@ export class ExporterFactory {
    */
   static getExporter(format: string): Exporter | null {
     const lowerFormat = format.toLowerCase();
+    const ExporterClass = ExporterFactory.registry.get(lowerFormat);
 
-    switch (lowerFormat) {
-      case "json":
-        return new JsonExporter();
-      case "csv":
-        return new CsvExporter();
-      case "md":
-      case "markdown":
-        return new MarkdownExporter();
-      case "obsidian":
-        return new ObsidianExporter();
-      case "joplin":
-        return new JoplinExporter();
-      case "html":
-        return new HtmlExporter();
-      default:
-        return null;
+    if (ExporterClass) {
+      return new ExporterClass();
     }
+
+    return null;
+  }
+
+  /**
+   * Get a list of all registered formats.
+   */
+  static getRegisteredFormats(): string[] {
+    return Array.from(ExporterFactory.registry.keys());
   }
 }
