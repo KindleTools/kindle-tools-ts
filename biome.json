@@ -22,6 +22,14 @@
         "noConsole": "off",
         "noMisleadingCharacterClass": "off",
         "noControlCharactersInRegex": "off"
+      },
+      "style": {
+        "useConst": "error",
+        "useTemplate": "error"
+      },
+      "correctness": {
+        "noUnusedVariables": "error",
+        "noUnusedImports": "error"
       }
     }
   },
