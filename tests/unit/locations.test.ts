@@ -11,7 +11,7 @@ import {
   getPageInfo,
   LOCATIONS_PER_PAGE,
   PAGE_PADDING_LENGTH,
-} from "#domain/page-utils.js";
+} from "#domain/locations.js";
 
 describe("page-utils", () => {
   describe("constants", () => {

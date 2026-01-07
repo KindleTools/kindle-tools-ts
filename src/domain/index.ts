@@ -27,7 +27,7 @@ export {
   LOCATIONS_PER_PAGE,
   PAGE_PADDING_LENGTH,
   type PageInfo,
-} from "./page-utils.js";
+} from "./locations.js";
 
 // Sanitization utilities
 export {
@@ -50,4 +50,4 @@ export {
   type TagCase,
   type TagExtractionOptions,
   type TagExtractionResult,
-} from "./tag-extractor.js";
+} from "./tags.js";

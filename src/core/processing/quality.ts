@@ -1,7 +1,10 @@
 import type { Clipping } from "#app-types/clipping.js";
+import {
+  DEFAULT_SIMILARITY_THRESHOLD,
+  SUSPICIOUS_HIGHLIGHT_THRESHOLDS,
+} from "#domain/constants.js";
 import { groupByBook } from "#domain/stats.js";
-import { DEFAULT_SIMILARITY_THRESHOLD, SUSPICIOUS_HIGHLIGHT_THRESHOLDS } from "../constants.js";
-import { jaccardSimilarity } from "../similarity.js";
+import { jaccardSimilarity } from "#utils/text/similarity.js";
 
 /**
  * Flag highlights that appear to be accidental or incomplete.

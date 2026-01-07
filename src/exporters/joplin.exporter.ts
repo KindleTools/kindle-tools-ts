@@ -17,8 +17,8 @@
 
 import type { Clipping } from "#app-types/clipping.js";
 import type { GeoLocation } from "#app-types/geo.js";
-import { sha256Sync } from "#core/hashing.js";
-import { formatPage, getEffectivePage } from "#domain/page-utils.js";
+import { sha256Sync } from "#domain/identity.js";
+import { formatPage, getEffectivePage } from "#domain/locations.js";
 import { groupByBook } from "#domain/stats.js";
 import { formatDateHuman } from "#utils/system/dates.js";
 import type {

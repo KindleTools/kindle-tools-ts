@@ -3,7 +3,8 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { compareTexts, isSubset, jaccardSimilarity } from "#core/similarity.js";
+import { compareTexts, isSubset } from "#domain/comparison.js";
+import { jaccardSimilarity } from "#utils/text/similarity.js";
 
 describe("similarity", () => {
   describe("jaccardSimilarity", () => {

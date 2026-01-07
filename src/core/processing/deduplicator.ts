@@ -1,5 +1,5 @@
 import type { Clipping } from "#app-types/clipping.js";
-import { generateDuplicateHash } from "../hashing.js";
+import { generateDuplicateHash } from "#domain/identity.js";
 
 /**
  * Merge tags from source clipping into target clipping.

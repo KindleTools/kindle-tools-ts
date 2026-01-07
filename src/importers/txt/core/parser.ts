@@ -10,9 +10,9 @@
 import type { Clipping, ClippingLocation, ClippingType } from "#app-types/clipping.js";
 import type { ParseOptions, ParseResult, ParseWarning } from "#app-types/config.js";
 import type { SupportedLanguage } from "#app-types/language.js";
-import { generateClippingId } from "#core/hashing.js";
 import { process } from "#core/processor.js";
-import { parseKindleDate } from "#domain/date-parser.js";
+import { parseKindleDate } from "#domain/dates.js";
+import { generateClippingId } from "#domain/identity.js";
 import { extractAuthor, isSideloaded, sanitizeContent, sanitizeTitle } from "#domain/sanitizers.js";
 import { calculateStats, countWords } from "#domain/stats.js";
 import { normalizeWhitespace, removeBOM } from "#utils/text/normalizers.js";

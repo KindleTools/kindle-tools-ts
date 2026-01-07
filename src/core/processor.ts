@@ -14,20 +14,19 @@
 
 import type { Clipping } from "#app-types/clipping.js";
 import type { ProcessOptions } from "#app-types/config.js";
-
-import { flagFuzzyDuplicates, flagSuspiciousHighlights } from "./processing/analyzer.js";
 import { removeDuplicates } from "./processing/deduplicator.js";
 import { filterClippings, filterToHighlightsOnly } from "./processing/filter.js";
 import { linkNotesToHighlights } from "./processing/linker.js";
 import { smartMergeHighlights } from "./processing/merger.js";
+import { flagFuzzyDuplicates, flagSuspiciousHighlights } from "./processing/quality.js";
 import { extractTagsFromLinkedNotes } from "./processing/tag-processor.js";
 
-// Re-export individually for testing or granular use
-export { flagFuzzyDuplicates, flagSuspiciousHighlights } from "./processing/analyzer.js";
 export { mergeTags, removeDuplicates } from "./processing/deduplicator.js";
 export { filterClippings, filterToHighlightsOnly } from "./processing/filter.js";
 export { linkNotesToHighlights } from "./processing/linker.js";
 export { smartMergeHighlights } from "./processing/merger.js";
+// Re-export specific processing steps for granular use
+export { flagFuzzyDuplicates, flagSuspiciousHighlights } from "./processing/quality.js";
 export { extractTagsFromLinkedNotes } from "./processing/tag-processor.js";
 
 /**

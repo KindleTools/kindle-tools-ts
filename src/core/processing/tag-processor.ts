@@ -1,5 +1,5 @@
 import type { Clipping } from "#app-types/clipping.js";
-import { extractTagsFromNote } from "#domain/tag-extractor.js";
+import { extractTagsFromNote } from "#domain/tags.js";
 
 /**
  * Extract tags from linked notes and assign them to highlights.
