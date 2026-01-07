@@ -4,7 +4,7 @@
  * @packageDocumentation
  */
 
-import * as PATTERNS from "./patterns.js";
+import * as Patterns from "./patterns.js";
 
 /**
  * Apply Unicode NFC normalization to text.
@@ -35,7 +35,7 @@ export function normalizeUnicode(text: string): string {
  * @returns Text without BOM
  */
 export function removeBOM(text: string): string {
-  return text.replace(PATTERNS.BOM, "");
+  return text.replace(Patterns.BOM, "");
 }
 
 /**
@@ -59,8 +59,8 @@ export function normalizeLineEndings(text: string): string {
  */
 export function normalizeWhitespace(text: string): string {
   return text
-    .replace(PATTERNS.NBSP, " ") // Non-breaking space to regular space
-    .replace(PATTERNS.MULTIPLE_SPACES, " ") // Collapse multiple spaces
+    .replace(Patterns.NBSP, " ") // Non-breaking space to regular space
+    .replace(Patterns.MULTIPLE_SPACES, " ") // Collapse multiple spaces
     .trim();
 }
 
@@ -71,7 +71,7 @@ export function normalizeWhitespace(text: string): string {
  * @returns Clean text
  */
 export function removeControlCharacters(text: string): string {
-  return text.replace(PATTERNS.CONTROL_CHARS, "").replace(PATTERNS.ZERO_WIDTH, "");
+  return text.replace(Patterns.CONTROL_CHARS, "").replace(Patterns.ZERO_WIDTH, "");
 }
 
 /**

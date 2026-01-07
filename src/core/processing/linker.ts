@@ -1,6 +1,8 @@
 import type { Clipping } from "#app-types/clipping.js";
 import { groupByBook } from "#domain/stats.js";
 
+const MAX_DISTANCE = 10;
+
 /**
  * Check if a note's location falls within a highlight's range.
  *
@@ -76,10 +78,8 @@ export function linkNotesToHighlights(clippings: Clipping[]): {
       }
     }
 
-    // Phase 2: Fall back to proximity if no range match
     if (!bestMatch) {
       let bestDistance = Number.POSITIVE_INFINITY;
-      const MAX_DISTANCE = 10;
 
       for (const highlight of bookHighlights) {
         const distance = Math.abs(highlight.location.start - noteLocation);

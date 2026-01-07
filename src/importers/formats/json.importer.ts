@@ -15,9 +15,9 @@ import { generateImportId, parseLocationString } from "../shared/index.js";
 
 // Validation Schemas
 
-const ClippingTypeSchema = z.enum(["highlight", "note", "bookmark", "clip"]).optional();
+const CLIPPING_TYPE_SCHEMA = z.enum(["highlight", "note", "bookmark", "clip"]).optional();
 
-const ClippingLocationSchema = z
+const CLIPPING_LOCATION_SCHEMA = z
   .union([
     z.string(),
     z.object({
@@ -28,9 +28,9 @@ const ClippingLocationSchema = z
   ])
   .optional();
 
-const SupportedLanguageSchema = z.string().optional(); // Loosely typed to allow string import, validated later if needed
+const SUPPORTED_LANGUAGE_SCHEMA = z.string().optional(); // Loosely typed to allow string import, validated later if needed
 
-const JsonClippingSchema = z.object({
+const JSON_CLIPPING_SCHEMA = z.object({
   id: z.string().optional(),
   title: z.string().optional(),
   titleRaw: z.string().optional(),
@@ -38,14 +38,14 @@ const JsonClippingSchema = z.object({
   authorRaw: z.string().optional(),
   content: z.string().optional(),
   contentRaw: z.string().optional(),
-  type: ClippingTypeSchema,
+  type: CLIPPING_TYPE_SCHEMA,
   page: z.number().nullable().optional(),
-  location: ClippingLocationSchema,
+  location: CLIPPING_LOCATION_SCHEMA,
   date: z.string().nullable().optional(),
   dateRaw: z.string().optional(),
   isLimitReached: z.boolean().optional(),
   isEmpty: z.boolean().optional(),
-  language: SupportedLanguageSchema,
+  language: SUPPORTED_LANGUAGE_SCHEMA,
   source: z.enum(["kindle", "sideload"]).optional(),
   wordCount: z.number().optional(),
   charCount: z.number().optional(),
@@ -62,15 +62,15 @@ const JsonClippingSchema = z.object({
   contentWasCleaned: z.boolean().optional(),
 });
 
-type JsonClipping = z.infer<typeof JsonClippingSchema>;
+type JsonClipping = z.infer<typeof JSON_CLIPPING_SCHEMA>;
 
-const JsonExportSchema = z.union([
+const JSON_EXPORT_SCHEMA = z.union([
   // Array format
-  z.array(JsonClippingSchema),
+  z.array(JSON_CLIPPING_SCHEMA),
   // Object format
   z.object({
-    clippings: z.array(JsonClippingSchema).optional(),
-    books: z.record(z.string(), z.array(JsonClippingSchema)).optional(),
+    clippings: z.array(JSON_CLIPPING_SCHEMA).optional(),
+    books: z.record(z.string(), z.array(JSON_CLIPPING_SCHEMA)).optional(),
     meta: z
       .object({
         total: z.number().optional(),
@@ -193,7 +193,7 @@ export class JsonImporter extends BaseImporter {
       throw new Error(`Invalid JSON syntax: ${e}`);
     }
 
-    const parsedData = JsonExportSchema.safeParse(rawJson);
+    const parsedData = JSON_EXPORT_SCHEMA.safeParse(rawJson);
 
     if (!parsedData.success) {
       // Map Zod errors to readable warnings

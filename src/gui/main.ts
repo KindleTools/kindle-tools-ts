@@ -29,7 +29,7 @@ import * as ZipUtils from "#utils/fs/zip.js";
 import * as DateUtils from "#utils/system/dates.js";
 import * as TextUtils from "#utils/text/normalizers.js";
 
-const Utils = {
+const UTILS = {
   ...DateUtils,
   ...GeoUtils,
   ...TextUtils,
@@ -265,7 +265,7 @@ async function parseFile(): Promise<void> {
     });
 
     // 3. Stats calculation
-    const stats = Utils.calculateStats(processResult.clippings);
+    const stats = UTILS.calculateStats(processResult.clippings);
 
     // Augment based on processing results
     stats.duplicatesRemoved = processResult.duplicatesRemoved;
@@ -641,7 +641,7 @@ async function renderExports(): Promise<void> {
         date: new Date(),
       }));
 
-      const zipData = await Utils.createZipArchive(entries);
+      const zipData = await UTILS.createZipArchive(entries);
 
       exportResults.md = {
         content: zipData,
@@ -683,7 +683,7 @@ async function renderExports(): Promise<void> {
         date: new Date(),
       }));
 
-      const zipData = await Utils.createZipArchive(entries);
+      const zipData = await UTILS.createZipArchive(entries);
 
       exportResults.obsidian = {
         content: zipData,
@@ -733,7 +733,7 @@ async function renderExports(): Promise<void> {
         content: f.content,
       }));
 
-      const tarData = Utils.createTarArchive(entries);
+      const tarData = UTILS.createTarArchive(entries);
 
       exportResults.joplin = {
         content: tarData,

@@ -17,6 +17,7 @@ export const MULTIPLE_SPACES = /\s{2,}/g;
 /**
  * Control characters to remove (U+0000-U+0008, U+000B, U+000C, U+000E-U+001F, U+007F)
  */
+// biome-ignore lint/suspicious/noControlCharactersInRegex: Intentional - regex detects control chars for text cleaning
 export const CONTROL_CHARS = /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g;
 
 /**
