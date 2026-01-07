@@ -7,7 +7,7 @@
  */
 
 import type { Clipping, ClippingLocation } from "#app-types/clipping.js";
-import { toError } from "#utils/errors.js";
+import { toError } from "#utils/system/errors.js";
 import type { ImportResult } from "../importer.types.js";
 
 /**

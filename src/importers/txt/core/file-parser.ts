@@ -1,6 +1,6 @@
 import * as fs from "node:fs/promises";
 import type { ParseOptions, ParseResult } from "#app-types/config.js";
-import { decodeWithFallback, detectEncoding } from "#utils/encoding.js";
+import { decodeWithFallback, detectEncoding } from "#utils/text/encoding.js";
 import { parseString } from "./parser.js";
 
 /**

@@ -4,6 +4,7 @@
  * @packageDocumentation
  */
 
+import { BOM } from "#utils/text/patterns.js";
 import { PATTERNS } from "./constants.js";
 
 /**
@@ -42,7 +43,7 @@ export interface TokenizedBlock {
  */
 export function tokenize(content: string): TokenizedBlock[] {
   // Remove BOM if present
-  let cleaned = content.replace(PATTERNS.BOM, "");
+  let cleaned = content.replace(BOM, "");
 
   // Normalize line endings to Unix style
   cleaned = cleaned.replace(/\r\n/g, "\n").replace(/\r/g, "\n");

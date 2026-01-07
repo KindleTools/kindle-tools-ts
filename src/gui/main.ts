@@ -22,12 +22,12 @@ import {
   type TagCase,
 } from "#exporters/index.js";
 import { CsvImporter, type Importer, JsonImporter, TxtImporter } from "#importers/index.js";
-import * as DateUtils from "#utils/dates.js";
-import * as TextUtils from "#utils/normalizers.js";
-import type { TarEntry } from "#utils/tar.js";
-import * as TarUtils from "#utils/tar.js";
-import type { ZipEntry } from "#utils/zip.js";
-import * as ZipUtils from "#utils/zip.js";
+import type { TarEntry } from "#utils/fs/tar.js";
+import * as TarUtils from "#utils/fs/tar.js";
+import type { ZipEntry } from "#utils/fs/zip.js";
+import * as ZipUtils from "#utils/fs/zip.js";
+import * as DateUtils from "#utils/system/dates.js";
+import * as TextUtils from "#utils/text/normalizers.js";
 
 const Utils = {
   ...DateUtils,

@@ -9,7 +9,7 @@ import {
   normalizeWhitespace,
   removeBOM,
   removeControlCharacters,
-} from "#utils/normalizers.js";
+} from "#utils/text/normalizers.js";
 
 describe("normalizers", () => {
   describe("normalizeUnicode", () => {

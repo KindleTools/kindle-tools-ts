@@ -9,7 +9,7 @@
 
 import type { Clipping } from "#app-types/clipping.js";
 import type { AuthorCase, ExportedFile, ExportResult } from "#exporters/exporter.types.js";
-import { toError } from "#utils/errors.js";
+import { toError } from "#utils/system/errors.js";
 
 /**
  * Default value for unknown authors.

@@ -3,7 +3,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { cleanText, needsCleaning } from "#utils/text-cleaner.js";
+import { cleanText, needsCleaning } from "#utils/text/text-cleaner.js";
 
 describe("text-cleaner", () => {
   describe("cleanText", () => {

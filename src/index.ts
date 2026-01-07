@@ -58,8 +58,8 @@ export type {
 } from "./types/clipping.js";
 export type { ParseOptions, ParseResult, ProcessOptions } from "./types/config.js";
 export type { SupportedLanguage } from "./types/language.js";
-export type { TarEntry } from "./utils/tar.js";
-export type { ZipEntry } from "./utils/zip.js";
+export type { TarEntry } from "./utils/fs/tar.js";
+export type { ZipEntry } from "./utils/fs/zip.js";
 
 // =============================================================================
 // Utilities Namespace (Optional usage)
@@ -67,10 +67,10 @@ export type { ZipEntry } from "./utils/zip.js";
 
 import * as GeoUtils from "./domain/geo-location.js";
 import * as StatUtils from "./domain/stats.js";
-import * as DateUtils from "./utils/dates.js";
-import * as TextUtils from "./utils/normalizers.js";
-import * as TarUtils from "./utils/tar.js";
-import * as ZipUtils from "./utils/zip.js";
+import * as TarUtils from "./utils/fs/tar.js";
+import * as ZipUtils from "./utils/fs/zip.js";
+import * as DateUtils from "./utils/system/dates.js";
+import * as TextUtils from "./utils/text/normalizers.js";
 
 export const Utils = {
   ...DateUtils,
@@ -83,4 +83,4 @@ export const Utils = {
 
 // Re-exporting specific core utilities that might be useful for advanced integration
 export { detectLanguage } from "./importers/txt/core/language-detector.js";
-export { getErrorMessage, toError } from "./utils/errors.js";
+export { getErrorMessage, toError } from "./utils/system/errors.js";

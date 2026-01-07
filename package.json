@@ -37,6 +37,9 @@
     "#importers/*.js": "./src/importers/*.ts",
     "#exporters/*.js": "./src/exporters/*.ts",
     "#utils/*.js": "./src/utils/*.ts",
+    "#utils/text/*.js": "./src/utils/text/*.ts",
+    "#utils/fs/*.js": "./src/utils/fs/*.ts",
+    "#utils/system/*.js": "./src/utils/system/*.ts",
     "#app-types/*.js": "./src/types/*.ts",
     "#templates/*.js": "./src/templates/*.ts",
     "#domain/*.js": "./src/domain/*.ts"
