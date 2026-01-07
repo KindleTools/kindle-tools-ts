@@ -10,7 +10,7 @@ import {
   parseGeoLocation,
   toGoogleMapsUrl,
   toOpenStreetMapUrl,
-} from "#domain/geo-location.js";
+} from "#domain/geography.js";
 
 describe("geo-location", () => {
   describe("isValidGeoLocation", () => {

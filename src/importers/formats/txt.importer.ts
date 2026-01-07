@@ -7,9 +7,9 @@
  * @packageDocumentation
  */
 
-import type { ImportResult } from "../importer.types.js";
+import type { ImportResult } from "../core/types.js";
 import { BaseImporter } from "../shared/base-importer.js";
-import { parseString } from "./core/parser.js";
+import { parseString } from "./txt/parser.js";
 
 /**
  * Import clippings from standard "My Clippings.txt" format.

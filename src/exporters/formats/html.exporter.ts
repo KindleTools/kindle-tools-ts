@@ -14,8 +14,8 @@
 import type { Clipping } from "#app-types/clipping.js";
 import { groupByBook } from "#domain/stats.js";
 import { formatDateHuman } from "#utils/system/dates.js";
-import type { ExportedFile, ExporterOptions, ExportResult } from "./exporter.types.js";
-import { BaseExporter } from "./shared/base-exporter.js";
+import type { ExportedFile, ExporterOptions, ExportResult } from "../core/types.js";
+import { BaseExporter } from "../shared/base-exporter.js";
 
 /**
  * Extended options for HTML export.

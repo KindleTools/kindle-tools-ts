@@ -3,7 +3,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { tokenize } from "#importers/txt/core/tokenizer.js";
+import { tokenize } from "#importers/formats/txt/tokenizer.js";
 
 describe("tokenizer", () => {
   describe("tokenize", () => {

@@ -8,7 +8,7 @@
 
 import type { Clipping, ClippingLocation } from "#app-types/clipping.js";
 import { toError } from "#utils/system/errors.js";
-import type { ImportResult } from "../importer.types.js";
+import type { ImportResult } from "../core/types.js";
 
 /**
  * Generate a unique ID for imported clippings that don't have one.

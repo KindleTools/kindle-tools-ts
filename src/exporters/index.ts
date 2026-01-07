@@ -4,8 +4,7 @@
  * @packageDocumentation
  */
 
-export { CsvExporter } from "./csv.exporter.js";
-export { ExporterFactory } from "./exporter.factory.js";
+export { ExporterFactory } from "./core/factory.js";
 export type {
   AuthorCase,
   ExportedFile,
@@ -14,12 +13,13 @@ export type {
   ExportResult,
   FolderStructure,
   TagCase,
-} from "./exporter.types.js";
-export { HtmlExporter } from "./html.exporter.js";
-export { JoplinExporter } from "./joplin.exporter.js";
-export { JsonExporter } from "./json.exporter.js";
-export { MarkdownExporter } from "./markdown.exporter.js";
-export { ObsidianExporter } from "./obsidian.exporter.js";
+} from "./core/types.js";
+export { CsvExporter } from "./formats/csv.exporter.js";
+export { HtmlExporter } from "./formats/html.exporter.js";
+export { JoplinExporter } from "./formats/joplin.exporter.js";
+export { JsonExporter } from "./formats/json.exporter.js";
+export { MarkdownExporter } from "./formats/markdown.exporter.js";
+export { ObsidianExporter } from "./formats/obsidian.exporter.js";
 // Shared Base & Utilities
 export { BaseExporter } from "./shared/base-exporter.js";
 export {

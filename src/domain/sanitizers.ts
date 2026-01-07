@@ -5,7 +5,7 @@
  */
 
 import { DRM_LIMIT_MESSAGES, TITLE_NOISE_PATTERNS } from "#domain/constants.js";
-import { PATTERNS } from "#importers/txt/core/constants.js";
+import { PATTERNS } from "#importers/formats/txt/constants.js";
 import { normalizeWhitespace } from "#utils/text/normalizers.js";
 
 /**

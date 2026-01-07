@@ -31,9 +31,9 @@ import type {
   TagCase,
 } from "#exporters/index.js";
 import { ExporterFactory } from "#exporters/index.js";
+import { parseString } from "#importers/formats/txt/parser.js";
+import { tokenize } from "#importers/formats/txt/tokenizer.js";
 import { ImporterFactory } from "#importers/index.js";
-import { parseString } from "#importers/txt/core/parser.js";
-import { tokenize } from "#importers/txt/core/tokenizer.js";
 import { createTarArchive } from "#utils/fs/tar.js";
 import { createZipArchive } from "#utils/fs/zip.js";
 import { decodeWithFallback, detectEncoding } from "#utils/text/encoding.js";

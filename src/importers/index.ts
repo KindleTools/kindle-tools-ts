@@ -4,8 +4,8 @@
  * @packageDocumentation
  */
 
-export { CsvImporter } from "./csv.importer.js";
-export { ImporterFactory } from "./importer.factory.js";
-export type { Importer, ImportResult } from "./importer.types.js";
-export { JsonImporter } from "./json.importer.js";
-export { TxtImporter } from "./txt/index.js";
+export { ImporterFactory } from "./core/factory.js";
+export type { Importer, ImportResult } from "./core/types.js";
+export { CsvImporter } from "./formats/csv.importer.js";
+export { JsonImporter } from "./formats/json.importer.js";
+export { TxtImporter } from "./formats/txt.importer.js";

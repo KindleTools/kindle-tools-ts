@@ -4,12 +4,12 @@
 
 import { describe, expect, it } from "vitest";
 import type { Clipping } from "#app-types/clipping.js";
-import { CsvExporter } from "#exporters/csv.exporter.js";
-import { HtmlExporter } from "#exporters/html.exporter.js";
-import { JoplinExporter } from "#exporters/joplin.exporter.js";
-import { JsonExporter } from "#exporters/json.exporter.js";
-import { MarkdownExporter } from "#exporters/markdown.exporter.js";
-import { ObsidianExporter } from "#exporters/obsidian.exporter.js";
+import { CsvExporter } from "#exporters/formats/csv.exporter.js";
+import { HtmlExporter } from "#exporters/formats/html.exporter.js";
+import { JoplinExporter } from "#exporters/formats/joplin.exporter.js";
+import { JsonExporter } from "#exporters/formats/json.exporter.js";
+import { MarkdownExporter } from "#exporters/formats/markdown.exporter.js";
+import { ObsidianExporter } from "#exporters/formats/obsidian.exporter.js";
 import {
   EMPTY_CLIPPINGS,
   SAMPLE_CLIPPINGS,

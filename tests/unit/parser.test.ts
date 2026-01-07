@@ -3,7 +3,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { parse, parseString } from "#importers/txt/core/parser.js";
+import { parse, parseString } from "#importers/formats/txt/parser.js";
 import { SAMPLE_CLIPPINGS_EN, SAMPLE_CLIPPINGS_ES } from "../fixtures/sample-clippings.js";
 
 describe("parser", () => {

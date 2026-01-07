@@ -39,6 +39,14 @@ export {
   MarkdownExporter,
   ObsidianExporter,
 } from "./exporters/index.js";
+// Txt Importer Core (Direct access)
+export { parseFile } from "./importers/formats/txt/file-parser.js";
+// Language
+export { detectLanguage } from "./importers/formats/txt/language-detector.js";
+export { parse, parseString } from "./importers/formats/txt/parser.js";
+// Text utilities
+export { cleanText } from "./importers/formats/txt/text-cleaner.js";
+export { tokenize } from "./importers/formats/txt/tokenizer.js";
 export type { Importer, ImportResult } from "./importers/index.js";
 // Importers & Factory
 export {
@@ -47,9 +55,6 @@ export {
   JsonImporter,
   TxtImporter,
 } from "./importers/index.js";
-// Core Parsing & Processing
-export { parseFile } from "./importers/txt/core/file-parser.js";
-export { parse, parseString } from "./importers/txt/core/parser.js";
 // Types
 export type {
   Clipping,
@@ -65,7 +70,7 @@ export type { SupportedLanguage } from "./types/language.js";
 // Utilities Namespace (Optional usage)
 // =============================================================================
 
-import * as GeoUtils from "./domain/geo-location.js";
+import * as GeoUtils from "./domain/geography.js";
 import * as StatUtils from "./domain/stats.js";
 import * as DateUtils from "./utils/system/dates.js";
 import * as TextUtils from "./utils/text/normalizers.js";
@@ -78,5 +83,5 @@ export const Utils = {
 };
 
 // Re-exporting specific core utilities that might be useful for advanced integration
-export { detectLanguage } from "./importers/txt/core/language-detector.js";
+
 export { getErrorMessage, toError } from "./utils/system/errors.js";

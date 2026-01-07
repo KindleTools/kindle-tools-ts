@@ -1,15 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { CsvExporter } from "#exporters/csv.exporter.js";
-import { ExporterFactory } from "#exporters/exporter.factory.js";
-import { HtmlExporter } from "#exporters/html.exporter.js";
-import { JoplinExporter } from "#exporters/joplin.exporter.js";
-import { JsonExporter } from "#exporters/json.exporter.js";
-import { MarkdownExporter } from "#exporters/markdown.exporter.js";
-import { ObsidianExporter } from "#exporters/obsidian.exporter.js";
-import { CsvImporter } from "#importers/csv.importer.js";
-import { ImporterFactory } from "#importers/importer.factory.js";
-import { JsonImporter } from "#importers/json.importer.js";
-import { TxtImporter } from "#importers/txt/index.js";
+import { ExporterFactory } from "#exporters/core/factory.js";
+import { CsvExporter } from "#exporters/formats/csv.exporter.js";
+import { HtmlExporter } from "#exporters/formats/html.exporter.js";
+import { JoplinExporter } from "#exporters/formats/joplin.exporter.js";
+import { JsonExporter } from "#exporters/formats/json.exporter.js";
+import { MarkdownExporter } from "#exporters/formats/markdown.exporter.js";
+import { ObsidianExporter } from "#exporters/formats/obsidian.exporter.js";
+import { ImporterFactory } from "#importers/core/factory.js";
+import { CsvImporter } from "#importers/formats/csv.importer.js";
+import { JsonImporter } from "#importers/formats/json.importer.js";
+import { TxtImporter } from "#importers/formats/txt.importer.js";
 
 describe("Factories", () => {
   describe("ExporterFactory", () => {

@@ -4,10 +4,10 @@
  * @packageDocumentation
  */
 
-import { CsvImporter } from "./csv.importer.js";
-import type { Importer } from "./importer.types.js";
-import { JsonImporter } from "./json.importer.js";
-import { TxtImporter } from "./txt/index.js";
+import { CsvImporter } from "../formats/csv.importer.js";
+import { JsonImporter } from "../formats/json.importer.js";
+import { TxtImporter } from "../formats/txt.importer.js";
+import type { Importer } from "./types.js";
 
 /**
  * Factory for creating importers.

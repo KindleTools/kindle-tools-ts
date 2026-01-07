@@ -15,7 +15,7 @@ export {
   parseGeoLocation,
   toGoogleMapsUrl,
   toOpenStreetMapUrl,
-} from "./geo-location.js";
+} from "./geography.js";
 
 // Page number utilities
 export {

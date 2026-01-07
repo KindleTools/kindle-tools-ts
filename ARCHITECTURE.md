@@ -23,20 +23,17 @@ src/
 ├── domain/               # 📦 Domain Entities & Pure Logic
 │   ├── stats.ts          # Statistics calculation
 │   ├── sanitizers.ts     # Data cleaning rules
-│   └── geo-location.ts   # Geolocation extensions
+│   └── geography.ts      # Geolocation extensions
 │
 ├── importers/            # 📥 Data Ingestion
-│   ├── txt/              # Kindle "My Clippings.txt" parser
-│   │   ├── core/         # Parser-specific logic (Tokenizer, Cleaner)
-│   │   └── index.ts
-│   ├── json/             # JSON importer
-│   └── csv/              # CSV importer
+│   ├── core/             # Base interfaces and factories
+│   ├── formats/          # Concrete implementation (txt, json, csv)
+│   └── shared/           # Shared utilities
 │
 ├── exporters/            # 📤 Data Egress
-│   ├── markdown/         # Markdown & Almanac-style exports
-│   ├── json/             # JSON data dump
-│   ├── joplin/           # JEX (Joplin Export) archive generation
-│   └── obsidian/         # Obsidian vault generation
+│   ├── core/             # Base interfaces and factories
+│   ├── formats/          # Concrete implementations (md, json, joplin...)
+│   └── shared/           # Shared utilities
 │
 ├── utils/                # 🛠️ Generic Tools (Stateless & Dumb)
 │   ├── fs/               # File system helpers (ZIP, TAR)

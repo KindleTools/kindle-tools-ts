@@ -35,7 +35,13 @@
   "imports": {
     "#core/*.js": "./src/core/*.ts",
     "#importers/*.js": "./src/importers/*.ts",
+    "#importers/core/*.js": "./src/importers/core/*.ts",
+    "#importers/formats/*.js": "./src/importers/formats/*.ts",
+    "#importers/shared/*.js": "./src/importers/shared/*.ts",
     "#exporters/*.js": "./src/exporters/*.ts",
+    "#exporters/core/*.js": "./src/exporters/core/*.ts",
+    "#exporters/formats/*.js": "./src/exporters/formats/*.ts",
+    "#exporters/shared/*.js": "./src/exporters/shared/*.ts",
     "#utils/*.js": "./src/utils/*.ts",
     "#utils/text/*.js": "./src/utils/text/*.ts",
     "#utils/fs/*.js": "./src/utils/fs/*.ts",

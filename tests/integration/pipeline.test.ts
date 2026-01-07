@@ -6,13 +6,14 @@
 
 import { describe, expect, it } from "vitest";
 import { process } from "#core/processor.js";
-import { CsvExporter } from "#exporters/csv.exporter.js";
-import { HtmlExporter } from "#exporters/html.exporter.js";
-import { JoplinExporter } from "#exporters/joplin.exporter.js";
-import { JsonExporter } from "#exporters/json.exporter.js";
-import { MarkdownExporter } from "#exporters/markdown.exporter.js";
-import { ObsidianExporter } from "#exporters/obsidian.exporter.js";
-import { parse } from "#importers/txt/core/parser.js";
+import { CsvExporter } from "#exporters/formats/csv.exporter.js";
+import { HtmlExporter } from "#exporters/formats/html.exporter.js";
+import { JoplinExporter } from "#exporters/formats/joplin.exporter.js";
+import { JsonExporter } from "#exporters/formats/json.exporter.js";
+import { MarkdownExporter } from "#exporters/formats/markdown.exporter.js";
+import { ObsidianExporter } from "#exporters/formats/obsidian.exporter.js";
+import type { ExportedFile } from "#exporters/index.js";
+import { parse } from "#importers/formats/txt/parser.js";
 import { SAMPLE_CLIPPINGS_EN } from "../fixtures/sample-clippings.js";
 
 describe("Integration: Full Pipeline", () => {
@@ -154,8 +155,8 @@ describe("Integration: Full Pipeline", () => {
       const result2 = await exporter.export(parseResult.clippings);
 
       // File paths (which contain IDs) should match
-      expect(result1.files?.map((f) => f.path).sort()).toEqual(
-        result2.files?.map((f) => f.path).sort(),
+      expect(result1.files?.map((f: ExportedFile) => f.path).sort()).toEqual(
+        result2.files?.map((f: ExportedFile) => f.path).sort(),
       );
     });
   });

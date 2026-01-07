@@ -7,7 +7,7 @@ import type { Clipping, ClippingType } from "#app-types/clipping.js";
 import type { ParseOptions, ParseResult } from "#app-types/config.js";
 import type { SupportedLanguage } from "#app-types/language.js";
 import { process } from "#core/processor.js";
-import * as GeoUtils from "#domain/geo-location.js";
+import * as GeoUtils from "#domain/geography.js";
 import * as StatUtils from "#domain/stats.js";
 import {
   type AuthorCase,
@@ -635,7 +635,7 @@ async function renderExports(): Promise<void> {
     elements.exportMdContent.classList.remove("placeholder");
 
     try {
-      const entries: ZipEntry[] = mdResult.files.map((f) => ({
+      const entries: ZipEntry[] = mdResult.files.map((f: ExportedFile) => ({
         name: f.path,
         content: f.content,
         date: new Date(),
@@ -677,7 +677,7 @@ async function renderExports(): Promise<void> {
 
     try {
       // Create ZIP archive for multiple files
-      const entries: ZipEntry[] = obsidianResult.files.map((f) => ({
+      const entries: ZipEntry[] = obsidianResult.files.map((f: ExportedFile) => ({
         name: f.path,
         content: f.content,
         date: new Date(),
@@ -728,7 +728,7 @@ async function renderExports(): Promise<void> {
 
     try {
       // Create TAR/JEX archive
-      const entries: TarEntry[] = joplinResult.files.map((f) => ({
+      const entries: TarEntry[] = joplinResult.files.map((f: ExportedFile) => ({
         name: f.path,
         content: f.content,
       }));
@@ -775,7 +775,8 @@ function renderMultiFilePreview(container: HTMLElement, files: ExportedFile[]): 
 
   // Summary header
   const totalSize = files.reduce(
-    (acc, f) => acc + (typeof f.content === "string" ? f.content.length : f.content.length),
+    (acc, f: ExportedFile) =>
+      acc + (typeof f.content === "string" ? f.content.length : f.content.length),
     0,
   );
 

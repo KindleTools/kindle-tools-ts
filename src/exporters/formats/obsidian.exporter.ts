@@ -20,8 +20,8 @@ import type {
   ExporterOptions,
   ExportResult,
   FolderStructure,
-} from "./exporter.types.js";
-import { BaseExporter } from "./shared/base-exporter.js";
+} from "../core/types.js";
+import { BaseExporter } from "../shared/base-exporter.js";
 
 /**
  * Extended options for Obsidian export.
