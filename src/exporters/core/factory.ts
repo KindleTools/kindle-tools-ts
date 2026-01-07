@@ -20,7 +20,7 @@ import type { Exporter } from "./types.js";
 // biome-ignore lint/complexity/noStaticOnlyClass: Factory pattern preference
 export class ExporterFactory {
   // Registry map to store exporter constructors
-  // biome-ignore lint/suspicious/noExplicitAny: Generic constructor type is complex
+
   private static registry = new Map<string, new () => Exporter>();
 
   // Initialize default exporters
@@ -40,7 +40,7 @@ export class ExporterFactory {
    * @param format - Format identifier (case-insensitive)
    * @param exporterClass - Constructor for the exporter class
    */
-  // biome-ignore lint/suspicious/noExplicitAny: Generic constructor type is complex
+
   static register(format: string, exporterClass: new () => Exporter): void {
     ExporterFactory.registry.set(format.toLowerCase(), exporterClass);
   }

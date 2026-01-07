@@ -17,11 +17,11 @@ import type { Importer } from "./types.js";
 // biome-ignore lint/complexity/noStaticOnlyClass: Factory pattern preference
 export class ImporterFactory {
   // Registry map to store importer constructors by file extension
-  // biome-ignore lint/suspicious/noExplicitAny: Generic constructor
+
   private static registry = new Map<string, new () => Importer>();
 
   // Default importer if no extension matches
-  // biome-ignore lint/suspicious/noExplicitAny: Generic constructor
+
   private static defaultImporter: new () => Importer = TxtImporter;
 
   // Initialize default importers
@@ -37,7 +37,7 @@ export class ImporterFactory {
    * @param extension - File extension (e.g., ".xml") or array of extensions
    * @param importerClass - Constructor for the importer class
    */
-  // biome-ignore lint/suspicious/noExplicitAny: Generic constructor
+
   static register(extension: string | string[], importerClass: new () => Importer): void {
     const exts = Array.isArray(extension) ? extension : [extension];
     for (const ext of exts) {
@@ -51,7 +51,7 @@ export class ImporterFactory {
   /**
    * Set the default importer to use when no extension matches.
    */
-  // biome-ignore lint/suspicious/noExplicitAny: Generic constructor
+
   static setDefaultImporter(importerClass: new () => Importer): void {
     ImporterFactory.defaultImporter = importerClass;
   }
