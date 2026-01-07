@@ -44,9 +44,6 @@ export { parseFile } from "./importers/formats/txt/file-parser.js";
 // Language
 export { detectLanguage } from "./importers/formats/txt/language-detector.js";
 export { parse, parseString } from "./importers/formats/txt/parser.js";
-// Text utilities
-export { cleanText } from "./importers/formats/txt/text-cleaner.js";
-export { tokenize } from "./importers/formats/txt/tokenizer.js";
 export type { Importer, ImportResult } from "./importers/index.js";
 // Importers & Factory
 export {

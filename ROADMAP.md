@@ -427,3 +427,15 @@ Strategic features to bridge the gap with paid tools like Readwise and community
 - [ ] **Plugin/Extension System**:
   - Refactor `ExporterFactory` to specific plugin interfaces.
   - Allow community-contributed exporters (e.g., `kindle-tools-notion`, `kindle-tools-roam`) to be loaded at runtime.
+
+## 🧹 API Cleanliness & Maintenance
+
+Tasks focused on long-term maintainability and developer experience.
+
+- [ ] **Centralized Options Definition (SSOT)**:
+  - Create `src/core/options.def.ts` to define CLI and GUI options programmatically.
+  - Generate CLI flags and GUI forms from this single source of truth to ensure 100% parity.
+
+- [ ] **Strict Node/Browser Split (Tree Shaking)**:
+  - Refactor `src/index.ts` to strictly separate Node.js dependencies (like `fs`) from the core logic.
+  - Consider creating specific entry points: `kindle-tools-ts/node` vs `kindle-tools-ts/browser` (or `core`) to prevent bundler errors in frontend projects.
