@@ -25,35 +25,9 @@ Documento consolidado con todas las mejoras identificadas, organizadas por prior
 
 ## 1. Mejoras Criticas (Fundamentos)
 
-### 1.1 Habilitar `noUncheckedIndexedAccess`
+### 1.1 ~~Habilitar `noUncheckedIndexedAccess`~~ ✅ COMPLETADO
 
-**Prioridad:** CRITICA | **Esfuerzo:** Medio-Alto
-
-TypeScript 2025 recomienda esta opcion para maxima seguridad de tipos. Sin ella, `arr[0]` devuelve `T` en lugar de `T | undefined`.
-
-```json
-// tsconfig.json
-{
-  "compilerOptions": {
-    "noUncheckedIndexedAccess": true
-  }
-}
-```
-
-**Cambios necesarios:**
-```typescript
-// Antes (peligroso)
-const first = clippings[0];
-first.content; // Puede ser undefined!
-
-// Despues (seguro)
-const first = clippings[0];
-if (first) {
-  first.content;
-}
-```
-
-**Referencia:** [The Strictest TypeScript Config](https://whatislove.dev/articles/the-strictest-typescript-config/)
+> Ya habilitado en tsconfig.json junto con todas las opciones estrictas de TypeScript 2025.
 
 ---
 
@@ -136,38 +110,15 @@ export const ImportedDataSchema = z.object({
 
 ---
 
-### 1.4 Coverage Thresholds en Vitest
+### 1.4 ~~Coverage Thresholds en Vitest~~ ✅ COMPLETADO
 
-**Prioridad:** ALTA | **Esfuerzo:** Bajo
-
-```typescript
-// vitest.config.ts
-coverage: {
-  provider: "v8",
-  reporter: ["text", "json", "html", "lcov"],
-  thresholds: {
-    lines: 80,
-    functions: 80,
-    branches: 75,
-    statements: 80,
-    perFile: true,
-  },
-}
-```
+> Implementado con thresholds al 80% y `perFile: true` en vitest.config.ts.
 
 ---
 
-### 1.5 Habilitar `exactOptionalPropertyTypes`
+### 1.5 ~~Habilitar `exactOptionalPropertyTypes`~~ ✅ COMPLETADO
 
-**Prioridad:** MEDIA-ALTA | **Esfuerzo:** Bajo
-
-```json
-{
-  "compilerOptions": {
-    "exactOptionalPropertyTypes": true
-  }
-}
-```
+> Ya habilitado en tsconfig.json.
 
 ---
 
@@ -966,11 +917,9 @@ Consider migrating to `csv-parse/sync` or `papaparse`.
 
 ---
 
-### 11.6 Biome 2.0 Type Inference
+### 11.6 ~~Biome 2.0 Type Inference~~ ✅ COMPLETADO
 
-**Prioridad:** BAJA | **Esfuerzo:** Bajo
-
-Update to Biome 2.0+ and enable type inference.
+> Actualizado a Biome 2.3+ con organizeImports y maxAllowedComplexity reducido a 25.
 
 ---
 
@@ -986,17 +935,19 @@ These would add significant complexity for limited value:
 
 ## Matriz de Prioridades
 
-| Mejora | Impacto | Esfuerzo | Sprint |
+| Mejora | Impacto | Esfuerzo | Estado |
 |--------|---------|----------|--------|
-| noUncheckedIndexedAccess | Alto | Medio | 1 |
-| Coverage Thresholds | Alto | Bajo | 1 |
-| Zod Validation | Alto | Medio | 1 |
-| CSV Injection Protection | Alto | Bajo | 1 |
-| Result Pattern | Alto | Alto | 2 |
-| CLI Library (citty) | Alto | Medio | 2 |
-| Snyk Security | Alto | Bajo | 2 |
-| Config File | Medio | Medio | 3 |
-| Streaming | Alto | Alto | 3 |
+| ~~noUncheckedIndexedAccess~~ | Alto | Medio | ✅ Done |
+| ~~Coverage Thresholds~~ | Alto | Bajo | ✅ Done |
+| ~~exactOptionalPropertyTypes~~ | Alto | Bajo | ✅ Done |
+| ~~Biome 2.0+~~ | Medio | Bajo | ✅ Done |
+| Zod Validation | Alto | Medio | Pendiente |
+| CSV Injection Protection | Alto | Bajo | Pendiente |
+| Result Pattern | Alto | Alto | Pendiente |
+| CLI Library (citty) | Alto | Medio | Pendiente |
+| Snyk Security | Alto | Bajo | Pendiente |
+| Config File | Medio | Medio | Backlog |
+| Streaming | Alto | Alto | Backlog |
 | Plugin System | Medio | Alto | Backlog |
 | Monorepo | Medio | Alto | Backlog |
 | AI Enrichment | Bajo | Alto | Opcional |
@@ -1005,15 +956,31 @@ These would add significant complexity for limited value:
 
 ## Estado Actual (Ya Implementado)
 
+### Arquitectura y Estructura
 - [x] Clean Architecture / DDD structure
 - [x] Factory Pattern for importers/exporters
 - [x] Native Node.js subpath imports (`#`)
 - [x] Dual package ESM/CJS with tsup
-- [x] TypeScript strict mode
-- [x] Turborepo build caching
+
+### TypeScript (Strictest Config 2025)
+- [x] TypeScript strict mode completo
+- [x] `noUncheckedIndexedAccess` habilitado
+- [x] `exactOptionalPropertyTypes` habilitado
+- [x] `moduleDetection: "force"`
+- [x] `allowUnreachableCode: false`
+- [x] `allowUnusedLabels: false`
+
+### Toolchain Moderno
+- [x] Turborepo con TUI, globalEnv, outputLogs
+- [x] Vitest con coverage thresholds (80%, perFile)
+- [x] Biome 2.3+ con organizeImports
+- [x] tsup con shared config pattern
+- [x] Vite GUI con chunk splitting y aliases
 - [x] `arethetypeswrong` CI check
-- [x] Unit + Integration tests with Vitest
-- [x] Biome linting/formatting
+
+### Testing
+- [x] Unit + Integration tests (367 tests)
+- [x] Benchmark configuration preparada
 
 ---
 
@@ -1038,4 +1005,4 @@ These would add significant complexity for limited value:
 ---
 
 *Documento actualizado: 2026-01-08*
-*Mejoras totales: 60+*
+*Mejoras totales: 60+ | Completadas: 6*
