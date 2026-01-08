@@ -85,13 +85,13 @@ export class CsvImporter extends BaseImporter {
     const rows = parseCSV(content);
 
     if (rows.length < 2) {
-      return this.error(new Error("CSV file has no data rows"), warnings);
+      return this.error(new Error("CSV file has no data rows"), warnings, "EMPTY_FILE");
     }
 
     // Parse header row
     const headerRow = rows[0];
     if (!headerRow) {
-      return this.error(new Error("CSV file has no header row"), warnings);
+      return this.error(new Error("CSV file has no header row"), warnings, "INVALID_FORMAT");
     }
 
     const headers = headerRow.map((h) => h.toLowerCase().trim());
@@ -110,7 +110,11 @@ export class CsvImporter extends BaseImporter {
     const hasTitle = "title" in colIndex;
 
     if (!hasContent && !hasTitle) {
-      return this.error(new Error("CSV must have at least 'content' or 'title' column"), warnings);
+      return this.error(
+        new Error("CSV must have at least 'content' or 'title' column"),
+        warnings,
+        "INVALID_FORMAT",
+      );
     }
 
     const clippings: Clipping[] = [];
@@ -185,7 +189,7 @@ export class CsvImporter extends BaseImporter {
     }
 
     if (clippings.length === 0) {
-      return this.error(new Error("No valid clippings found in CSV file"), warnings);
+      return this.error(new Error("No valid clippings found in CSV file"), warnings, "PARSE_ERROR");
     }
 
     return this.success(clippings, warnings);

@@ -190,7 +190,7 @@ export class JsonImporter extends BaseImporter {
     try {
       rawJson = JSON.parse(content);
     } catch (e) {
-      throw new Error(`Invalid JSON syntax: ${e}`);
+      return this.error(new Error(`Invalid JSON syntax: ${e}`), warnings, "PARSE_ERROR");
     }
 
     const parsedData = JSON_EXPORT_SCHEMA.safeParse(rawJson);
@@ -198,7 +198,23 @@ export class JsonImporter extends BaseImporter {
     if (!parsedData.success) {
       // Map Zod errors to readable warnings
       const issues = parsedData.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`);
-      return this.error(new Error("JSON content does not match expected schema"), issues);
+
+      const details = parsedData.error.issues.map((i) => ({
+        path: i.path,
+        message: i.message,
+        code: i.code,
+      }));
+
+      return this.error(
+        new Error("JSON content does not match expected schema"),
+        issues,
+        "INVALID_FORMAT",
+      ).mapErr((e) => {
+        if (e.code === "INVALID_FORMAT") {
+          return { ...e, details };
+        }
+        return e;
+      });
     }
 
     const data = parsedData.data;
@@ -249,7 +265,7 @@ export class JsonImporter extends BaseImporter {
 
     if (clippings.length === 0) {
       warnings.push("No clippings found in JSON file");
-      return this.error(new Error("No clippings found in JSON file"));
+      return this.error(new Error("No clippings found in JSON file"), warnings, "PARSE_ERROR");
     }
 
     return this.success(clippings, warnings);

@@ -247,11 +247,13 @@ async function parseFile(): Promise<void> {
     else importer = new TxtImporter();
 
     // 1. Import phase (raw parsing)
-    const importResult = await importer.import(state.fileContent);
+    const result = await importer.import(state.fileContent);
 
-    if (!importResult.success) {
-      throw importResult.error || new Error(`Failed to import ${inputFormat.toUpperCase()} file`);
+    if (result.isErr()) {
+      throw result.error;
     }
+
+    const importResult = result.value;
 
     // 2. Processing phase (clean, dedup, link, filter)
     const uiOptions = getParseOptions();
@@ -306,12 +308,48 @@ async function parseFile(): Promise<void> {
     populateBookFilter();
   } catch (error) {
     console.error("Parse error:", error);
-    elements.statsContent.innerHTML = `
-      <div style="color: var(--error); padding: 20px;">
-        <strong>Parse Error:</strong><br>
-        ${escapeHtml(error instanceof Error ? error.message : String(error))}
-      </div>
-    `;
+
+    // Handle typed ImportError
+    const importError = error as {
+      code?: string;
+      message?: string;
+      details?: unknown[];
+      warnings?: string[];
+    };
+
+    let errorHtml = `<div style="color: var(--error); padding: 20px;">`;
+
+    if (importError.code) {
+      // Typed error from neverthrow Result
+      errorHtml += `<strong>Import Error [${escapeHtml(importError.code)}]</strong><br>`;
+      errorHtml += `<p>${escapeHtml(importError.message || "Unknown error")}</p>`;
+
+      // Show validation details if present (e.g., Zod errors)
+      if (importError.details && Array.isArray(importError.details)) {
+        errorHtml += `<details style="margin-top: 10px;"><summary>Validation Details (${importError.details.length} issues)</summary><ul>`;
+        for (const detail of importError.details as { path?: unknown[]; message?: string }[]) {
+          const path = detail.path?.join(".") || "root";
+          errorHtml += `<li><code>${escapeHtml(path)}</code>: ${escapeHtml(detail.message || "Invalid")}</li>`;
+        }
+        errorHtml += `</ul></details>`;
+      }
+
+      // Show warnings if present
+      if (importError.warnings && importError.warnings.length > 0) {
+        errorHtml += `<details style="margin-top: 10px;"><summary>Warnings (${importError.warnings.length})</summary><ul>`;
+        for (const warning of importError.warnings) {
+          errorHtml += `<li>${escapeHtml(warning)}</li>`;
+        }
+        errorHtml += `</ul></details>`;
+      }
+    } else {
+      // Generic Error fallback
+      errorHtml += `<strong>Parse Error:</strong><br>`;
+      errorHtml += escapeHtml(error instanceof Error ? error.message : String(error));
+    }
+
+    errorHtml += `</div>`;
+    elements.statsContent.innerHTML = errorHtml;
   }
 }
 

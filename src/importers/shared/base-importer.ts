@@ -9,8 +9,9 @@
  * @packageDocumentation
  */
 
+import { errAsync, ResultAsync } from "neverthrow";
 import type { Clipping } from "#app-types/clipping.js";
-import type { Importer, ImportResult } from "../core/types.js";
+import type { ImportError, Importer, ImportResult, ImportResultAsync } from "../core/types.js";
 import { createErrorImport, createSuccessImport } from "./importer-utils.js";
 
 /**
@@ -28,21 +29,28 @@ export abstract class BaseImporter implements Importer {
   /**
    * Import clippings from file content.
    *
-   * This method provides standardized error handling.
+   * This method provides standardized error handling using ResultAsync.
    * Subclasses should override `doImport` for their specific parsing logic.
    *
    * @param content - File content as string
    * @returns Import result
    */
-  async import(content: string): Promise<ImportResult> {
-    try {
-      if (!content || content.trim().length === 0) {
-        throw new Error("File content is empty");
-      }
-      return await this.doImport(content);
-    } catch (error) {
-      return this.error(error);
+  import(content: string): ImportResultAsync {
+    if (!content || content.trim().length === 0) {
+      return errAsync({
+        code: "EMPTY_FILE",
+        message: "File content is empty",
+        warnings: [],
+      });
     }
+
+    // Wrap the doImport promise safely
+    return ResultAsync.fromPromise(this.doImport(content), (error) =>
+      this.error(error)._unsafeUnwrapErr(),
+    ).andThen((result) => {
+      // doImport returns Promise<Result<...>> so we check the result
+      return new ResultAsync(Promise.resolve(result));
+    });
   }
 
   /**
@@ -71,7 +79,11 @@ export abstract class BaseImporter implements Importer {
   /**
    * Create an error import result.
    */
-  protected error(err: unknown, warnings: string[] = []): ImportResult {
-    return createErrorImport(err, warnings);
+  protected error(
+    errObj: unknown,
+    warnings: string[] = [],
+    code: ImportError["code"] = "UNKNOWN_ERROR",
+  ): ImportResult {
+    return createErrorImport(errObj, warnings, code);
   }
 }

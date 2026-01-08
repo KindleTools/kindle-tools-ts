@@ -29,13 +29,16 @@ describe("importers", () => {
 
       const result = await importer.import(json);
 
-      expect(result.success).toBe(true);
-      expect(result.clippings).toHaveLength(1);
-      expect(result.clippings[0]?.title).toBe("Test Book");
-      expect(result.clippings[0]?.author).toBe("Test Author");
-      expect(result.clippings[0]?.content).toBe("Test content");
-      expect(result.clippings[0]?.type).toBe("highlight");
-      expect(result.clippings[0]?.page).toBe(42);
+      expect(result.isOk()).toBe(true);
+      if (!result.isOk()) return;
+      const { clippings } = result.value;
+
+      expect(clippings).toHaveLength(1);
+      expect(clippings[0]?.title).toBe("Test Book");
+      expect(clippings[0]?.author).toBe("Test Author");
+      expect(clippings[0]?.content).toBe("Test content");
+      expect(clippings[0]?.type).toBe("highlight");
+      expect(clippings[0]?.page).toBe(42);
     });
 
     it("should import grouped by book format", async () => {
@@ -63,10 +66,13 @@ describe("importers", () => {
 
       const result = await importer.import(json);
 
-      expect(result.success).toBe(true);
-      expect(result.clippings).toHaveLength(3);
-      expect(result.clippings[0]?.title).toBe("Test Book");
-      expect(result.clippings[2]?.title).toBe("Another Book");
+      expect(result.isOk()).toBe(true);
+      if (!result.isOk()) return;
+      const { clippings } = result.value;
+
+      expect(clippings).toHaveLength(3);
+      expect(clippings[0]?.title).toBe("Test Book");
+      expect(clippings[2]?.title).toBe("Another Book");
     });
 
     it("should handle location as string", async () => {
@@ -81,10 +87,13 @@ describe("importers", () => {
 
       const result = await importer.import(json);
 
-      expect(result.success).toBe(true);
-      expect(result.clippings[0]?.location.raw).toBe("100-105");
-      expect(result.clippings[0]?.location.start).toBe(100);
-      expect(result.clippings[0]?.location.end).toBe(105);
+      expect(result.isOk()).toBe(true);
+      if (!result.isOk()) return;
+      const { clippings } = result.value;
+
+      expect(clippings[0]?.location.raw).toBe("100-105");
+      expect(clippings[0]?.location.start).toBe(100);
+      expect(clippings[0]?.location.end).toBe(105);
     });
 
     it("should generate IDs for clippings without them", async () => {
@@ -94,14 +103,18 @@ describe("importers", () => {
 
       const result = await importer.import(json);
 
-      expect(result.success).toBe(true);
-      expect(result.clippings[0]?.id).toMatch(/^imp_/);
+      expect(result.isOk()).toBe(true);
+      if (!result.isOk()) return;
+      const { clippings } = result.value;
+
+      expect(clippings[0]?.id).toMatch(/^imp_/);
     });
 
     it("should fail on invalid JSON", async () => {
       const result = await importer.import("not valid json");
 
-      expect(result.success).toBe(false);
+      expect(result.isErr()).toBe(true);
+      if (!result.isErr()) return;
       expect(result.error).toBeDefined();
     });
 
@@ -110,8 +123,9 @@ describe("importers", () => {
 
       const result = await importer.import(json);
 
-      expect(result.success).toBe(false);
-      expect(result.error?.message).toContain("No clippings found");
+      expect(result.isErr()).toBe(true);
+      if (!result.isErr()) return;
+      expect(result.error.message).toContain("No clippings found");
     });
 
     it("should preserve optional fields when present", async () => {
@@ -129,11 +143,14 @@ describe("importers", () => {
 
       const result = await importer.import(json);
 
-      expect(result.success).toBe(true);
-      expect(result.clippings[0]?.tags).toEqual(["tag1", "tag2"]);
-      expect(result.clippings[0]?.note).toBe("My note");
-      expect(result.clippings[0]?.isSuspiciousHighlight).toBe(true);
-      expect(result.clippings[0]?.suspiciousReason).toBe("too_short");
+      expect(result.isOk()).toBe(true);
+      if (!result.isOk()) return;
+      const { clippings } = result.value;
+
+      expect(clippings[0]?.tags).toEqual(["tag1", "tag2"]);
+      expect(clippings[0]?.note).toBe("My note");
+      expect(clippings[0]?.isSuspiciousHighlight).toBe(true);
+      expect(clippings[0]?.suspiciousReason).toBe("too_short");
     });
 
     it("should not include undefined optional fields", async () => {
@@ -143,9 +160,12 @@ describe("importers", () => {
 
       const result = await importer.import(json);
 
-      expect(result.success).toBe(true);
-      expect(Object.hasOwn(result.clippings[0], "tags")).toBe(false);
-      expect(Object.hasOwn(result.clippings[0], "note")).toBe(false);
+      expect(result.isOk()).toBe(true);
+      if (!result.isOk()) return;
+      const { clippings } = result.value;
+
+      expect(Object.hasOwn(clippings[0], "tags")).toBe(false);
+      expect(Object.hasOwn(clippings[0], "note")).toBe(false);
     });
 
     it("should work with minimal JSON (only content)", async () => {
@@ -155,13 +175,16 @@ describe("importers", () => {
 
       const result = await importer.import(json);
 
-      expect(result.success).toBe(true);
-      expect(result.clippings).toHaveLength(1);
-      expect(result.clippings[0]?.content).toBe("Just the content, nothing else");
-      expect(result.clippings[0]?.title).toBe("Unknown");
-      expect(result.clippings[0]?.author).toBe("Unknown");
-      expect(result.clippings[0]?.type).toBe("highlight");
-      expect(result.clippings[0]?.id).toMatch(/^imp_/);
+      expect(result.isOk()).toBe(true);
+      if (!result.isOk()) return;
+      const { clippings } = result.value;
+
+      expect(clippings).toHaveLength(1);
+      expect(clippings[0]?.content).toBe("Just the content, nothing else");
+      expect(clippings[0]?.title).toBe("Unknown");
+      expect(clippings[0]?.author).toBe("Unknown");
+      expect(clippings[0]?.type).toBe("highlight");
+      expect(clippings[0]?.id).toMatch(/^imp_/);
     });
 
     it("should work with external JSON (different structure)", async () => {
@@ -178,12 +201,15 @@ describe("importers", () => {
 
       const result = await importer.import(json);
 
-      expect(result.success).toBe(true);
-      expect(result.clippings[0]?.title).toBe("My Book");
-      expect(result.clippings[0]?.content).toBe("Some quote");
-      expect(result.clippings[0]?.author).toBe("Unknown");
-      expect(result.clippings[0]?.type).toBe("highlight");
-      expect(result.clippings[0]?.wordCount).toBe(2); // "Some quote"
+      expect(result.isOk()).toBe(true);
+      if (!result.isOk()) return;
+      const { clippings } = result.value;
+
+      expect(clippings[0]?.title).toBe("My Book");
+      expect(clippings[0]?.content).toBe("Some quote");
+      expect(clippings[0]?.author).toBe("Unknown");
+      expect(clippings[0]?.type).toBe("highlight");
+      expect(clippings[0]?.wordCount).toBe(2); // "Some quote"
     });
   });
 
@@ -196,13 +222,16 @@ describe("importers", () => {
 
       const result = await importer.import(csv);
 
-      expect(result.success).toBe(true);
-      expect(result.clippings).toHaveLength(1);
-      expect(result.clippings[0]?.id).toBe("test1");
-      expect(result.clippings[0]?.title).toBe("Test Book");
-      expect(result.clippings[0]?.author).toBe("Test Author");
-      expect(result.clippings[0]?.content).toBe("Test content");
-      expect(result.clippings[0]?.page).toBe(42);
+      expect(result.isOk()).toBe(true);
+      if (!result.isOk()) return;
+      const { clippings } = result.value;
+
+      expect(clippings).toHaveLength(1);
+      expect(clippings[0]?.id).toBe("test1");
+      expect(clippings[0]?.title).toBe("Test Book");
+      expect(clippings[0]?.author).toBe("Test Author");
+      expect(clippings[0]?.content).toBe("Test content");
+      expect(clippings[0]?.page).toBe(42);
     });
 
     it("should handle BOM", async () => {
@@ -211,8 +240,10 @@ describe("importers", () => {
 
       const result = await importer.import(csv);
 
-      expect(result.success).toBe(true);
-      expect(result.clippings).toHaveLength(1);
+      expect(result.isOk()).toBe(true);
+      if (!result.isOk()) return;
+      const { clippings } = result.value;
+      expect(clippings).toHaveLength(1);
     });
 
     it("should handle quoted fields with commas", async () => {
@@ -221,10 +252,13 @@ describe("importers", () => {
 
       const result = await importer.import(csv);
 
-      expect(result.success).toBe(true);
-      expect(result.clippings[0]?.title).toBe("Book, With Comma");
-      expect(result.clippings[0]?.author).toBe("Author, Name");
-      expect(result.clippings[0]?.content).toBe("Content, with, commas");
+      expect(result.isOk()).toBe(true);
+      if (!result.isOk()) return;
+      const { clippings } = result.value;
+
+      expect(clippings[0]?.title).toBe("Book, With Comma");
+      expect(clippings[0]?.author).toBe("Author, Name");
+      expect(clippings[0]?.content).toBe("Content, with, commas");
     });
 
     it("should handle escaped quotes", async () => {
@@ -233,9 +267,12 @@ describe("importers", () => {
 
       const result = await importer.import(csv);
 
-      expect(result.success).toBe(true);
-      expect(result.clippings[0]?.title).toBe('Book "With" Quotes');
-      expect(result.clippings[0]?.content).toBe('Content "quoted"');
+      expect(result.isOk()).toBe(true);
+      if (!result.isOk()) return;
+      const { clippings } = result.value;
+
+      expect(clippings[0]?.title).toBe('Book "With" Quotes');
+      expect(clippings[0]?.content).toBe('Content "quoted"');
     });
 
     it("should parse tags", async () => {
@@ -244,8 +281,11 @@ describe("importers", () => {
 
       const result = await importer.import(csv);
 
-      expect(result.success).toBe(true);
-      expect(result.clippings[0]?.tags).toEqual(["tag1", "tag2", "tag3"]);
+      expect(result.isOk()).toBe(true);
+      if (!result.isOk()) return;
+      const { clippings } = result.value;
+
+      expect(clippings[0]?.tags).toEqual(["tag1", "tag2", "tag3"]);
     });
 
     it("should not include empty tags", async () => {
@@ -254,8 +294,11 @@ describe("importers", () => {
 
       const result = await importer.import(csv);
 
-      expect(result.success).toBe(true);
-      expect(Object.hasOwn(result.clippings[0], "tags")).toBe(false);
+      expect(result.isOk()).toBe(true);
+      if (!result.isOk()) return;
+      const { clippings } = result.value;
+
+      expect(Object.hasOwn(clippings[0], "tags")).toBe(false);
     });
 
     it("should generate IDs when missing", async () => {
@@ -264,21 +307,25 @@ describe("importers", () => {
 
       const result = await importer.import(csv);
 
-      expect(result.success).toBe(true);
-      expect(result.clippings[0]?.id).toMatch(/^imp_/);
+      expect(result.isOk()).toBe(true);
+      if (!result.isOk()) return;
+      const { clippings } = result.value;
+
+      expect(clippings[0]?.id).toMatch(/^imp_/);
     });
 
     it("should fail on empty CSV", async () => {
       const result = await importer.import("");
-
-      expect(result.success).toBe(false);
+      expect(result.isErr()).toBe(true);
     });
 
     it("should fail on header-only CSV", async () => {
       const result = await importer.import("id,title,content");
 
-      expect(result.success).toBe(false);
-      expect(result.error?.message).toContain("no data rows");
+      expect(result.isErr()).toBe(true);
+      expect(result.isErr()).toBe(true);
+      if (!result.isErr()) return;
+      expect(result.error.message).toContain("no data rows");
     });
 
     it("should fail when required columns are missing", async () => {
@@ -287,8 +334,10 @@ describe("importers", () => {
 
       const result = await importer.import(csv);
 
-      expect(result.success).toBe(false);
-      expect(result.error?.message).toContain("content");
+      expect(result.isErr()).toBe(true);
+      expect(result.isErr()).toBe(true);
+      if (!result.isErr()) return;
+      expect(result.error.message).toContain("content");
     });
 
     it("should parse location correctly", async () => {
@@ -297,9 +346,12 @@ describe("importers", () => {
 
       const result = await importer.import(csv);
 
-      expect(result.success).toBe(true);
-      expect(result.clippings[0]?.location.start).toBe(100);
-      expect(result.clippings[0]?.location.end).toBe(105);
+      expect(result.isOk()).toBe(true);
+      if (!result.isOk()) return;
+      const { clippings } = result.value;
+
+      expect(clippings[0]?.location.start).toBe(100);
+      expect(clippings[0]?.location.end).toBe(105);
     });
 
     it("should handle CRLF line endings", async () => {
@@ -307,8 +359,10 @@ describe("importers", () => {
 
       const result = await importer.import(csv);
 
-      expect(result.success).toBe(true);
-      expect(result.clippings).toHaveLength(1);
+      expect(result.isOk()).toBe(true);
+      if (!result.isOk()) return;
+      const { clippings } = result.value;
+      expect(clippings).toHaveLength(1);
     });
 
     it("should skip empty rows", async () => {
@@ -319,8 +373,10 @@ describe("importers", () => {
 
       const result = await importer.import(csv);
 
-      expect(result.success).toBe(true);
-      expect(result.clippings).toHaveLength(2);
+      expect(result.isOk()).toBe(true);
+      if (!result.isOk()) return;
+      const { clippings } = result.value;
+      expect(clippings).toHaveLength(2);
     });
 
     it("should work with minimal CSV (only content column)", async () => {
@@ -330,13 +386,16 @@ describe("importers", () => {
 
       const result = await importer.import(csv);
 
-      expect(result.success).toBe(true);
-      expect(result.clippings).toHaveLength(2);
-      expect(result.clippings[0]?.content).toBe("This is my highlight");
-      expect(result.clippings[0]?.title).toBe("Unknown");
-      expect(result.clippings[0]?.author).toBe("Unknown");
-      expect(result.clippings[0]?.type).toBe("highlight");
-      expect(result.clippings[0]?.id).toMatch(/^imp_/);
+      expect(result.isOk()).toBe(true);
+      if (!result.isOk()) return;
+      const { clippings } = result.value;
+
+      expect(clippings).toHaveLength(2);
+      expect(clippings[0]?.content).toBe("This is my highlight");
+      expect(clippings[0]?.title).toBe("Unknown");
+      expect(clippings[0]?.author).toBe("Unknown");
+      expect(clippings[0]?.type).toBe("highlight");
+      expect(clippings[0]?.id).toMatch(/^imp_/);
     });
 
     it("should work with only title column", async () => {
@@ -346,10 +405,13 @@ describe("importers", () => {
 
       const result = await importer.import(csv);
 
-      expect(result.success).toBe(true);
-      expect(result.clippings).toHaveLength(2);
-      expect(result.clippings[0]?.title).toBe("Book 1");
-      expect(result.clippings[0]?.content).toBe(""); // Empty content is OK
+      expect(result.isOk()).toBe(true);
+      if (!result.isOk()) return;
+      const { clippings } = result.value;
+
+      expect(clippings).toHaveLength(2);
+      expect(clippings[0]?.title).toBe("Book 1");
+      expect(clippings[0]?.content).toBe(""); // Empty content is OK
     });
 
     it("should work with custom columns from other apps", async () => {
@@ -361,7 +423,7 @@ describe("importers", () => {
       const result = await importer.import(csv);
 
       // This should fail because it doesn't have 'content' or 'title' columns
-      expect(result.success).toBe(false);
+      expect(result.isErr()).toBe(true);
     });
 
     it("should be case-insensitive for headers", async () => {
@@ -370,10 +432,13 @@ describe("importers", () => {
 
       const result = await importer.import(csv);
 
-      expect(result.success).toBe(true);
-      expect(result.clippings[0]?.title).toBe("My Book");
-      expect(result.clippings[0]?.content).toBe("My quote");
-      expect(result.clippings[0]?.author).toBe("Some Author");
+      expect(result.isOk()).toBe(true);
+      if (!result.isOk()) return;
+      const { clippings } = result.value;
+
+      expect(clippings[0]?.title).toBe("My Book");
+      expect(clippings[0]?.content).toBe("My quote");
+      expect(clippings[0]?.author).toBe("Some Author");
     });
   });
 });

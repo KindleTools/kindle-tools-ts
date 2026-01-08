@@ -4,30 +4,19 @@
  * @packageDocumentation
  */
 
-import type { Clipping } from "#app-types/clipping.js";
+/**
+ * Result of importing clippings from a file.
+ */
+import type { ImportResultAsyncType, ImportResultType } from "#app-types/result.js";
+
+// Re-export result types for consumers
+export * from "#app-types/result.js";
 
 /**
  * Result of importing clippings from a file.
  */
-export interface ImportResult {
-  /** Whether the import was successful */
-  success: boolean;
-
-  /** Parsed clippings */
-  clippings: Clipping[];
-
-  /** Warnings generated during import */
-  warnings: string[];
-
-  /** Error if import failed */
-  error?: Error;
-
-  /** Additional metadata from the import process */
-  meta?: {
-    detectedLanguage?: string;
-    [key: string]: unknown;
-  };
-}
+export type ImportResult = ImportResultType;
+export type ImportResultAsync = ImportResultAsyncType;
 
 /**
  * Interface for clipping importers.
@@ -45,5 +34,5 @@ export interface Importer {
    * @param content - File content as string
    * @returns Import result with clippings
    */
-  import(content: string): Promise<ImportResult>;
+  import(content: string): ImportResultAsync;
 }

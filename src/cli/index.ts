@@ -239,11 +239,17 @@ async function parseClippingsFile(filePath: string, args: ParsedArgs): Promise<P
 
   // 2. Import using Factory
   const importer = ImporterFactory.getImporter(filePath);
-  const importResult = await importer.import(content);
+  const result = await importer.import(content);
 
-  if (!importResult.success || importResult.clippings.length === 0) {
-    if (importResult.error) throw importResult.error;
-    throw new Error(`Failed to import file using ${importer.name} importer`);
+  if (result.isErr()) {
+    const err = result.error;
+    throw new Error(`Import failed [${err.code}]: ${err.message}`);
+  }
+
+  const importResult = result.value;
+
+  if (importResult.clippings.length === 0) {
+    throw new Error(`Failed to import file using ${importer.name} importer: No clippings found`);
   }
 
   // 3. Process clippings (Dedupe, Merge, Link Notes, etc.)

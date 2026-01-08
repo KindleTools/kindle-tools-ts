@@ -31,45 +31,47 @@ Documento consolidado con todas las mejoras identificadas, organizadas por prior
 
 ---
 
-### 1.2 Implementar Result Pattern con neverthrow
+### 1.2 ~~Implementar Result Pattern con neverthrow~~ ✅ COMPLETADO
 
-**Prioridad:** CRITICA | **Esfuerzo:** Alto
+**Prioridad:** CRITICA | **Esfuerzo:** Alto | **Estado:** COMPLETADO
 
-El patron actual `{ success: boolean, error?: Error }` no es type-safe.
+> **Implementado:** neverthrow con ResultAsync para operaciones asíncronas.
 
-```bash
-pnpm add neverthrow
-```
+**Implementación actual en `src/types/result.ts`:**
 
 ```typescript
-// src/types/result.ts
-import { Result, ok, err } from 'neverthrow';
+import type { Result, ResultAsync } from 'neverthrow';
+
+export interface ValidationErrorDetail {
+  path: (string | number | symbol)[];
+  message: string;
+  code: string;
+}
 
 export type ImportError =
-  | { code: 'PARSE_ERROR'; message: string; blockIndex?: number }
-  | { code: 'ENCODING_ERROR'; message: string }
-  | { code: 'EMPTY_FILE'; message: string }
-  | { code: 'INVALID_FORMAT'; message: string };
+  | { code: 'PARSE_ERROR'; message: string; originalError?: unknown; warnings?: string[] }
+  | { code: 'EMPTY_FILE'; message: string; warnings?: string[] }
+  | { code: 'INVALID_FORMAT'; message: string; details?: ValidationErrorDetail[]; warnings?: string[] }
+  | { code: 'UNKNOWN_ERROR'; message: string; originalError?: unknown; warnings?: string[] };
 
-export type ImportSuccess = {
-  clippings: Clipping[];
-  warnings: string[];
-  meta?: ImportMeta;
-};
+export type ImportResultType = Result<ImportSuccess, ImportError>;
+export type ImportResultAsyncType = ResultAsync<ImportSuccess, ImportError>;
+```
 
-export type ImportResult = Result<ImportSuccess, ImportError>;
-
-// Uso
-result.match(
-  (data) => processClippings(data.clippings),
-  (error) => handleError(error.code, error.message)
+**Uso con pattern matching:**
+```typescript
+// En CLI y GUI
+await importer.import(content).match(
+  (successData) => processClippings(successData.clippings),
+  (errorData) => handleError(errorData.code, errorData.message)
 );
 ```
 
-**Comparativa:**
-- **neverthrow** (recomendado): API simple, bien mantenido
-- **fp-ts Either**: Mas completo pero curva mayor
-- **oxide.ts**: Similar a Rust
+**Características implementadas:**
+- ✅ ResultAsync para operaciones asíncronas
+- ✅ ValidationErrorDetail para errores de Zod tipados
+- ✅ Pattern matching con `.match()` en CLI y GUI
+- ✅ Warnings incluidos en errores para contexto
 
 ---
 
