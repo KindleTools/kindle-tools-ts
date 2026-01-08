@@ -13,7 +13,7 @@ export default defineConfig({
     include: ["tests/**/*.{test,spec}.{ts,js}", "src/**/*.{test,spec}.{ts,js}"],
 
     // Exclude patterns
-    exclude: ["**/node_modules/**", "**/dist/**", "**/e2e/**"],
+    exclude: ["**/node_modules/**", "**/dist/**", "**/dist-gui/**", "**/e2e/**"],
 
     // Coverage configuration
     coverage: {
@@ -31,16 +31,19 @@ export default defineConfig({
         "src/**/*.d.ts",
         "src/**/*.test.ts",
         "src/**/*.spec.ts",
-        "src/cli.ts",
+        "src/cli/**",
         "src/types/**",
+        "src/gui/**",
       ],
 
-      // Coverage thresholds
+      // Coverage thresholds (ROADMAP 1.4)
       thresholds: {
         statements: 80,
         branches: 80,
         functions: 80,
         lines: 80,
+        // Enforce per-file thresholds
+        perFile: true,
       },
 
       // Clean coverage before running
@@ -48,15 +51,18 @@ export default defineConfig({
 
       // Report on failure
       reportOnFailure: true,
+
+      // Include all files (even untested) in coverage report
+      all: true,
     },
 
-    // Reporter
-    reporters: ["verbose"],
+    // Reporters
+    reporters: ["default"],
 
     // Timeout for each test
     testTimeout: 10000,
 
-    // Pool configuration for parallel tests
+    // Pool configuration for parallel tests (Vitest 4+)
     pool: "threads",
 
     // Retry failed tests
@@ -64,5 +70,14 @@ export default defineConfig({
 
     // Bail on first failure (useful in CI)
     bail: 0,
+
+    // Watch mode disabled by default
+    watch: false,
+
+    // Benchmark configuration
+    benchmark: {
+      include: ["**/*.bench.{ts,js}"],
+      exclude: ["node_modules", "dist"],
+    },
   },
 });

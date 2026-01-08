@@ -1,26 +1,77 @@
 {
   "$schema": "https://turbo.build/schema.json",
+  "ui": "tui",
+  "globalDependencies": ["package.json", "pnpm-lock.yaml"],
+  "globalEnv": ["NODE_ENV", "CI"],
   "tasks": {
     "build": {
-      "outputs": ["dist/**", "dist-gui/**"],
-      "dependsOn": ["^build"]
+      "outputs": ["dist/**"],
+      "inputs": ["src/**/*.ts", "tsup.config.ts", "tsconfig.json", "package.json"],
+      "dependsOn": ["^build"],
+      "outputLogs": "new-only",
+      "cache": true
     },
     "test": {
       "dependsOn": ["build"],
       "outputs": ["coverage/**"],
-      "inputs": ["src/**/*.ts", "tests/**/*.ts", "vitest.config.ts"]
+      "inputs": ["src/**/*.ts", "tests/**/*.ts", "vitest.config.ts", "tsconfig.json"],
+      "outputLogs": "errors-only",
+      "cache": true
+    },
+    "test:watch": {
+      "cache": false,
+      "persistent": true
+    },
+    "test:coverage": {
+      "dependsOn": ["build"],
+      "outputs": ["coverage/**"],
+      "inputs": ["src/**/*.ts", "tests/**/*.ts", "vitest.config.ts"],
+      "cache": true
     },
     "gui:build": {
       "outputs": ["dist-gui/**"],
-      "dependsOn": ["build"]
+      "inputs": ["src/gui/**/*", "vite.config.gui.ts", "package.json"],
+      "dependsOn": ["build"],
+      "cache": true
     },
-    "lint": {},
-    "format": {},
+    "gui": {
+      "cache": false,
+      "persistent": true
+    },
+    "lint": {
+      "inputs": ["src/**/*.ts", "tests/**/*.ts", "biome.json", "package.json"],
+      "outputLogs": "errors-only",
+      "cache": true
+    },
+    "lint:fix": {
+      "inputs": ["src/**/*.ts", "tests/**/*.ts", "biome.json"],
+      "cache": false
+    },
+    "format": {
+      "inputs": ["src/**/*.ts", "tests/**/*.ts", "biome.json"],
+      "cache": false
+    },
+    "typecheck": {
+      "dependsOn": ["^build"],
+      "inputs": ["src/**/*.ts", "tsconfig.json", "package.json"],
+      "outputLogs": "errors-only",
+      "cache": true
+    },
     "check": {
-      "dependsOn": ["build"]
+      "dependsOn": ["lint", "typecheck", "test"],
+      "cache": false
     },
     "check:exports": {
-      "dependsOn": ["build"]
+      "dependsOn": ["build"],
+      "inputs": ["dist/**", "package.json"],
+      "cache": true
+    },
+    "clean": {
+      "cache": false
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
     }
   }
 }

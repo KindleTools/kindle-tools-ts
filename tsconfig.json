@@ -6,6 +6,8 @@
     "lib": ["ES2022"],
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
+    "moduleDetection": "force",
+
     // Type Checking - Strict Mode
     "strict": true,
     "noImplicitAny": true,
@@ -24,6 +26,11 @@
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
     "noPropertyAccessFromIndexSignature": true,
+
+    // Additional Checks
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false,
+
     // Emit
     "declaration": true,
     "declarationMap": true,
@@ -32,19 +39,20 @@
     "rootDir": "./src",
     "removeComments": false,
     "newLine": "lf",
+
     // Interop Constraints
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
+
     // Paths and Resolution
     "baseUrl": ".",
     "resolveJsonModule": true,
+
     // Skip Lib Check for faster builds
-    "skipLibCheck": true,
-    // Path Aliases
-    "paths": {}
+    "skipLibCheck": true
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "coverage", "**/*.test.ts", "**/*.spec.ts", "src/gui"]

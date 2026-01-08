@@ -1,13 +1,7 @@
-import { defineConfig } from "tsup";
+import { defineConfig, type Options } from "tsup";
 
-export default defineConfig({
-  // Entry points
-  entry: {
-    index: "src/index.ts",
-    cli: "src/cli/index.ts",
-    node: "src/node/index.ts",
-  },
-
+// Shared configuration
+const sharedConfig: Options = {
   // Output formats: ESM and CommonJS
   format: ["esm", "cjs"],
 
@@ -34,7 +28,14 @@ export default defineConfig({
 
   // Shims for ESM/CJS interop
   shims: true,
+};
 
-  // No need to manually specify external dependencies;
-  // tsup automatically externalizes dependencies and peerDependencies from package.json
+export default defineConfig({
+  // Entry points
+  entry: {
+    index: "src/index.ts",
+    cli: "src/cli/index.ts",
+    node: "src/node/index.ts",
+  },
+  ...sharedConfig,
 });
