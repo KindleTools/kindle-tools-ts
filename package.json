@@ -129,7 +129,7 @@
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.2",
-    "@biomejs/biome": "^2.3.10",
+    "@biomejs/biome": "^2.3.11",
     "@changesets/cli": "^2.29.8",
     "@types/handlebars": "^4.1.0",
     "@types/jszip": "^3.4.1",
@@ -142,7 +142,7 @@
     "tsx": "^4.21.0",
     "turbo": "^2.7.3",
     "typescript": "^5.9.3",
-    "vite": "^6.0.7",
+    "vite": "^7.3.1",
     "vite-tsconfig-paths": "^6.0.3",
     "vitest": "^4.0.16"
   },
@@ -151,6 +151,6 @@
     "handlebars": "^4.7.8",
     "jszip": "^3.10.1",
     "neverthrow": "^8.2.0",
-    "zod": "^4.3.4"
+    "zod": "^4.3.5"
   }
 }
