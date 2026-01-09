@@ -58,6 +58,11 @@ export {
   isValidationError,
   ValidationErrorCodes,
 } from "./codes.js";
+// Formatting utilities
+export { formatErrorDetail, formatUserMessage, getErrorCode } from "./formatting.js";
+// Logging utilities
+export type { ErrorLogContext } from "./logger.js";
+export { logError, logWarning } from "./logger.js";
 export type {
   AppResult,
   AppResultAsync,
