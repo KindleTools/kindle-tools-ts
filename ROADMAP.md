@@ -83,48 +83,53 @@ await importer.import(content).match(
 
 **Implementación actual:**
 
-- `src/schemas/clipping.schema.ts` - Schemas para Clipping, ClippingImport, ClippingsExport
-- `src/schemas/config.schema.ts` - Schemas para ParseOptions, GeoLocation, ConfigFile
+- `src/schemas/clipping.schema.ts` - Schemas para Clipping, ClippingImport, ClippingsExport, ClippingStrict
+- `src/schemas/config.schema.ts` - Schemas para ParseOptions, GeoLocation, ConfigFile con helpers
+- `src/schemas/exporter.schema.ts` - Schemas para ExporterOptions, FolderStructure, AuthorCase
+- `src/schemas/cli.schema.ts` - Schemas para validación de argumentos CLI
 - `src/schemas/index.ts` - Re-exportación centralizada
 
 **Schemas principales:**
 
 ```typescript
-// src/schemas/clipping.schema.ts
+// Lenient schema (for external data import)
 export const ClippingImportSchema = z.object({
   id: z.string().optional(),
-  title: z.string().min(1, "Title is required").optional(),
-  author: z.string().optional(),
-  content: z.string().optional(),
-  type: ClippingTypeSchema.optional(),
-  page: z.number().nullable().optional(),
-  location: ClippingLocationSchema.optional(),
-  date: z.union([z.string(), z.date(), z.null()]).transform(...).optional(),
-  tags: z.array(z.string()).optional(),
-  // ... otros campos opcionales
+  title: z.string().optional(), // All fields optional
+  // ... with date transformation, defaults, etc.
 });
 
-export const ClippingsExportSchema = z.union([
-  z.array(ClippingImportSchema),
-  z.object({
-    clippings: z.array(ClippingImportSchema).optional(),
-    books: z.record(z.string(), z.array(ClippingImportSchema)).optional(),
-    meta: z.object({ ... }).optional(),
-  }),
-]);
+// Strict schema (for internal validation)
+export const ClippingStrictSchema = z.object({
+  id: z.string().min(1, { message: "ID is required" }),
+  title: z.string().min(1, { message: "Title is required" }),
+  // ... all required fields with validation
+});
+
+// Config file schema (.kindletoolsrc)
+export const ConfigFileSchema = z.object({
+  format: z.string().optional(),
+  folderStructure: ConfigFolderStructureSchema.optional(),
+  ...ParseOptionsSchema.shape,
+});
 ```
 
 **Uso en Importers:**
 
+- `TxtImporter` - Valida cada clipping con `ClippingImportSchema` (post-parse)
 - `JsonImporter` - Usa `ClippingsExportSchema` para validar JSON importado
 - `CsvImporter` - Usa `CsvRowSchema` para validar cada fila del CSV
 
 **Características implementadas:**
-- ✅ Schemas centralizados reutilizables
-- ✅ Validación de datos externos (JSON, CSV)
+- ✅ Schemas centralizados reutilizables con JSDoc y ejemplos
+- ✅ Mensajes de error personalizados para mejor UX
+- ✅ Schemas strict vs lenient para diferentes casos de uso
+- ✅ Tipos TypeScript inferidos desde Zod (`z.infer<>`)
+- ✅ Validación en todos los importers (TXT, JSON, CSV)
 - ✅ Transformación de fechas (string → Date)
-- ✅ Errores tipados con `ValidationErrorDetail`
-- ✅ Schema para configuración CLI/config files
+- ✅ Helpers: `parseParseOptions()`, `parseConfigFile()`, `validateFormat()`, etc.
+- ✅ Validación de CLI args (format, language)
+- ✅ Tests unitarios exhaustivos para todos los schemas
 
 ---
 
