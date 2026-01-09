@@ -11,13 +11,14 @@
 
 import type { Clipping } from "#app-types/clipping.js";
 import { groupByBook } from "#domain/stats.js";
+import type { ExporterOptionsParsed } from "#schemas/exporter.schema.js";
 import { getTemplatePreset, TemplateEngine, type TemplatePreset } from "#templates/index.js";
-import type { ExportedFile, ExporterOptions, ExportResult } from "../core/types.js";
+import type { ExportedFile, ExportResult } from "../core/types.js";
 import { BaseExporter } from "../shared/base-exporter.js";
 /**
  * Extended options for Markdown export.
  */
-export interface MarkdownExporterOptions extends ExporterOptions {
+export interface MarkdownExporterOptions extends ExporterOptionsParsed {
   /**
    * Template preset to use.
    * Available: 'default', 'minimal', 'obsidian', 'notion', 'academic', 'compact', 'verbose'
@@ -75,29 +76,29 @@ export class MarkdownExporter extends BaseExporter {
    */
   protected async doExport(
     clippings: Clipping[],
-    options?: MarkdownExporterOptions,
+    options: MarkdownExporterOptions,
   ): Promise<ExportResult> {
     // Create template engine with appropriate templates
     const engine = this.createTemplateEngine(options);
 
-    if (options?.groupByBook) {
+    if (options.groupByBook) {
       return this.exportGrouped(clippings, engine, options);
     }
 
-    return this.exportSingle(clippings, engine, options?.title);
+    return this.exportSingle(clippings, engine, options.title);
   }
 
   /**
    * Create a template engine based on options.
    */
-  private createTemplateEngine(options?: MarkdownExporterOptions): TemplateEngine {
+  private createTemplateEngine(options: MarkdownExporterOptions): TemplateEngine {
     // Custom templates take precedence
-    if (options?.customTemplates) {
+    if (options.customTemplates) {
       return new TemplateEngine(options.customTemplates);
     }
 
     // Use preset if specified
-    if (options?.templatePreset) {
+    if (options.templatePreset) {
       const preset = getTemplatePreset(options.templatePreset);
       return new TemplateEngine(preset);
     }
@@ -126,14 +127,14 @@ export class MarkdownExporter extends BaseExporter {
   private exportGrouped(
     clippings: Clipping[],
     engine: TemplateEngine,
-    options?: MarkdownExporterOptions,
+    options: MarkdownExporterOptions,
   ): ExportResult {
     const grouped = groupByBook(clippings);
     const files: ExportedFile[] = [];
 
     // Default options for file structure
-    const folderStructure = options?.folderStructure ?? "flat";
-    const authorCase = options?.authorCase ?? "original";
+    const folderStructure = options.folderStructure;
+    const authorCase = options.authorCase;
     const baseFolder = ""; // Markdown files usually exported to root unless specified otherwise
 
     for (const [_, bookClippings] of grouped) {

@@ -6,7 +6,8 @@
 
 import type { Clipping } from "#app-types/clipping.js";
 import { groupByBook } from "#domain/stats.js";
-import type { ExporterOptions, ExportResult } from "../core/types.js";
+import type { ExporterOptionsParsed } from "#schemas/exporter.schema.js";
+import type { ExportResult } from "../core/types.js";
 import { BaseExporter } from "../shared/base-exporter.js";
 
 /**
@@ -25,11 +26,11 @@ export class JsonExporter extends BaseExporter {
    */
   protected async doExport(
     clippings: Clipping[],
-    options?: ExporterOptions,
+    options: ExporterOptionsParsed,
   ): Promise<ExportResult> {
     let data: unknown;
 
-    if (options?.groupByBook) {
+    if (options.groupByBook) {
       // Group by book
       const grouped = groupByBook(clippings);
       const books: Record<string, Clipping[]> = {};
@@ -38,20 +39,18 @@ export class JsonExporter extends BaseExporter {
         books[title] = this.prepareClippings(bookClippings, options);
       }
 
-      data =
-        options?.includeStats !== false
-          ? { books, meta: { totalBooks: grouped.size, totalClippings: clippings.length } }
-          : { books };
+      data = options.includeStats
+        ? { books, meta: { totalBooks: grouped.size, totalClippings: clippings.length } }
+        : { books };
     } else {
       // Flat array
       const preparedClippings = this.prepareClippings(clippings, options);
-      data =
-        options?.includeStats !== false
-          ? { clippings: preparedClippings, meta: { total: clippings.length } }
-          : { clippings: preparedClippings };
+      data = options.includeStats
+        ? { clippings: preparedClippings, meta: { total: clippings.length } }
+        : { clippings: preparedClippings };
     }
 
-    const indent = options?.pretty ? 2 : undefined;
+    const indent = options.pretty ? 2 : undefined;
     const output = JSON.stringify(data, null, indent);
 
     return this.success(output);
@@ -60,13 +59,13 @@ export class JsonExporter extends BaseExporter {
   /**
    * Prepare clippings for export (remove raw fields if requested, ensure tags field).
    */
-  private prepareClippings(clippings: Clipping[], options?: ExporterOptions): Clipping[] {
-    const includeClippingTags = options?.includeClippingTags ?? true;
+  private prepareClippings(clippings: Clipping[], options: ExporterOptionsParsed): Clipping[] {
+    const includeClippingTags = options.includeClippingTags;
 
     return clippings.map((c) => {
       // Start with the clipping, optionally removing raw fields
       let prepared: Clipping;
-      if (options?.includeRaw) {
+      if (options.includeRaw) {
         prepared = { ...c };
       } else {
         const { titleRaw: _titleRaw, authorRaw: _authorRaw, contentRaw: _contentRaw, ...rest } = c;

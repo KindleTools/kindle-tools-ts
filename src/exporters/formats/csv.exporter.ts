@@ -5,7 +5,8 @@
  */
 
 import type { Clipping } from "#app-types/clipping.js";
-import type { ExporterOptions, ExportResult } from "../core/types.js";
+import type { ExporterOptionsParsed } from "#schemas/exporter.schema.js";
+import type { ExportResult } from "../core/types.js";
 import { BaseExporter } from "../shared/base-exporter.js";
 
 /**
@@ -24,9 +25,9 @@ export class CsvExporter extends BaseExporter {
    */
   protected async doExport(
     clippings: Clipping[],
-    options?: ExporterOptions,
+    options: ExporterOptionsParsed,
   ): Promise<ExportResult> {
-    const includeClippingTags = options?.includeClippingTags ?? true;
+    const includeClippingTags = options.includeClippingTags;
 
     const headers = [
       "id",

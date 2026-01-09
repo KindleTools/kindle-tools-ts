@@ -25,6 +25,20 @@ import {
   safeParseParseOptions,
   TagCaseSchema,
 } from "#schemas/config.schema.js";
+import {
+  AuthorCaseSchema,
+  ExporterOptionsSchema,
+  FolderStructureSchema,
+  parseExporterOptions,
+  safeParseExporterOptions,
+  TemplatePresetSchema,
+} from "#schemas/exporter.schema.js";
+import {
+  CaseTransformSchema,
+  FolderStructureBaseSchema,
+  LanguageCodeSchema,
+  LanguageWithAutoSchema,
+} from "#schemas/shared.schema.js";
 
 describe("Clipping Schemas", () => {
   describe("ClippingTypeSchema", () => {
@@ -466,6 +480,183 @@ describe("Config Schemas", () => {
     it("should return error for invalid config", () => {
       const result = safeParseConfigFile({ folderStructure: "wrong" });
       expect(result.success).toBe(false);
+    });
+  });
+});
+
+describe("Exporter Schemas", () => {
+  describe("FolderStructureSchema", () => {
+    it("should accept valid folder structures", () => {
+      expect(FolderStructureSchema.parse("flat")).toBe("flat");
+      expect(FolderStructureSchema.parse("by-book")).toBe("by-book");
+      expect(FolderStructureSchema.parse("by-author")).toBe("by-author");
+      expect(FolderStructureSchema.parse("by-author-book")).toBe("by-author-book");
+    });
+
+    it("should reject invalid folder structures", () => {
+      expect(() => FolderStructureSchema.parse("nested")).toThrow();
+      expect(() => FolderStructureSchema.parse("by-date")).toThrow();
+    });
+  });
+
+  describe("AuthorCaseSchema", () => {
+    it("should accept valid case transforms", () => {
+      expect(AuthorCaseSchema.parse("original")).toBe("original");
+      expect(AuthorCaseSchema.parse("uppercase")).toBe("uppercase");
+      expect(AuthorCaseSchema.parse("lowercase")).toBe("lowercase");
+    });
+
+    it("should reject invalid case transforms", () => {
+      expect(() => AuthorCaseSchema.parse("UPPERCASE")).toThrow();
+      expect(() => AuthorCaseSchema.parse("camelCase")).toThrow();
+    });
+  });
+
+  describe("TemplatePresetSchema", () => {
+    it("should accept valid template presets", () => {
+      expect(TemplatePresetSchema.parse("default")).toBe("default");
+      expect(TemplatePresetSchema.parse("minimal")).toBe("minimal");
+      expect(TemplatePresetSchema.parse("obsidian")).toBe("obsidian");
+      expect(TemplatePresetSchema.parse("notion")).toBe("notion");
+      expect(TemplatePresetSchema.parse("academic")).toBe("academic");
+      expect(TemplatePresetSchema.parse("joplin")).toBe("joplin");
+    });
+
+    it("should reject invalid presets", () => {
+      expect(() => TemplatePresetSchema.parse("custom")).toThrow();
+    });
+  });
+
+  describe("ExporterOptionsSchema", () => {
+    it("should apply defaults for empty input", () => {
+      const result = ExporterOptionsSchema.parse({});
+      expect(result.groupByBook).toBe(true);
+      expect(result.includeStats).toBe(false);
+      expect(result.includeRaw).toBe(false);
+      expect(result.includeClippingTags).toBe(true);
+      expect(result.pretty).toBe(true);
+      expect(result.folderStructure).toBe("by-author");
+      expect(result.authorCase).toBe("uppercase");
+    });
+
+    it("should accept valid options", () => {
+      const result = ExporterOptionsSchema.parse({
+        outputPath: "./output",
+        groupByBook: false,
+        includeStats: true,
+        folderStructure: "by-author-book",
+        authorCase: "lowercase",
+        templatePreset: "obsidian",
+        title: "My Highlights",
+      });
+      expect(result.outputPath).toBe("./output");
+      expect(result.groupByBook).toBe(false);
+      expect(result.includeStats).toBe(true);
+      expect(result.folderStructure).toBe("by-author-book");
+      expect(result.authorCase).toBe("lowercase");
+      expect(result.templatePreset).toBe("obsidian");
+      expect(result.title).toBe("My Highlights");
+    });
+
+    it("should accept custom templates", () => {
+      const result = ExporterOptionsSchema.parse({
+        customTemplates: {
+          book: "# {{title}}",
+          clipping: "> {{content}}",
+        },
+      });
+      expect(result.customTemplates?.book).toBe("# {{title}}");
+      expect(result.customTemplates?.clipping).toBe("> {{content}}");
+    });
+
+    it("should reject invalid folderStructure", () => {
+      expect(() => ExporterOptionsSchema.parse({ folderStructure: "invalid" })).toThrow();
+    });
+
+    it("should reject invalid authorCase", () => {
+      expect(() => ExporterOptionsSchema.parse({ authorCase: "CAPS" })).toThrow();
+    });
+  });
+
+  describe("parseExporterOptions helper", () => {
+    it("should parse and return typed result with defaults", () => {
+      const result = parseExporterOptions({
+        folderStructure: "by-book",
+      });
+      expect(result.folderStructure).toBe("by-book");
+      expect(result.authorCase).toBe("uppercase"); // default
+      expect(result.pretty).toBe(true); // default
+    });
+
+    it("should throw on invalid input", () => {
+      expect(() => parseExporterOptions({ folderStructure: "bad" })).toThrow();
+    });
+  });
+
+  describe("safeParseExporterOptions helper", () => {
+    it("should return success result for valid input", () => {
+      const result = safeParseExporterOptions({ authorCase: "lowercase" });
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.authorCase).toBe("lowercase");
+      }
+    });
+
+    it("should return error result for invalid input", () => {
+      const result = safeParseExporterOptions({ templatePreset: "invalid" });
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error).toBeDefined();
+      }
+    });
+  });
+});
+
+describe("Shared Schemas", () => {
+  describe("CaseTransformSchema", () => {
+    it("should accept valid case transforms", () => {
+      expect(CaseTransformSchema.parse("original")).toBe("original");
+      expect(CaseTransformSchema.parse("uppercase")).toBe("uppercase");
+      expect(CaseTransformSchema.parse("lowercase")).toBe("lowercase");
+    });
+
+    it("should reject invalid transforms", () => {
+      expect(() => CaseTransformSchema.parse("UPPER")).toThrow();
+    });
+  });
+
+  describe("FolderStructureBaseSchema", () => {
+    it("should accept valid folder structures", () => {
+      expect(FolderStructureBaseSchema.parse("flat")).toBe("flat");
+      expect(FolderStructureBaseSchema.parse("by-author")).toBe("by-author");
+    });
+
+    it("should reject invalid structures", () => {
+      expect(() => FolderStructureBaseSchema.parse("nested")).toThrow();
+    });
+  });
+
+  describe("LanguageCodeSchema", () => {
+    it("should accept valid language codes", () => {
+      expect(LanguageCodeSchema.parse("en")).toBe("en");
+      expect(LanguageCodeSchema.parse("es")).toBe("es");
+      expect(LanguageCodeSchema.parse("ja")).toBe("ja");
+    });
+
+    it("should reject invalid codes", () => {
+      expect(() => LanguageCodeSchema.parse("auto")).toThrow();
+      expect(() => LanguageCodeSchema.parse("xx")).toThrow();
+    });
+  });
+
+  describe("LanguageWithAutoSchema", () => {
+    it("should accept language codes and auto", () => {
+      expect(LanguageWithAutoSchema.parse("en")).toBe("en");
+      expect(LanguageWithAutoSchema.parse("auto")).toBe("auto");
+    });
+
+    it("should reject invalid codes", () => {
+      expect(() => LanguageWithAutoSchema.parse("invalid")).toThrow();
     });
   });
 });

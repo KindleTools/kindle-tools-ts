@@ -20,14 +20,9 @@ import type { GeoLocation } from "#app-types/geo.js";
 import { sha256Sync } from "#domain/identity.js";
 import { formatPage, getEffectivePage } from "#domain/locations.js";
 import { groupByBook } from "#domain/stats.js";
+import type { ExporterOptionsParsed } from "#schemas/exporter.schema.js";
 import { formatDateHuman } from "#utils/system/dates.js";
-import type {
-  AuthorCase,
-  ExportedFile,
-  ExporterOptions,
-  ExportResult,
-  FolderStructure,
-} from "../core/types.js";
+import type { ExportedFile, ExportResult } from "../core/types.js";
 import { BaseExporter } from "../shared/base-exporter.js";
 
 // ============================================================================
@@ -40,20 +35,14 @@ import { BaseExporter } from "../shared/base-exporter.js";
 
 /**
  * Extended options for Joplin export.
+ * Extends ExporterOptionsParsed with Joplin-specific options.
  */
-export interface JoplinExporterOptions extends ExporterOptions {
+export interface JoplinExporterOptions extends ExporterOptionsParsed {
   /** Root notebook name (default: "Kindle Highlights") */
-  notebookName?: string;
+  notebookName?: string | undefined;
 
   /** Add tags to notes (default: []) */
   tags?: string[];
-
-  /**
-   * Creator/author name for note metadata.
-   * This appears in the note body as attribution.
-   * Example: "John Doe" -> "- author: John Doe"
-   */
-  creator?: string;
 
   /**
    * Estimate page numbers from Kindle locations when not available.
@@ -61,29 +50,6 @@ export interface JoplinExporterOptions extends ExporterOptions {
    * Default: true
    */
   estimatePages?: boolean;
-
-  /**
-   * Folder structure for notebooks.
-   * - 'flat': Root > Book
-   * - 'by-author': Root > Author > Book (default, 3-level hierarchy)
-   * - 'by-author-book': Same as 'by-author'
-   * Note: 'by-book' behaves like 'flat' for Joplin.
-   */
-  folderStructure?: FolderStructure;
-
-  /**
-   * Case transformation for author notebook names.
-   * - 'original': Keep original case
-   * - 'uppercase': Convert to UPPERCASE (default, like Python version)
-   * - 'lowercase': Convert to lowercase
-   */
-  authorCase?: AuthorCase;
-
-  /**
-   * Include clipping tags as Joplin tags.
-   * Tags are merged with default tags. (default: true)
-   */
-  includeClippingTags?: boolean;
 
   /**
    * Geographic location where the reading took place.
@@ -196,20 +162,20 @@ export class JoplinExporter extends BaseExporter {
    */
   protected async doExport(
     clippings: Clipping[],
-    options?: JoplinExporterOptions,
+    options: JoplinExporterOptions,
   ): Promise<ExportResult> {
     const files: ExportedFile[] = [];
     const now = Date.now();
 
     // Extract options with defaults
-    const rootNotebookName = options?.notebookName ?? this.DEFAULT_EXPORT_TITLE;
-    const defaultTags = options?.tags ?? [];
-    const folderStructure = options?.folderStructure ?? "by-author";
-    const authorCase = options?.authorCase ?? "uppercase"; // Python default
-    const includeClippingTags = options?.includeClippingTags ?? true;
-    const estimatePages = options?.estimatePages ?? true;
-    const creator = options?.creator ?? "";
-    const geoLocation = options?.geoLocation ?? { latitude: 0, longitude: 0, altitude: 0 };
+    const rootNotebookName = options.notebookName ?? this.DEFAULT_EXPORT_TITLE;
+    const defaultTags = options.tags ?? [];
+    const folderStructure = options.folderStructure;
+    const authorCase = options.authorCase;
+    const includeClippingTags = options.includeClippingTags;
+    const estimatePages = options.estimatePages ?? true;
+    const creator = options.creator ?? "";
+    const geoLocation = options.geoLocation ?? { latitude: 0, longitude: 0, altitude: 0 };
 
     // Determine if we use 3-level hierarchy (Root > Author > Book)
     const useAuthorLevel = folderStructure === "by-author" || folderStructure === "by-author-book";

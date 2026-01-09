@@ -44,6 +44,7 @@
   },
   "imports": {
     "#core/*.js": "./src/core/*.ts",
+    "#config/*.js": "./src/config/*.ts",
     "#importers/*.js": "./src/importers/*.ts",
     "#importers/core/*.js": "./src/importers/core/*.ts",
     "#importers/formats/*.js": "./src/importers/formats/*.ts",
@@ -148,6 +149,7 @@
     "vitest": "^4.0.16"
   },
   "dependencies": {
+    "cosmiconfig": "^9.0.0",
     "date-fns": "^4.1.0",
     "handlebars": "^4.7.8",
     "jszip": "^3.10.1",

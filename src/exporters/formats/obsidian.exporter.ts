@@ -13,20 +13,16 @@
 import type { Clipping } from "#app-types/clipping.js";
 import { getPageInfo } from "#domain/locations.js";
 import { groupByBook } from "#domain/stats.js";
+import type { ExporterOptionsParsed } from "#schemas/exporter.schema.js";
 import { formatDateISO } from "#utils/system/dates.js";
-import type {
-  AuthorCase,
-  ExportedFile,
-  ExporterOptions,
-  ExportResult,
-  FolderStructure,
-} from "../core/types.js";
+import type { ExportedFile, ExportResult } from "../core/types.js";
 import { BaseExporter } from "../shared/base-exporter.js";
 
 /**
  * Extended options for Obsidian export.
+ * Extends ExporterOptionsParsed with Obsidian-specific options.
  */
-export interface ObsidianExporterOptions extends ExporterOptions {
+export interface ObsidianExporterOptions extends ExporterOptionsParsed {
   /** Add wikilinks to author pages (default: true) */
   wikilinks?: boolean;
   /** Use callouts for highlights (default: true) */
@@ -35,26 +31,6 @@ export interface ObsidianExporterOptions extends ExporterOptions {
   tags?: string[];
   /** Folder name for book notes (default: "books") */
   folder?: string;
-  /**
-   * Folder structure for organizing files.
-   * - 'flat': All files in the root folder
-   * - 'by-book': One folder per book (containing a single file)
-   * - 'by-author': Root > Author > Book (default)
-   * - 'by-author-book': Author folder > Book subfolder
-   */
-  folderStructure?: FolderStructure;
-  /**
-   * Case transformation for author folder names.
-   * - 'original': Keep original case
-   * - 'uppercase': Convert to UPPERCASE (default)
-   * - 'lowercase': Convert to lowercase
-   */
-  authorCase?: AuthorCase;
-  /**
-   * Include clipping tags in the frontmatter.
-   * Tags are merged with default tags. (default: true)
-   */
-  includeClippingTags?: boolean;
   /**
    * Estimate page numbers from Kindle locations when not available.
    * Uses ~16 locations per page as a heuristic.
@@ -81,13 +57,13 @@ export class ObsidianExporter extends BaseExporter {
    */
   protected async doExport(
     clippings: Clipping[],
-    options?: ObsidianExporterOptions,
+    options: ObsidianExporterOptions,
   ): Promise<ExportResult> {
     const grouped = groupByBook(clippings);
     const files: ExportedFile[] = [];
-    const folder = options?.folder ?? "books";
-    const folderStructure = options?.folderStructure ?? "by-author";
-    const authorCase = options?.authorCase ?? "uppercase";
+    const folder = options.folder ?? "books";
+    const folderStructure = options.folderStructure;
+    const authorCase = options.authorCase;
 
     for (const [title, bookClippings] of grouped) {
       const first = bookClippings[0];
@@ -114,15 +90,15 @@ export class ObsidianExporter extends BaseExporter {
   /**
    * Generate a complete Obsidian note for a book.
    */
-  private generateBookNote(clippings: Clipping[], options?: ObsidianExporterOptions): string {
+  private generateBookNote(clippings: Clipping[], options: ObsidianExporterOptions): string {
     const first = clippings[0];
     if (!first) return "";
 
-    const useCallouts = options?.useCallouts ?? true;
-    const useWikilinks = options?.wikilinks ?? true;
-    const defaultTags = options?.tags ?? [];
-    const includeClippingTags = options?.includeClippingTags ?? true;
-    const estimatePages = options?.estimatePages ?? true;
+    const useCallouts = options.useCallouts ?? true;
+    const useWikilinks = options.wikilinks ?? true;
+    const defaultTags = options.tags ?? [];
+    const includeClippingTags = options.includeClippingTags;
+    const estimatePages = options.estimatePages ?? true;
 
     // Collect all unique tags from clippings
     const allTags = this.collectAllTags(clippings, defaultTags, includeClippingTags);

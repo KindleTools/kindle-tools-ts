@@ -3,6 +3,7 @@
  *
  * Provides common functionality for all exporters:
  * - Standardized error handling
+ * - Options validation with Zod
  * - Access to shared utility functions
  * - Template method pattern for export operations
  *
@@ -13,6 +14,8 @@
  */
 
 import type { Clipping } from "#app-types/clipping.js";
+import { type ExporterOptionsParsed, ExporterOptionsSchema } from "#schemas/exporter.schema.js";
+import { formatZodError } from "#utils/system/errors.js";
 import type {
   AuthorCase,
   ExportedFile,
@@ -46,7 +49,7 @@ import {
  *   name = "my-format";
  *   extension = ".my";
  *
- *   protected async doExport(clippings: Clipping[], options?: ExporterOptions): Promise<ExportResult> {
+ *   protected async doExport(clippings: Clipping[], options: ExporterOptionsParsed): Promise<ExportResult> {
  *     const content = this.generateContent(clippings);
  *     return this.success(content);
  *   }
@@ -67,16 +70,27 @@ export abstract class BaseExporter implements Exporter {
   /**
    * Export clippings to the target format.
    *
-   * This method provides standardized error handling.
+   * This method provides standardized error handling and options validation.
    * Subclasses should override `doExport` for their specific logic.
    *
    * @param clippings - Array of clippings to export
-   * @param options - Export options
+   * @param options - Export options (will be validated and defaults applied)
    * @returns Export result
    */
   async export(clippings: Clipping[], options?: ExporterOptions): Promise<ExportResult> {
     try {
-      return await this.doExport(clippings, options);
+      // Validate and parse options with Zod
+      const parseResult = ExporterOptionsSchema.safeParse(options ?? {});
+
+      if (!parseResult.success) {
+        const errorMessage = `Invalid exporter options:\n${formatZodError(parseResult.error)}`;
+        return this.error(new Error(errorMessage));
+      }
+
+      // Options are now validated with defaults applied
+      const validatedOptions = parseResult.data;
+
+      return await this.doExport(clippings, validatedOptions);
     } catch (error) {
       return this.error(error);
     }
@@ -86,12 +100,12 @@ export abstract class BaseExporter implements Exporter {
    * Implement this method with the actual export logic.
    *
    * @param clippings - Array of clippings to export
-   * @param options - Export options
+   * @param options - Validated export options with defaults applied
    * @returns Export result
    */
   protected abstract doExport(
     clippings: Clipping[],
-    options?: ExporterOptions,
+    options: ExporterOptionsParsed,
   ): Promise<ExportResult>;
 
   // ========================

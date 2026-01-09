@@ -13,14 +13,15 @@
 
 import type { Clipping } from "#app-types/clipping.js";
 import { groupByBook } from "#domain/stats.js";
+import type { ExporterOptionsParsed } from "#schemas/exporter.schema.js";
 import { formatDateHuman } from "#utils/system/dates.js";
-import type { ExportedFile, ExporterOptions, ExportResult } from "../core/types.js";
+import type { ExportedFile, ExportResult } from "../core/types.js";
 import { BaseExporter } from "../shared/base-exporter.js";
 
 /**
  * Extended options for HTML export.
  */
-export interface HtmlExporterOptions extends ExporterOptions {
+export interface HtmlExporterOptions extends ExporterOptionsParsed {
   /** Page title (default: "Kindle Highlights") */
   title?: string;
   /** Include search functionality (default: true) */
@@ -47,11 +48,11 @@ export class HtmlExporter extends BaseExporter {
    */
   protected async doExport(
     clippings: Clipping[],
-    options?: HtmlExporterOptions,
+    options: HtmlExporterOptions,
   ): Promise<ExportResult> {
-    const title = options?.title ?? this.DEFAULT_EXPORT_TITLE;
-    const includeSearch = options?.includeSearch ?? true;
-    const includeDarkMode = options?.includeDarkMode ?? true;
+    const title = options.title ?? this.DEFAULT_EXPORT_TITLE;
+    const includeSearch = options.includeSearch ?? true;
+    const includeDarkMode = options.includeDarkMode ?? true;
 
     const grouped = groupByBook(clippings);
     const html = this.generateHtml(
@@ -62,7 +63,7 @@ export class HtmlExporter extends BaseExporter {
       options?.customCss,
     );
 
-    if (options?.groupByBook) {
+    if (options.groupByBook) {
       // Generate separate files per book
       const files: ExportedFile[] = [];
 
@@ -77,7 +78,7 @@ export class HtmlExporter extends BaseExporter {
           pageTitle,
           includeSearch,
           includeDarkMode,
-          options?.customCss,
+          options.customCss,
         );
 
         const safeTitle = this.sanitizeFilename(bookTitle);

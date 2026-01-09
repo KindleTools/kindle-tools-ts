@@ -82,7 +82,10 @@ describe("MarkdownExporter", () => {
         createMockClipping({ title: "Book Two", content: "Content from book two" }),
       ];
 
-      const result = await exporter.export(clippings, { groupByBook: true });
+      const result = await exporter.export(clippings, {
+        groupByBook: true,
+        folderStructure: "flat",
+      });
 
       expect(result.success).toBe(true);
       expect(result.files).toBeDefined();
@@ -97,7 +100,10 @@ describe("MarkdownExporter", () => {
       const exporter = new MarkdownExporter();
       const clippings = [createMockClipping({ title: 'Book: A <Test> "Title"' })];
 
-      const result = await exporter.export(clippings, { groupByBook: true });
+      const result = await exporter.export(clippings, {
+        groupByBook: true,
+        folderStructure: "flat",
+      });
 
       expect(result.success).toBe(true);
       expect(result.files?.[0].path).not.toContain(":");
@@ -332,7 +338,10 @@ describe("MarkdownExporter", () => {
         createMockClipping({ title: "Book B", author: "Author 2", content: "From B" }),
       ];
 
-      const result = await exporter.export(clippings, { groupByBook: true });
+      const result = await exporter.export(clippings, {
+        groupByBook: true,
+        folderStructure: "flat",
+      });
 
       expect(result.success).toBe(true);
       expect(result.files?.length).toBe(2);

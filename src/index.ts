@@ -17,6 +17,15 @@
 // Main API Exports
 // =============================================================================
 
+// Config file loading (cosmiconfig integration)
+export {
+  clearConfigCache,
+  clearConfigCacheSync,
+  type LoadConfigOptions,
+  type LoadedConfig,
+  loadConfig,
+  loadConfigSync,
+} from "./config/index.js";
 export type { ProcessResult } from "./core/processor.js";
 export { process } from "./core/processor.js";
 export type {
@@ -27,7 +36,6 @@ export type {
   ExportResult,
   FolderStructure,
 } from "./exporters/index.js";
-
 // Exporters
 export {
   BaseExporter,
@@ -131,4 +139,9 @@ export const Utils = {
 
 // Re-exporting specific core utilities that might be useful for advanced integration
 
-export { getErrorMessage, toError } from "./utils/system/errors.js";
+export {
+  formatZodError,
+  formatZodErrorSummary,
+  getErrorMessage,
+  toError,
+} from "./utils/system/errors.js";
