@@ -72,6 +72,14 @@ export {
   safeParseParseOptions,
   TagCaseSchema,
 } from "./schemas/config.schema.js";
+export {
+  AuthorCaseSchema,
+  ExporterOptionsSchema,
+  FolderStructureSchema,
+  parseExporterOptions,
+  safeParseExporterOptions,
+  TemplatePresetSchema,
+} from "./schemas/exporter.schema.js";
 // Types
 export type {
   Clipping,

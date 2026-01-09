@@ -34,6 +34,7 @@ import { ExporterFactory } from "#exporters/index.js";
 import { parseString } from "#importers/formats/txt/parser.js";
 import { tokenize } from "#importers/formats/txt/tokenizer.js";
 import { ImporterFactory } from "#importers/index.js";
+import { validateFormat, validateLanguage } from "#schemas/cli.schema.js";
 import { createTarArchive } from "#utils/fs/tar.js";
 import { createZipArchive } from "#utils/fs/zip.js";
 import { decodeWithFallback, detectEncoding } from "#utils/text/encoding.js";
@@ -253,9 +254,12 @@ async function parseClippingsFile(filePath: string, args: ParsedArgs): Promise<P
   }
 
   // 3. Process clippings (Dedupe, Merge, Link Notes, etc.)
+  // Validate language if specified
+  const language = args.lang && validateLanguage(args.lang) ? args.lang : "auto";
+
   // We process ALL formats to ensure consistency (e.g. valid JSON export from raw data)
   const processOptions: ProcessOptions = {
-    language: args.lang || "auto",
+    language,
     removeDuplicates: !args.noDedup,
     mergeOverlapping: !args.noMerge,
     mergeNotes: true,
@@ -380,6 +384,13 @@ async function handleExport(args: string[]): Promise<void> {
   if (!parsed.format) {
     error(c.error("Error: No format specified"));
     log(c.dim("Available formats: json, csv, md, obsidian, joplin, html"));
+    process.exit(1);
+  }
+
+  // Validate format with Zod schema
+  if (!validateFormat(parsed.format)) {
+    error(c.error(`Error: Invalid format '${parsed.format}'`));
+    log(c.dim("Available formats: json, csv, md, markdown, obsidian, joplin, html"));
     process.exit(1);
   }
 

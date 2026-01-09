@@ -52,6 +52,7 @@
     "#exporters/core/*.js": "./src/exporters/core/*.ts",
     "#exporters/formats/*.js": "./src/exporters/formats/*.ts",
     "#exporters/shared/*.js": "./src/exporters/shared/*.ts",
+    "#schemas/*.js": "./src/schemas/*.ts",
     "#utils/*.js": "./src/utils/*.ts",
     "#utils/text/*.js": "./src/utils/text/*.ts",
     "#utils/fs/*.js": "./src/utils/fs/*.ts",
