@@ -9,6 +9,7 @@ import type { SupportedLanguage } from "#app-types/language.js";
 import { process } from "#core/processor.js";
 import * as GeoUtils from "#domain/geography.js";
 import * as StatUtils from "#domain/stats.js";
+import { type ExportResult, type ExportSuccess, formatUserMessage } from "#errors";
 import {
   type AuthorCase,
   CsvExporter,
@@ -626,6 +627,18 @@ const exportResults: Record<
   { content: string | Uint8Array; extension: string; mimeType: string }
 > = {};
 
+/**
+ * Helper to safely extract success data from ExportResult.
+ * Returns null and logs error if export failed.
+ */
+function unwrapExport(result: ExportResult, exporterName: string): ExportSuccess | null {
+  if (result.isErr()) {
+    console.error(`${exporterName} export error:`, formatUserMessage(result.error));
+    return null;
+  }
+  return result.value;
+}
+
 async function renderExports(): Promise<void> {
   const result = state.parseResult;
   if (!result) return;
@@ -640,119 +653,125 @@ async function renderExports(): Promise<void> {
 
   // JSON Export
   const jsonExporter = new JsonExporter();
-  const jsonResult = await jsonExporter.export(result.clippings, {
+  const jsonResultRaw = await jsonExporter.export(result.clippings, {
     groupByBook,
     includeStats,
     includeClippingTags,
     pretty: true,
   });
-  const jsonContent = typeof jsonResult.output === "string" ? jsonResult.output : "[Binary output]";
-  elements.exportJsonContent.textContent = jsonContent;
-  elements.exportJsonContent.classList.remove("placeholder");
-  exportResults.json = { content: jsonContent, extension: ".json", mimeType: "application/json" };
+  const jsonData = unwrapExport(jsonResultRaw, "JSON");
+  if (jsonData) {
+    const jsonContent = typeof jsonData.output === "string" ? jsonData.output : "[Binary output]";
+    elements.exportJsonContent.textContent = jsonContent;
+    elements.exportJsonContent.classList.remove("placeholder");
+    exportResults.json = { content: jsonContent, extension: ".json", mimeType: "application/json" };
+  }
 
   // CSV Export
   const csvExporter = new CsvExporter();
-  const csvResult = await csvExporter.export(result.clippings, { includeClippingTags });
-  const csvContent = typeof csvResult.output === "string" ? csvResult.output : "[Binary output]";
-  elements.exportCsvContent.textContent = csvContent;
-  elements.exportCsvContent.classList.remove("placeholder");
-  exportResults.csv = { content: csvContent, extension: ".csv", mimeType: "text/csv" };
+  const csvResultRaw = await csvExporter.export(result.clippings, { includeClippingTags });
+  const csvData = unwrapExport(csvResultRaw, "CSV");
+  if (csvData) {
+    const csvContent = typeof csvData.output === "string" ? csvData.output : "[Binary output]";
+    elements.exportCsvContent.textContent = csvContent;
+    elements.exportCsvContent.classList.remove("placeholder");
+    exportResults.csv = { content: csvContent, extension: ".csv", mimeType: "text/csv" };
+  }
 
-  // Markdown Export
   // Markdown Export
   const mdExporter = new MarkdownExporter();
-  const mdResult = await mdExporter.export(result.clippings, { groupByBook });
+  const mdResultRaw = await mdExporter.export(result.clippings, { groupByBook });
+  const mdData = unwrapExport(mdResultRaw, "Markdown");
 
-  if (mdResult.files && mdResult.files.length > 0) {
-    // Multi-file output
-    // Assuming you have a renderMultiFilePreview call or similar, otherwise fallback to text prev but allow zip download
-    // For markdown generic tab, we might just show concat text preview but offer zip download
-    const mdContent = typeof mdResult.output === "string" ? mdResult.output : "[Binary output]";
-    elements.exportMdContent.textContent = mdContent;
-    elements.exportMdContent.classList.remove("placeholder");
+  if (mdData) {
+    if (mdData.files && mdData.files.length > 0) {
+      const mdContent = typeof mdData.output === "string" ? mdData.output : "[Binary output]";
+      elements.exportMdContent.textContent = mdContent;
+      elements.exportMdContent.classList.remove("placeholder");
 
-    try {
-      const entries: ZipEntry[] = mdResult.files.map((f: ExportedFile) => ({
-        name: f.path,
-        content: f.content,
-        date: new Date(),
-      }));
+      try {
+        const entries: ZipEntry[] = mdData.files.map((f: ExportedFile) => ({
+          name: f.path,
+          content: f.content,
+          date: new Date(),
+        }));
 
-      const zipData = await UTILS.createZipArchive(entries);
+        const zipData = await UTILS.createZipArchive(entries);
 
-      exportResults.md = {
-        content: zipData,
-        extension: ".zip",
-        mimeType: "application/zip",
-      };
-    } catch (err) {
-      console.error("ZIP generation error for MD:", err);
-      exportResults.md = {
-        content: mdContent,
-        extension: ".md",
-        mimeType: "text/markdown",
-      };
+        exportResults.md = {
+          content: zipData,
+          extension: ".zip",
+          mimeType: "application/zip",
+        };
+      } catch (err) {
+        console.error("ZIP generation error for MD:", err);
+        exportResults.md = {
+          content: mdContent,
+          extension: ".md",
+          mimeType: "text/markdown",
+        };
+      }
+    } else {
+      const mdContent = typeof mdData.output === "string" ? mdData.output : "[Binary output]";
+      elements.exportMdContent.textContent = mdContent;
+      elements.exportMdContent.classList.remove("placeholder");
+      exportResults.md = { content: mdContent, extension: ".md", mimeType: "text/markdown" };
     }
-  } else {
-    const mdContent = typeof mdResult.output === "string" ? mdResult.output : "[Binary output]";
-    elements.exportMdContent.textContent = mdContent;
-    elements.exportMdContent.classList.remove("placeholder");
-    exportResults.md = { content: mdContent, extension: ".md", mimeType: "text/markdown" };
   }
 
   // Obsidian Export
   const obsidianExporter = new ObsidianExporter();
-  const obsidianResult = await obsidianExporter.export(result.clippings, {
+  const obsidianResultRaw = await obsidianExporter.export(result.clippings, {
     groupByBook,
     folderStructure,
     authorCase,
     includeClippingTags,
   });
+  const obsidianData = unwrapExport(obsidianResultRaw, "Obsidian");
 
-  if (obsidianResult.files && obsidianResult.files.length > 0) {
-    renderMultiFilePreview(elements.exportObsidianContent, obsidianResult.files);
+  if (obsidianData) {
+    if (obsidianData.files && obsidianData.files.length > 0) {
+      renderMultiFilePreview(elements.exportObsidianContent, obsidianData.files);
 
-    try {
-      // Create ZIP archive for multiple files
-      const entries: ZipEntry[] = obsidianResult.files.map((f: ExportedFile) => ({
-        name: f.path,
-        content: f.content,
-        date: new Date(),
-      }));
+      try {
+        const entries: ZipEntry[] = obsidianData.files.map((f: ExportedFile) => ({
+          name: f.path,
+          content: f.content,
+          date: new Date(),
+        }));
 
-      const zipData = await UTILS.createZipArchive(entries);
+        const zipData = await UTILS.createZipArchive(entries);
+
+        exportResults.obsidian = {
+          content: zipData,
+          extension: ".zip",
+          mimeType: "application/zip",
+        };
+      } catch (err) {
+        console.error("ZIP generation error:", err);
+        exportResults.obsidian = {
+          content: `Error generating ZIP: ${err}`,
+          extension: ".txt",
+          mimeType: "text/plain",
+        };
+      }
+    } else {
+      const obsidianContent =
+        typeof obsidianData.output === "string" ? obsidianData.output : "[Binary output]";
+      elements.exportObsidianContent.textContent = obsidianContent;
+      elements.exportObsidianContent.classList.remove("placeholder");
 
       exportResults.obsidian = {
-        content: zipData,
-        extension: ".zip",
-        mimeType: "application/zip",
-      };
-    } catch (err) {
-      console.error("ZIP generation error:", err);
-      // Fallback
-      exportResults.obsidian = {
-        content: `Error generating ZIP: ${err}`,
-        extension: ".txt",
-        mimeType: "text/plain",
+        content: obsidianContent,
+        extension: ".md",
+        mimeType: "text/markdown",
       };
     }
-  } else {
-    const obsidianContent =
-      typeof obsidianResult.output === "string" ? obsidianResult.output : "[Binary output]";
-    elements.exportObsidianContent.textContent = obsidianContent;
-    elements.exportObsidianContent.classList.remove("placeholder");
-
-    exportResults.obsidian = {
-      content: obsidianContent,
-      extension: ".md",
-      mimeType: "text/markdown",
-    };
   }
 
   // Joplin Export
   const joplinExporter = new JoplinExporter();
-  const joplinResult = await joplinExporter.export(result.clippings, {
+  const joplinResultRaw = await joplinExporter.export(result.clippings, {
     groupByBook,
     folderStructure,
     authorCase,
@@ -760,47 +779,54 @@ async function renderExports(): Promise<void> {
     notebookName: title,
     creator,
   });
+  const joplinData = unwrapExport(joplinResultRaw, "Joplin");
 
-  if (joplinResult.files && joplinResult.files.length > 0) {
-    renderMultiFilePreview(elements.exportJoplinContent, joplinResult.files);
+  if (joplinData) {
+    if (joplinData.files && joplinData.files.length > 0) {
+      renderMultiFilePreview(elements.exportJoplinContent, joplinData.files);
 
-    try {
-      // Create TAR/JEX archive
-      const entries: TarEntry[] = joplinResult.files.map((f: ExportedFile) => ({
-        name: f.path,
-        content: f.content,
-      }));
+      try {
+        const entries: TarEntry[] = joplinData.files.map((f: ExportedFile) => ({
+          name: f.path,
+          content: f.content,
+        }));
 
-      const tarData = UTILS.createTarArchive(entries);
+        const tarData = UTILS.createTarArchive(entries);
 
+        exportResults.joplin = {
+          content: tarData,
+          extension: ".jex",
+          mimeType: "application/x-tar",
+        };
+      } catch (err) {
+        console.error("JEX generation error:", err);
+        exportResults.joplin = {
+          content: `Error: ${err}`,
+          extension: ".txt",
+          mimeType: "text/plain",
+        };
+      }
+    } else {
+      const joplinContent =
+        typeof joplinData.output === "string" ? joplinData.output : "[Binary output]";
+      elements.exportJoplinContent.textContent = joplinContent;
+      elements.exportJoplinContent.classList.remove("placeholder");
       exportResults.joplin = {
-        content: tarData,
-        extension: ".jex",
-        mimeType: "application/x-tar",
-      };
-    } catch (err) {
-      console.error("JEX generation error:", err);
-      exportResults.joplin = {
-        content: `Error: ${err}`,
-        extension: ".txt",
-        mimeType: "text/plain",
+        content: joplinContent,
+        extension: ".md",
+        mimeType: "text/markdown",
       };
     }
-  } else {
-    const joplinContent =
-      typeof joplinResult.output === "string" ? joplinResult.output : "[Binary output]";
-    elements.exportJoplinContent.textContent = joplinContent;
-    elements.exportJoplinContent.classList.remove("placeholder");
-    exportResults.joplin = { content: joplinContent, extension: ".md", mimeType: "text/markdown" };
   }
 
   // HTML Export
   const htmlExporter = new HtmlExporter();
-  const htmlResult = await htmlExporter.export(result.clippings, { includeStats, title });
-  if (typeof htmlResult.output === "string") {
-    const blob = new Blob([htmlResult.output], { type: "text/html" });
+  const htmlResultRaw = await htmlExporter.export(result.clippings, { includeStats, title });
+  const htmlData = unwrapExport(htmlResultRaw, "HTML");
+  if (htmlData && typeof htmlData.output === "string") {
+    const blob = new Blob([htmlData.output], { type: "text/html" });
     elements.exportHtmlContent.src = URL.createObjectURL(blob);
-    exportResults.html = { content: htmlResult.output, extension: ".html", mimeType: "text/html" };
+    exportResults.html = { content: htmlData.output, extension: ".html", mimeType: "text/html" };
   }
 
   // Enable download button
