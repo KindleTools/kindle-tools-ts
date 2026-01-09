@@ -203,16 +203,23 @@ export const ConfigFolderStructureSchema = z.enum(
 
 /**
  * Config file schema for .kindletoolsrc files.
- * Extends ParseOptions with export-specific settings.
+ * Combines parsing options with export-specific settings.
  *
  * @example
  * ```json
  * // .kindletoolsrc
  * {
  *   "format": "obsidian",
+ *   "output": "./exports",
  *   "folderStructure": "by-author",
+ *   "authorCase": "uppercase",
+ *   "groupByBook": true,
  *   "extractTags": true,
- *   "tagCase": "lowercase"
+ *   "tagCase": "lowercase",
+ *   "parse": {
+ *     "removeDuplicates": true,
+ *     "mergeOverlapping": true
+ *   }
  * }
  * ```
  */
@@ -222,11 +229,57 @@ export const ConfigFileSchema = z.object({
     .string()
     .optional()
     .describe("Default export format: json, csv, md, obsidian, joplin, html"),
+
+  // Output path
+  output: z.string().optional().describe("Default output file or directory path"),
+
+  // Folder structure for multi-file exports
   folderStructure: ConfigFolderStructureSchema.optional().describe(
     "Folder structure for multi-file exports",
   ),
 
-  // Include all ParseOptions fields
+  // Case transformations
+  authorCase: TagCaseSchema.optional().describe(
+    "Case transformation for author folder names: original, uppercase, lowercase",
+  ),
+
+  // Grouping
+  groupByBook: z.boolean().optional().describe("Group clippings by book in output"),
+
+  // Tags
+  includeTags: z.boolean().optional().describe("Include tags in export"),
+
+  // Pretty printing
+  pretty: z.boolean().optional().describe("Pretty-print JSON output"),
+
+  // Metadata
+  title: z.string().optional().describe("Custom title for exports"),
+  creator: z.string().optional().describe("Creator name for metadata"),
+
+  // Nested parse options (allows grouping parse-specific settings)
+  parse: z
+    .object({
+      removeDuplicates: z.boolean().optional(),
+      mergeNotes: z.boolean().optional(),
+      mergeOverlapping: z.boolean().optional(),
+      extractTags: z.boolean().optional(),
+      tagCase: TagCaseSchema.optional(),
+      highlightsOnly: z.boolean().optional(),
+      normalizeUnicode: z.boolean().optional(),
+      cleanContent: z.boolean().optional(),
+      cleanTitles: z.boolean().optional(),
+      excludeTypes: z.array(ClippingTypeFilterSchema).optional(),
+      excludeBooks: z.array(z.string()).optional(),
+      onlyBooks: z.array(z.string()).optional(),
+      minContentLength: z.number().min(0).optional(),
+      dateLocale: z.string().optional(),
+      geoLocation: GeoLocationSchema.optional(),
+      strict: z.boolean().optional(),
+    })
+    .optional()
+    .describe("Parsing options override"),
+
+  // Include all ParseOptions fields at root level for backwards compatibility
   ...ParseOptionsSchema.shape,
 });
 

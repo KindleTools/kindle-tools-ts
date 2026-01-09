@@ -20,6 +20,7 @@ import type { Clipping } from "#app-types/clipping.js";
 import type { ParseResult, ProcessOptions } from "#app-types/config.js";
 import type { SupportedLanguage } from "#app-types/language.js";
 import type { ClippingsStats } from "#app-types/stats.js";
+import { type LoadedConfig, loadConfigSync } from "#config/index.js";
 import { process as processClippings } from "#core/processor.js";
 import { calculateStats } from "#domain/stats.js";
 import type {
@@ -66,6 +67,7 @@ interface ParsedArgs {
   highlightsOnly?: boolean;
   title?: string;
   creator?: string;
+  config?: string; // Path to config file
 }
 
 // =============================================================================
@@ -217,10 +219,112 @@ function parseArgs(args: string[]): ParsedArgs {
       result.creator = args[++i] ?? "";
     } else if (arg.startsWith("--creator=") || arg.startsWith("--author=")) {
       result.creator = arg.split("=")[1] ?? "";
+    } else if (arg === "--config" || arg === "-c") {
+      result.config = args[++i] ?? "";
+    } else if (arg.startsWith("--config=")) {
+      result.config = arg.split("=")[1] ?? "";
     }
   }
 
   return result;
+}
+
+/**
+ * Load configuration file and merge with CLI arguments.
+ * CLI arguments take precedence over config file values.
+ *
+ * @param args - Parsed CLI arguments
+ * @param verbose - Whether to log config loading info
+ * @returns Merged arguments with config defaults applied
+ */
+function loadAndMergeConfig(args: ParsedArgs, verbose = false): ParsedArgs {
+  try {
+    let loadedConfig: LoadedConfig | null = null;
+
+    if (args.config) {
+      // Load specific config file
+      loadedConfig = loadConfigSync({ configPath: args.config });
+      if (!loadedConfig) {
+        error(c.warn(`Warning: Config file not found: ${args.config}`));
+      }
+    } else {
+      // Auto-discover config file
+      loadedConfig = loadConfigSync();
+    }
+
+    if (loadedConfig) {
+      if (verbose) {
+        log(c.dim(`Using config from: ${loadedConfig.filepath}`));
+      }
+
+      const config = loadedConfig.config;
+
+      // Merge config with args (CLI args take precedence over config)
+      // Only use config value if the CLI arg wasn't provided
+      const merged: ParsedArgs = {
+        // Start with all CLI args
+        ...args,
+      };
+
+      // Apply config defaults only for undefined CLI args
+      if (args.lang === undefined && config.language) {
+        merged.lang = config.language as SupportedLanguage;
+      }
+      if (args.format === undefined && config.format) {
+        merged.format = config.format;
+      }
+      if (args.output === undefined && config.output) {
+        merged.output = config.output;
+      }
+      if (args.folderStructure === undefined && config.folderStructure) {
+        merged.folderStructure = config.folderStructure as FolderStructure;
+      }
+      if (args.authorCase === undefined && config.authorCase) {
+        merged.authorCase = config.authorCase as AuthorCase;
+      }
+      if (args.tagCase === undefined && config.tagCase) {
+        merged.tagCase = config.tagCase;
+      }
+      if (args.groupByBook === undefined && config.groupByBook !== undefined) {
+        merged.groupByBook = config.groupByBook;
+      }
+      if (args.includeTags === undefined && config.includeTags !== undefined) {
+        merged.includeTags = config.includeTags;
+      }
+      if (args.extractTags === undefined && config.extractTags !== undefined) {
+        merged.extractTags = config.extractTags;
+      }
+      if (args.pretty === undefined && config.pretty !== undefined) {
+        merged.pretty = config.pretty;
+      }
+      if (args.title === undefined && config.title) {
+        merged.title = config.title;
+      }
+      if (args.creator === undefined && config.creator) {
+        merged.creator = config.creator;
+      }
+
+      // Handle nested parse options
+      if (config.parse) {
+        if (args.noMerge === undefined && config.parse.mergeOverlapping === false) {
+          merged.noMerge = true;
+        }
+        if (args.noDedup === undefined && config.parse.removeDuplicates === false) {
+          merged.noDedup = true;
+        }
+        if (args.highlightsOnly === undefined && config.parse.highlightsOnly !== undefined) {
+          merged.highlightsOnly = config.parse.highlightsOnly;
+        }
+      }
+
+      return merged;
+    }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    error(c.warn(`Warning: Failed to load config: ${message}`));
+  }
+
+  return args;
 }
 
 /**
@@ -318,7 +422,10 @@ async function parseClippingsFile(filePath: string, args: ParsedArgs): Promise<P
  * Handle parse command - parse file and show summary.
  */
 async function handleParse(args: string[]): Promise<void> {
-  const parsed = parseArgs(args);
+  let parsed = parseArgs(args);
+
+  // Load config file and merge with CLI args
+  parsed = loadAndMergeConfig(parsed, parsed.verbose);
 
   if (!parsed.file) {
     error(c.error("Error: No file specified"));
@@ -373,7 +480,10 @@ async function handleParse(args: string[]): Promise<void> {
  * Handle export command - export clippings to a specific format.
  */
 async function handleExport(args: string[]): Promise<void> {
-  const parsed = parseArgs(args);
+  let parsed = parseArgs(args);
+
+  // Load config file and merge with CLI args
+  parsed = loadAndMergeConfig(parsed, parsed.verbose);
 
   if (!parsed.file) {
     error(c.error("Error: No file specified"));
