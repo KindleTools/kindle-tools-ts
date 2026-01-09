@@ -23,6 +23,7 @@ import type { ClippingsStats } from "#app-types/stats.js";
 import { type LoadedConfig, loadConfigSync } from "#config/index.js";
 import { process as processClippings } from "#core/processor.js";
 import { calculateStats } from "#domain/stats.js";
+import { formatUserMessage } from "#errors";
 import type {
   AuthorCase,
   Exporter,
@@ -348,7 +349,7 @@ async function parseClippingsFile(filePath: string, args: ParsedArgs): Promise<P
 
   if (result.isErr()) {
     const err = result.error;
-    throw new Error(`Import failed [${err.code}]: ${err.message}`);
+    throw new Error(formatUserMessage(err));
   }
 
   const importResult = result.value;
@@ -547,7 +548,7 @@ async function handleExport(args: string[]): Promise<void> {
 
     if (exportResult.isErr()) {
       const err = exportResult.error;
-      throw new Error(`Export failed [${err.code}]: ${err.message}`);
+      throw new Error(formatUserMessage(err));
     }
 
     const exportData = exportResult.value;
