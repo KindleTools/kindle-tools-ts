@@ -791,6 +791,7 @@ ${c.bold("OPTIONS:")}
   --verbose             Show detailed output
   --pretty              Pretty print JSON output
   --group-by-book       Group output by book
+  -c, --config <path>   Use specific config file (default: auto-discover .kindletoolsrc)
 
 ${c.bold("PROCESSING OPTIONS:")}
   --highlights-only     Return only highlights with embedded notes (no separate notes/bookmarks)
@@ -837,6 +838,19 @@ ${c.bold("EXAMPLES:")}
 
   ${c.dim("# Validate file format")}
   kindle-tools validate "My Clippings.txt"
+
+  ${c.dim("# Use a specific config file")}
+  kindle-tools export "My Clippings.txt" --config=./my-config.json
+
+${c.bold("CONFIG FILE:")}
+  Create .kindletoolsrc, .kindletoolsrc.json, or kindletools.config.json:
+  {
+    "format": "obsidian",
+    "folderStructure": "by-author",
+    "authorCase": "uppercase",
+    "extractTags": true,
+    "tagCase": "lowercase"
+  }
 
 ${c.bold("DOCUMENTATION:")}
   https://github.com/KindleTools/kindle-tools-ts
