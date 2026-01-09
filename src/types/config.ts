@@ -1,15 +1,16 @@
+/**
+ * Configuration and options types for Kindle clippings processing.
+ *
+ * @packageDocumentation
+ */
+
 import type { Clipping, ClippingType } from "./clipping.js";
 import type { GeoLocation } from "./geo.js";
 import type { SupportedLanguage } from "./language.js";
 import type { ClippingsStats } from "./stats.js";
 
-/**
- * Case transformation for extracted tags.
- * - 'original': Keep original case as typed in notes
- * - 'uppercase': Convert to UPPERCASE
- * - 'lowercase': Convert to lowercase (default behavior)
- */
-export type TagCase = "original" | "uppercase" | "lowercase";
+// Re-export TagCase from schema for consistency
+export type { TagCase } from "#schemas/config.schema.js";
 
 /**
  * Options for parsing Kindle clippings.
@@ -44,7 +45,7 @@ export interface ParseOptions {
    * Only applies when extractTags is enabled.
    * Default: 'uppercase'
    */
-  tagCase?: TagCase;
+  tagCase?: "original" | "uppercase" | "lowercase";
 
   /** Merge overlapping/extended highlights. Default: true */
   mergeOverlapping?: boolean;
@@ -115,6 +116,10 @@ export interface ProcessOptions extends ParseOptions {
   detectedLanguage: SupportedLanguage;
 }
 
+// =============================================================================
+// Parse Warnings
+// =============================================================================
+
 /**
  * Warning generated during parsing.
  */
@@ -136,6 +141,10 @@ export interface ParseWarning {
   /** Raw content that caused the warning (if applicable) */
   raw?: string;
 }
+
+// =============================================================================
+// Parse Result
+// =============================================================================
 
 /**
  * Result of parsing a Kindle clippings file.
