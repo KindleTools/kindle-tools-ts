@@ -7,12 +7,16 @@
  * @packageDocumentation
  */
 
+import { ClippingImportSchema } from "#schemas/clipping.schema.js";
 import type { ImportResult } from "../core/types.js";
 import { BaseImporter } from "../shared/base-importer.js";
 import { parseString } from "./txt/parser.js";
 
 /**
  * Import clippings from standard "My Clippings.txt" format.
+ *
+ * This importer parses Kindle's native clipping format and validates
+ * each clipping against the Zod schema for consistent data quality.
  */
 export class TxtImporter extends BaseImporter {
   readonly name = "txt";
@@ -20,6 +24,9 @@ export class TxtImporter extends BaseImporter {
 
   /**
    * Import clippings from TXT content.
+   *
+   * Each parsed clipping is validated against ClippingImportSchema to ensure
+   * data consistency. Invalid clippings generate warnings but don't stop processing.
    */
   protected async doImport(content: string): Promise<ImportResult> {
     // Parse without options to get raw clippings (no filtering/processing)
@@ -36,6 +43,29 @@ export class TxtImporter extends BaseImporter {
       );
     }
 
+    // Validate each clipping against the schema (optional post-parse validation)
+    const warnings = parseResult.warnings.map((w) => w.message);
+    const validatedClippings = [];
+
+    for (let i = 0; i < parseResult.clippings.length; i++) {
+      const clipping = parseResult.clippings[i];
+      if (!clipping) continue;
+
+      const validationResult = ClippingImportSchema.safeParse(clipping);
+
+      if (!validationResult.success) {
+        // Log warning but still include the clipping (lenient mode)
+        const issues = validationResult.error.issues
+          .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
+          .join(", ");
+        warnings.push(`Clipping ${i + 1} validation warning: ${issues}`);
+        // Still add the original clipping - the parser already produces valid structure
+        validatedClippings.push(clipping);
+      } else {
+        validatedClippings.push(clipping);
+      }
+    }
+
     const meta = {
       detectedLanguage: parseResult.meta.detectedLanguage,
       fileSize: parseResult.meta.fileSize,
@@ -44,10 +74,6 @@ export class TxtImporter extends BaseImporter {
       parsedBlocks: parseResult.meta.parsedBlocks,
     };
 
-    return this.success(
-      parseResult.clippings,
-      parseResult.warnings.map((w) => w.message),
-      meta,
-    );
+    return this.success(validatedClippings, warnings, meta);
   }
 }

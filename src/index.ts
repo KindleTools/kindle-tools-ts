@@ -26,7 +26,6 @@ export type {
   ExporterOptions,
   ExportResult,
   FolderStructure,
-  TagCase,
 } from "./exporters/index.js";
 
 // Exporters
@@ -52,26 +51,48 @@ export {
   JsonImporter,
   TxtImporter,
 } from "./importers/index.js";
+// New Zod-inferred types (for users who prefer Zod validation)
+export type {
+  ClippingImport,
+  ClippingSource,
+  ClippingStrict,
+  ClippingsExport,
+  ImportedData,
+  SuspiciousReason,
+} from "./schemas/clipping.schema.js";
 // Zod Schemas (for external validation)
 export {
   ClippingImportSchema,
   ClippingLocationObjectSchema,
   ClippingLocationSchema,
   ClippingSourceSchema,
+  ClippingStrictSchema,
   ClippingsExportSchema,
   ClippingTypeSchema,
   ImportedDataSchema,
   SupportedLanguageSchema,
   SuspiciousReasonSchema,
 } from "./schemas/clipping.schema.js";
+// New Zod-inferred types from config schemas
+export type {
+  ClippingTypeFilter,
+  ConfigFile,
+  ConfigFileInput,
+  GeoLocation,
+  ParseOptionsInput,
+} from "./schemas/config.schema.js";
 export {
   ConfigFileSchema,
+  ConfigFolderStructureSchema,
   GeoLocationSchema,
   ParseOptionsSchema,
+  parseConfigFile,
   parseParseOptions,
+  safeParseConfigFile,
   safeParseParseOptions,
   TagCaseSchema,
 } from "./schemas/config.schema.js";
+
 export {
   AuthorCaseSchema,
   ExporterOptionsSchema,
@@ -80,13 +101,14 @@ export {
   safeParseExporterOptions,
   TemplatePresetSchema,
 } from "./schemas/exporter.schema.js";
-// Types
+
+// Legacy Types (from ./types/ for backward compatibility)
 export type {
   Clipping,
   ClippingLocation,
   ClippingType,
 } from "./types/clipping.js";
-export type { ParseOptions, ParseResult, ProcessOptions } from "./types/config.js";
+export type { ParseOptions, ParseResult, ProcessOptions, TagCase } from "./types/config.js";
 export type { SupportedLanguage } from "./types/language.js";
 
 // Removed internal file system types from public API

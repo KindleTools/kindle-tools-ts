@@ -8,6 +8,7 @@ import {
   ClippingLocationObjectSchema,
   ClippingLocationSchema,
   ClippingSourceSchema,
+  ClippingStrictSchema,
   ClippingsExportSchema,
   ClippingTypeSchema,
   ImportedDataSchema,
@@ -18,7 +19,9 @@ import {
   ConfigFileSchema,
   GeoLocationSchema,
   ParseOptionsSchema,
+  parseConfigFile,
   parseParseOptions,
+  safeParseConfigFile,
   safeParseParseOptions,
   TagCaseSchema,
 } from "#schemas/config.schema.js";
@@ -236,6 +239,61 @@ describe("Clipping Schemas", () => {
       expect(() => ImportedDataSchema.parse({})).toThrow();
     });
   });
+
+  describe("ClippingStrictSchema", () => {
+    const validClipping = {
+      id: "test123",
+      title: "Test Book",
+      titleRaw: "Test Book (Edition)",
+      author: "Test Author",
+      authorRaw: "Author, Test",
+      content: "Some highlighted content",
+      contentRaw: "Some highlighted content",
+      type: "highlight",
+      page: 42,
+      location: { raw: "100-105", start: 100, end: 105 },
+      date: new Date("2024-01-01"),
+      dateRaw: "January 1, 2024",
+      isLimitReached: false,
+      isEmpty: false,
+      language: "en",
+      source: "kindle",
+      wordCount: 3,
+      charCount: 25,
+      blockIndex: 0,
+    };
+
+    it("should accept valid complete clipping", () => {
+      const result = ClippingStrictSchema.parse(validClipping);
+      expect(result.id).toBe("test123");
+      expect(result.title).toBe("Test Book");
+    });
+
+    it("should reject missing required fields", () => {
+      expect(() => ClippingStrictSchema.parse({})).toThrow();
+      expect(() => ClippingStrictSchema.parse({ title: "Book" })).toThrow();
+    });
+
+    it("should reject empty id", () => {
+      expect(() => ClippingStrictSchema.parse({ ...validClipping, id: "" })).toThrow();
+    });
+
+    it("should reject empty title", () => {
+      expect(() => ClippingStrictSchema.parse({ ...validClipping, title: "" })).toThrow();
+    });
+
+    it("should accept optional linking fields", () => {
+      const withLinks = {
+        ...validClipping,
+        linkedNoteId: "note123",
+        note: "My note",
+        tags: ["tag1", "tag2"],
+      };
+      const result = ClippingStrictSchema.parse(withLinks);
+      expect(result.linkedNoteId).toBe("note123");
+      expect(result.tags).toEqual(["tag1", "tag2"]);
+    });
+  });
 });
 
 describe("Config Schemas", () => {
@@ -373,6 +431,41 @@ describe("Config Schemas", () => {
 
     it("should reject invalid folderStructure", () => {
       expect(() => ConfigFileSchema.parse({ folderStructure: "invalid" })).toThrow();
+    });
+
+    it("should accept by-author-book folderStructure", () => {
+      const result = ConfigFileSchema.parse({ folderStructure: "by-author-book" });
+      expect(result.folderStructure).toBe("by-author-book");
+    });
+  });
+
+  describe("parseConfigFile helper", () => {
+    it("should parse valid config file", () => {
+      const result = parseConfigFile({
+        format: "joplin",
+        extractTags: true,
+      });
+      expect(result.format).toBe("joplin");
+      expect(result.extractTags).toBe(true);
+    });
+
+    it("should throw on invalid config", () => {
+      expect(() => parseConfigFile({ folderStructure: "bad" })).toThrow();
+    });
+  });
+
+  describe("safeParseConfigFile helper", () => {
+    it("should return success for valid config", () => {
+      const result = safeParseConfigFile({ format: "html" });
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.format).toBe("html");
+      }
+    });
+
+    it("should return error for invalid config", () => {
+      const result = safeParseConfigFile({ folderStructure: "wrong" });
+      expect(result.success).toBe(false);
     });
   });
 });
