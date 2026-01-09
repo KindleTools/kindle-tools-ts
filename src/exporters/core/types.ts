@@ -94,6 +94,12 @@ export interface ExporterOptions {
    * Creator/Author attribution for the export.
    */
   creator?: string;
+
+  /**
+   * Allow additional exporter-specific options.
+   * Each exporter may define its own additional options (e.g., folder, useCallouts, tags).
+   */
+  [key: string]: unknown;
 }
 
 /**

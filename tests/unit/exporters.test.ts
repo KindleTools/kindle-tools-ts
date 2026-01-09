@@ -39,7 +39,7 @@ describe("JsonExporter", () => {
     });
 
     it("should include clippings array and meta", async () => {
-      const result = await exporter.export(SAMPLE_CLIPPINGS);
+      const result = await exporter.export(SAMPLE_CLIPPINGS, { includeStats: true });
       const data = JSON.parse(result.output as string);
 
       expect(data.clippings).toBeDefined();
@@ -48,7 +48,10 @@ describe("JsonExporter", () => {
     });
 
     it("should group by book when option is set", async () => {
-      const result = await exporter.export(SAMPLE_CLIPPINGS, { groupByBook: true });
+      const result = await exporter.export(SAMPLE_CLIPPINGS, {
+        groupByBook: true,
+        includeStats: true,
+      });
       const data = JSON.parse(result.output as string);
 
       expect(data.books).toBeDefined();
@@ -83,7 +86,7 @@ describe("JsonExporter", () => {
     });
 
     it("should handle empty clippings array", async () => {
-      const result = await exporter.export(EMPTY_CLIPPINGS);
+      const result = await exporter.export(EMPTY_CLIPPINGS, { includeStats: true });
       const data = JSON.parse(result.output as string);
 
       expect(result.success).toBe(true);

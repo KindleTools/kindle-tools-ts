@@ -140,49 +140,53 @@ export const CustomTemplatesSchema = z.object({
  * });
  * ```
  */
-export const ExporterOptionsSchema = z.object({
-  // Output
-  outputPath: z
-    .string()
-    .optional()
-    .describe("Output file path or directory for multi-file exports"),
+export const ExporterOptionsSchema = z
+  .object({
+    // Output
+    outputPath: z
+      .string()
+      .optional()
+      .describe("Output file path or directory for multi-file exports"),
 
-  // Grouping
-  groupByBook: z.boolean().default(true).describe("Group clippings by book in output"),
+    // Grouping
+    groupByBook: z.boolean().default(false).describe("Group clippings by book in output"),
 
-  // Content options
-  includeStats: z.boolean().default(false).describe("Include statistics section in output"),
-  includeRaw: z
-    .boolean()
-    .default(false)
-    .describe("Include raw/original content alongside cleaned content"),
-  includeClippingTags: z
-    .boolean()
-    .default(true)
-    .describe("Include extracted tags in clipping output"),
+    // Content options
+    includeStats: z.boolean().default(false).describe("Include statistics section in output"),
+    includeRaw: z
+      .boolean()
+      .default(false)
+      .describe("Include raw/original content alongside cleaned content"),
+    includeClippingTags: z
+      .boolean()
+      .default(true)
+      .describe("Include extracted tags in clipping output"),
 
-  // Templates
-  templatePreset: TemplatePresetSchema.optional().describe("Predefined template style"),
-  customTemplates: CustomTemplatesSchema.optional().describe("Custom Handlebars templates"),
-  /** @deprecated Use templatePreset or customTemplates instead */
-  template: z.string().optional().describe("Deprecated: Use templatePreset or customTemplates"),
+    // Templates
+    templatePreset: TemplatePresetSchema.optional().describe("Predefined template style"),
+    customTemplates: CustomTemplatesSchema.optional().describe("Custom Handlebars templates"),
+    /** @deprecated Use templatePreset or customTemplates instead */
+    template: z.string().optional().describe("Deprecated: Use templatePreset or customTemplates"),
 
-  // Formatting
-  pretty: z.boolean().default(true).describe("Pretty-print output (indentation, spacing)"),
+    // Formatting
+    pretty: z.boolean().default(true).describe("Pretty-print output (indentation, spacing)"),
 
-  // Folder structure (for multi-file exports)
-  folderStructure: FolderStructureSchema.default("by-author").describe(
-    "Folder hierarchy for multi-file exports: flat, by-book, by-author, by-author-book",
-  ),
-  authorCase: AuthorCaseSchema.default("uppercase").describe(
-    "Case transformation for author folder names",
-  ),
+    // Folder structure (for multi-file exports)
+    folderStructure: FolderStructureSchema.default("by-author").describe(
+      "Folder hierarchy for multi-file exports: flat, by-book, by-author, by-author-book",
+    ),
+    authorCase: AuthorCaseSchema.default("uppercase").describe(
+      "Case transformation for author folder names",
+    ),
 
-  // Metadata
-  title: z.string().optional().describe("Title for the export (HTML page title, etc.)"),
-  notebookName: z.string().optional().describe("Notebook name for Joplin exports"),
-  creator: z.string().optional().describe("Creator/author attribution for the export"),
-});
+    // Metadata
+    title: z.string().optional().describe("Title for the export (HTML page title, etc.)"),
+    notebookName: z.string().optional().describe("Notebook name for Joplin exports"),
+    creator: z.string().optional().describe("Creator/author attribution for the export"),
+  })
+  // Allow additional exporter-specific options to pass through
+  // (e.g., folder, useCallouts, wikilinks for Obsidian; tags, geoLocation for Joplin; etc.)
+  .passthrough();
 
 /**
  * Inferred input type from ExporterOptionsSchema (before defaults).

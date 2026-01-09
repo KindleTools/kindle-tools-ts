@@ -530,7 +530,7 @@ describe("Exporter Schemas", () => {
   describe("ExporterOptionsSchema", () => {
     it("should apply defaults for empty input", () => {
       const result = ExporterOptionsSchema.parse({});
-      expect(result.groupByBook).toBe(true);
+      expect(result.groupByBook).toBe(false);
       expect(result.includeStats).toBe(false);
       expect(result.includeRaw).toBe(false);
       expect(result.includeClippingTags).toBe(true);

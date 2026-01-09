@@ -125,6 +125,7 @@ describe("Integration: Full Pipeline", () => {
       const exporter = new JsonExporter();
       const exportResult = await exporter.export(processResult.clippings, {
         groupByBook: true,
+        includeStats: true,
         pretty: true,
       });
 
