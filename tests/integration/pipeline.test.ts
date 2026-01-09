@@ -15,6 +15,7 @@ import { ObsidianExporter } from "#exporters/formats/obsidian.exporter.js";
 import type { ExportedFile } from "#exporters/index.js";
 import { parse } from "#importers/formats/txt/parser.js";
 import { SAMPLE_CLIPPINGS_EN } from "../fixtures/sample-clippings.js";
+import { getExportSuccess } from "../helpers/result-helpers.js";
 
 describe("Integration: Full Pipeline", () => {
   describe("Parse → Export", () => {
@@ -26,9 +27,10 @@ describe("Integration: Full Pipeline", () => {
       // Export
       const exporter = new JsonExporter();
       const exportResult = await exporter.export(parseResult.clippings);
+      const { output } = getExportSuccess(exportResult);
 
-      expect(exportResult.success).toBe(true);
-      const data = JSON.parse(exportResult.output as string);
+      expect(exportResult.isOk()).toBe(true);
+      const data = JSON.parse(output as string);
       expect(data.clippings.length).toBe(5);
     });
 
@@ -36,9 +38,10 @@ describe("Integration: Full Pipeline", () => {
       const parseResult = parse(SAMPLE_CLIPPINGS_EN);
       const exporter = new CsvExporter();
       const exportResult = await exporter.export(parseResult.clippings);
+      const { output } = getExportSuccess(exportResult);
 
-      expect(exportResult.success).toBe(true);
-      const lines = (exportResult.output as string).split("\n").filter((l) => l.trim());
+      expect(exportResult.isOk()).toBe(true);
+      const lines = (output as string).split("\n").filter((l) => l.trim());
       expect(lines.length).toBe(6); // Header + 5 data rows
     });
 
@@ -46,40 +49,44 @@ describe("Integration: Full Pipeline", () => {
       const parseResult = parse(SAMPLE_CLIPPINGS_EN);
       const exporter = new MarkdownExporter();
       const exportResult = await exporter.export(parseResult.clippings);
+      const { output } = getExportSuccess(exportResult);
 
-      expect(exportResult.success).toBe(true);
-      expect(exportResult.output).toContain("# Kindle Highlights");
-      expect(exportResult.output).toContain("The Great Gatsby");
+      expect(exportResult.isOk()).toBe(true);
+      expect(output).toContain("# Kindle Highlights");
+      expect(output).toContain("The Great Gatsby");
     });
 
     it("should parse and export to Obsidian", async () => {
       const parseResult = parse(SAMPLE_CLIPPINGS_EN);
       const exporter = new ObsidianExporter();
       const exportResult = await exporter.export(parseResult.clippings);
+      const { output, files } = getExportSuccess(exportResult);
 
-      expect(exportResult.success).toBe(true);
-      expect(exportResult.files?.length).toBe(3); // 3 books
-      expect(exportResult.output).toContain("---"); // YAML frontmatter
+      expect(exportResult.isOk()).toBe(true);
+      expect(files?.length).toBe(3); // 3 books
+      expect(output).toContain("---"); // YAML frontmatter
     });
 
     it("should parse and export to Joplin", async () => {
       const parseResult = parse(SAMPLE_CLIPPINGS_EN);
       const exporter = new JoplinExporter();
       const exportResult = await exporter.export(parseResult.clippings);
+      const { files } = getExportSuccess(exportResult);
 
-      expect(exportResult.success).toBe(true);
-      expect(exportResult.files).toBeDefined();
-      expect(exportResult.files?.length).toBeGreaterThan(0);
+      expect(exportResult.isOk()).toBe(true);
+      expect(files).toBeDefined();
+      expect(files?.length).toBeGreaterThan(0);
     });
 
     it("should parse and export to HTML", async () => {
       const parseResult = parse(SAMPLE_CLIPPINGS_EN);
       const exporter = new HtmlExporter();
       const exportResult = await exporter.export(parseResult.clippings);
+      const { output } = getExportSuccess(exportResult);
 
-      expect(exportResult.success).toBe(true);
-      expect(exportResult.output).toContain("<!DOCTYPE html>");
-      expect(exportResult.output).toContain("The Great Gatsby");
+      expect(exportResult.isOk()).toBe(true);
+      expect(output).toContain("<!DOCTYPE html>");
+      expect(output).toContain("The Great Gatsby");
     });
   });
 
@@ -128,10 +135,11 @@ describe("Integration: Full Pipeline", () => {
         includeStats: true,
         pretty: true,
       });
+      const { output } = getExportSuccess(exportResult);
 
-      expect(exportResult.success).toBe(true);
+      expect(exportResult.isOk()).toBe(true);
 
-      const data = JSON.parse(exportResult.output as string);
+      const data = JSON.parse(output as string);
       expect(data.books).toBeDefined();
       expect(data.meta.totalBooks).toBeGreaterThan(0);
     });
@@ -154,10 +162,12 @@ describe("Integration: Full Pipeline", () => {
 
       const result1 = await exporter.export(parseResult.clippings);
       const result2 = await exporter.export(parseResult.clippings);
+      const success1 = getExportSuccess(result1);
+      const success2 = getExportSuccess(result2);
 
       // File paths (which contain IDs) should match
-      expect(result1.files?.map((f: ExportedFile) => f.path).sort()).toEqual(
-        result2.files?.map((f: ExportedFile) => f.path).sort(),
+      expect(success1.files?.map((f: ExportedFile) => f.path).sort()).toEqual(
+        success2.files?.map((f: ExportedFile) => f.path).sort(),
       );
     });
   });
@@ -168,7 +178,8 @@ describe("Integration: Full Pipeline", () => {
       const exporter = new JsonExporter();
 
       const exportResult = await exporter.export(parseResult.clippings, { includeRaw: true });
-      const data = JSON.parse(exportResult.output as string);
+      const { output } = getExportSuccess(exportResult);
+      const data = JSON.parse(output as string);
 
       // Verify all clippings have essential fields
       for (const clipping of data.clippings) {
@@ -193,9 +204,10 @@ describe("Integration: Full Pipeline", () => {
     it("should export empty array without error", async () => {
       const exporter = new JsonExporter();
       const result = await exporter.export([]);
+      const { output } = getExportSuccess(result);
 
-      expect(result.success).toBe(true);
-      const data = JSON.parse(result.output as string);
+      expect(result.isOk()).toBe(true);
+      const data = JSON.parse(output as string);
       expect(data.clippings).toHaveLength(0);
     });
   });
@@ -223,9 +235,10 @@ Habe nun, ach! Philosophie, Juristerei und Medizin
 
     const exporter = new MarkdownExporter();
     const exportResult = await exporter.export(parseResult.clippings);
+    const { output } = getExportSuccess(exportResult);
 
-    expect(exportResult.success).toBe(true);
-    expect(exportResult.output).toContain("Don Quijote de la Mancha");
+    expect(exportResult.isOk()).toBe(true);
+    expect(output).toContain("Don Quijote de la Mancha");
   });
 
   it("should parse German clippings and export", async () => {
@@ -237,9 +250,10 @@ Habe nun, ach! Philosophie, Juristerei und Medizin
 
     const exporter = new HtmlExporter();
     const exportResult = await exporter.export(parseResult.clippings);
+    const { output } = getExportSuccess(exportResult);
 
-    expect(exportResult.success).toBe(true);
-    expect(exportResult.output).toContain("Faust");
-    expect(exportResult.output).toContain("Johann Wolfgang von Goethe");
+    expect(exportResult.isOk()).toBe(true);
+    expect(output).toContain("Faust");
+    expect(output).toContain("Johann Wolfgang von Goethe");
   });
 });

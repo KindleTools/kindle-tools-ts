@@ -39,7 +39,6 @@ export class TxtImporter extends BaseImporter {
       return this.error(
         new Error("No valid clippings found in TXT file"),
         parseResult.warnings.map((w) => w.message),
-        "PARSE_ERROR",
       );
     }
 

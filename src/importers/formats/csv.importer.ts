@@ -8,7 +8,7 @@
 
 import { z } from "zod";
 import type { Clipping, ClippingType } from "#app-types/clipping.js";
-import type { ImportResult } from "../core/types.js";
+import { type ImportResult, importEmptyFile, importInvalidFormat, importParseError } from "#errors";
 import { BaseImporter } from "../shared/base-importer.js";
 import { generateImportId, parseLocationString } from "../shared/index.js";
 
@@ -106,13 +106,13 @@ export class CsvImporter extends BaseImporter {
     const rows = parseCSV(content);
 
     if (rows.length < 2) {
-      return this.error(new Error("CSV file has no data rows"), warnings, "EMPTY_FILE");
+      return importEmptyFile("CSV file has no data rows");
     }
 
     // Parse header row
     const headerRow = rows[0];
     if (!headerRow) {
-      return this.error(new Error("CSV file has no header row"), warnings, "INVALID_FORMAT");
+      return importInvalidFormat("CSV file has no header row");
     }
 
     const headers = headerRow.map((h) => h.toLowerCase().trim());
@@ -131,11 +131,7 @@ export class CsvImporter extends BaseImporter {
     const hasTitle = "title" in colIndex;
 
     if (!hasContent && !hasTitle) {
-      return this.error(
-        new Error("CSV must have at least 'content' or 'title' column"),
-        warnings,
-        "INVALID_FORMAT",
-      );
+      return importInvalidFormat("CSV must have at least 'content' or 'title' column");
     }
 
     const clippings: Clipping[] = [];
@@ -235,7 +231,7 @@ export class CsvImporter extends BaseImporter {
     }
 
     if (clippings.length === 0) {
-      return this.error(new Error("No valid clippings found in CSV file"), warnings, "PARSE_ERROR");
+      return importParseError("No valid clippings found in CSV file", { warnings });
     }
 
     return this.success(clippings, warnings);

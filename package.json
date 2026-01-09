@@ -60,7 +60,9 @@
     "#utils/system/*.js": "./src/utils/system/*.ts",
     "#app-types/*.js": "./src/types/*.ts",
     "#templates/*.js": "./src/templates/*.ts",
-    "#domain/*.js": "./src/domain/*.ts"
+    "#domain/*.js": "./src/domain/*.ts",
+    "#errors": "./src/errors/index.ts",
+    "#errors/*.js": "./src/errors/*.ts"
   },
   "files": [
     "dist",

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Clipping } from "#app-types/clipping.js";
 import { MarkdownExporter } from "#exporters/formats/markdown.exporter.js";
+import { getExportSuccess, unwrapErr } from "../helpers/result-helpers.js";
 
 // Helper to create a mock clipping
 function createMockClipping(overrides: Partial<Clipping> = {}): Clipping {
@@ -35,11 +36,12 @@ describe("MarkdownExporter", () => {
       const clippings = [createMockClipping()];
 
       const result = await exporter.export(clippings);
+      const { output } = getExportSuccess(result);
 
-      expect(result.success).toBe(true);
-      expect(result.output).toContain("Test Book");
-      expect(result.output).toContain("Test Author");
-      expect(result.output).toContain("This is a test highlight content");
+      expect(result.isOk()).toBe(true);
+      expect(output).toContain("Test Book");
+      expect(output).toContain("Test Author");
+      expect(output).toContain("This is a test highlight content");
     });
 
     it("should have correct name and extension", () => {
@@ -54,7 +56,7 @@ describe("MarkdownExporter", () => {
 
       const result = await exporter.export([]);
 
-      expect(result.success).toBe(true);
+      expect(result.isOk()).toBe(true);
     });
 
     it("should export multiple clippings from same book", async () => {
@@ -66,11 +68,12 @@ describe("MarkdownExporter", () => {
       ];
 
       const result = await exporter.export(clippings);
+      const { output } = getExportSuccess(result);
 
-      expect(result.success).toBe(true);
-      expect(result.output).toContain("First highlight");
-      expect(result.output).toContain("Second highlight");
-      expect(result.output).toContain("A note");
+      expect(result.isOk()).toBe(true);
+      expect(output).toContain("First highlight");
+      expect(output).toContain("Second highlight");
+      expect(output).toContain("A note");
     });
   });
 
@@ -86,12 +89,13 @@ describe("MarkdownExporter", () => {
         groupByBook: true,
         folderStructure: "flat",
       });
+      const { files } = getExportSuccess(result);
 
-      expect(result.success).toBe(true);
-      expect(result.files).toBeDefined();
-      expect(result.files?.length).toBe(2);
+      expect(result.isOk()).toBe(true);
+      expect(files).toBeDefined();
+      expect(files?.length).toBe(2);
 
-      const filePaths = result.files?.map((f) => f.path);
+      const filePaths = files?.map((f) => f.path);
       expect(filePaths).toContain("Book One.md");
       expect(filePaths).toContain("Book Two.md");
     });
@@ -104,12 +108,13 @@ describe("MarkdownExporter", () => {
         groupByBook: true,
         folderStructure: "flat",
       });
+      const { files } = getExportSuccess(result);
 
-      expect(result.success).toBe(true);
-      expect(result.files?.[0].path).not.toContain(":");
-      expect(result.files?.[0].path).not.toContain("<");
-      expect(result.files?.[0].path).not.toContain(">");
-      expect(result.files?.[0].path).not.toContain('"');
+      expect(result.isOk()).toBe(true);
+      expect(files?.[0]?.path).not.toContain(":");
+      expect(files?.[0]?.path).not.toContain("<");
+      expect(files?.[0]?.path).not.toContain(">");
+      expect(files?.[0]?.path).not.toContain('"');
     });
   });
 
@@ -119,9 +124,10 @@ describe("MarkdownExporter", () => {
       const clippings = [createMockClipping()];
 
       const result = await exporter.export(clippings);
+      const { output } = getExportSuccess(result);
 
-      expect(result.success).toBe(true);
-      expect(result.output).toContain(">"); // Default uses blockquote
+      expect(result.isOk()).toBe(true);
+      expect(output).toContain(">"); // Default uses blockquote
     });
 
     it("should use minimal preset", async () => {
@@ -129,9 +135,10 @@ describe("MarkdownExporter", () => {
       const clippings = [createMockClipping()];
 
       const result = await exporter.export(clippings, { templatePreset: "minimal" });
+      const { output } = getExportSuccess(result);
 
-      expect(result.success).toBe(true);
-      expect(result.output).toContain("This is a test highlight content");
+      expect(result.isOk()).toBe(true);
+      expect(output).toContain("This is a test highlight content");
     });
 
     it("should use obsidian preset with YAML frontmatter", async () => {
@@ -142,11 +149,12 @@ describe("MarkdownExporter", () => {
         templatePreset: "obsidian",
         groupByBook: true,
       });
+      const { files } = getExportSuccess(result);
 
-      expect(result.success).toBe(true);
-      expect(result.files?.[0].content).toContain("---");
-      expect(result.files?.[0].content).toContain("title:");
-      expect(result.files?.[0].content).toContain("author:");
+      expect(result.isOk()).toBe(true);
+      expect(files?.[0]?.content).toContain("---");
+      expect(files?.[0]?.content).toContain("title:");
+      expect(files?.[0]?.content).toContain("author:");
     });
 
     it("should use notion preset", async () => {
@@ -157,11 +165,12 @@ describe("MarkdownExporter", () => {
         templatePreset: "notion",
         groupByBook: true,
       });
+      const { files } = getExportSuccess(result);
 
-      expect(result.success).toBe(true);
-      expect(result.files?.[0].content).toContain("📚");
-      expect(result.files?.[0].content).toContain("Property");
-      expect(result.files?.[0].content).toContain("Value");
+      expect(result.isOk()).toBe(true);
+      expect(files?.[0]?.content).toContain("📚");
+      expect(files?.[0]?.content).toContain("Property");
+      expect(files?.[0]?.content).toContain("Value");
     });
 
     it("should use academic preset", async () => {
@@ -172,10 +181,11 @@ describe("MarkdownExporter", () => {
         templatePreset: "academic",
         groupByBook: true,
       });
+      const { files } = getExportSuccess(result);
 
-      expect(result.success).toBe(true);
-      expect(result.files?.[0].content).toContain("Annotated Passages");
-      expect(result.files?.[0].content).toContain("References");
+      expect(result.isOk()).toBe(true);
+      expect(files?.[0]?.content).toContain("Annotated Passages");
+      expect(files?.[0]?.content).toContain("References");
     });
   });
 
@@ -189,11 +199,12 @@ describe("MarkdownExporter", () => {
           clipping: "CUSTOM: {{content}} by {{author}}",
         },
       });
+      const { output } = getExportSuccess(result);
 
-      expect(result.success).toBe(true);
-      expect(result.output).toContain("CUSTOM:");
-      expect(result.output).toContain("This is a test highlight content");
-      expect(result.output).toContain("by Test Author");
+      expect(result.isOk()).toBe(true);
+      expect(output).toContain("CUSTOM:");
+      expect(output).toContain("This is a test highlight content");
+      expect(output).toContain("by Test Author");
     });
 
     it("should use custom book template", async () => {
@@ -207,9 +218,10 @@ describe("MarkdownExporter", () => {
           book: "BOOK: {{title}}\n{{#each clippings}}{{> clipping this}}\n{{/each}}",
         },
       });
+      const { files } = getExportSuccess(result);
 
-      expect(result.success).toBe(true);
-      expect(result.files?.[0].content).toContain("BOOK: Test Book");
+      expect(result.isOk()).toBe(true);
+      expect(files?.[0]?.content).toContain("BOOK: Test Book");
     });
 
     it("should handle notes and tags in custom templates", async () => {
@@ -226,10 +238,11 @@ describe("MarkdownExporter", () => {
           clipping: "{{content}} | Note: {{note}} | Tags: {{tagsString}}",
         },
       });
+      const { output } = getExportSuccess(result);
 
-      expect(result.success).toBe(true);
-      expect(result.output).toContain("An important note");
-      expect(result.output).toContain("important, review");
+      expect(result.isOk()).toBe(true);
+      expect(output).toContain("An important note");
+      expect(output).toContain("important, review");
     });
 
     it("should prefer customTemplates over templatePreset", async () => {
@@ -242,13 +255,14 @@ describe("MarkdownExporter", () => {
           clipping: "CUSTOM_WINS: {{content}}",
         },
       });
+      const { output } = getExportSuccess(result);
 
-      expect(result.success).toBe(true);
+      expect(result.isOk()).toBe(true);
       // Custom clipping template should be used
-      expect(result.output).toContain("CUSTOM_WINS:");
+      expect(output).toContain("CUSTOM_WINS:");
       // Default export template uses --- as separators, that's expected
       // What matters is that our custom clipping template was used
-      expect(result.output).toContain("CUSTOM_WINS: This is a test highlight content");
+      expect(output).toContain("CUSTOM_WINS: This is a test highlight content");
     });
   });
 
@@ -304,8 +318,9 @@ describe("MarkdownExporter", () => {
         },
       });
 
-      expect(result.success).toBe(false);
-      expect(result.error).toBeDefined();
+      expect(result.isErr()).toBe(true);
+      const error = unwrapErr(result);
+      expect(error).toBeDefined();
     });
   });
 
@@ -320,9 +335,10 @@ describe("MarkdownExporter", () => {
       ];
 
       const result = await exporter.export(clippings, { groupByBook: true });
+      const { files } = getExportSuccess(result);
 
-      expect(result.success).toBe(true);
-      const content = result.files?.[0].content ?? "";
+      expect(result.isOk()).toBe(true);
+      const content = (files?.[0]?.content as string) ?? "";
       expect(content).toContain("Highlight 1");
       expect(content).toContain("Highlight 2");
       expect(content).toContain("My thought");
@@ -342,12 +358,13 @@ describe("MarkdownExporter", () => {
         groupByBook: true,
         folderStructure: "flat",
       });
+      const { files } = getExportSuccess(result);
 
-      expect(result.success).toBe(true);
-      expect(result.files?.length).toBe(2);
+      expect(result.isOk()).toBe(true);
+      expect(files?.length).toBe(2);
 
-      const bookA = result.files?.find((f) => f.path === "Book A.md");
-      const bookB = result.files?.find((f) => f.path === "Book B.md");
+      const bookA = files?.find((f) => f.path === "Book A.md");
+      const bookB = files?.find((f) => f.path === "Book B.md");
 
       expect(bookA?.content).toContain("From A");
       expect(bookA?.content).toContain("Also from A");

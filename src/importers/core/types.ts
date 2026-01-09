@@ -4,19 +4,24 @@
  * @packageDocumentation
  */
 
-/**
- * Result of importing clippings from a file.
- */
-import type { ImportResultAsyncType, ImportResultType } from "#app-types/result.js";
+// Re-export all error types and result factories from centralized errors module
+export type {
+  ImportError,
+  ImportResult,
+  ImportResultAsync,
+  ImportSuccess,
+  ValidationIssue,
+} from "#errors";
 
-// Re-export result types for consumers
-export * from "#app-types/result.js";
-
-/**
- * Result of importing clippings from a file.
- */
-export type ImportResult = ImportResultType;
-export type ImportResultAsync = ImportResultAsyncType;
+export {
+  err,
+  importEmptyFile,
+  importInvalidFormat,
+  importParseError,
+  importSuccess,
+  importUnknownError,
+  ok,
+} from "#errors";
 
 /**
  * Interface for clipping importers.
@@ -34,5 +39,5 @@ export interface Importer {
    * @param content - File content as string
    * @returns Import result with clippings
    */
-  import(content: string): ImportResultAsync;
+  import(content: string): import("#errors").ImportResultAsync;
 }

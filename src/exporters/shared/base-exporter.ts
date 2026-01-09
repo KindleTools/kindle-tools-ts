@@ -2,7 +2,7 @@
  * Base exporter abstract class.
  *
  * Provides common functionality for all exporters:
- * - Standardized error handling
+ * - Standardized error handling with neverthrow Result
  * - Options validation with Zod
  * - Access to shared utility functions
  * - Template method pattern for export operations
@@ -14,20 +14,20 @@
  */
 
 import type { Clipping } from "#app-types/clipping.js";
+import {
+  type ExportedFile,
+  type ExportResult,
+  exportInvalidOptions,
+  exportSuccess,
+  exportUnknownError,
+  zodIssuesToValidationIssues,
+} from "#errors";
 import { type ExporterOptionsParsed, ExporterOptionsSchema } from "#schemas/exporter.schema.js";
 import { formatZodError } from "#utils/system/errors.js";
-import type {
-  AuthorCase,
-  ExportedFile,
-  Exporter,
-  ExporterOptions,
-  ExportResult,
-} from "../core/types.js";
+import type { AuthorCase, Exporter, ExporterOptions, FolderStructure } from "../core/types.js";
 import {
   applyCase as applyCaseUtil,
   collectAllTags as collectAllTagsUtil,
-  createErrorResult,
-  createSuccessResult,
   DEFAULT_EXPORT_TITLE,
   DEFAULT_UNKNOWN_AUTHOR,
   escapeCSV as escapeCSVUtil,
@@ -75,7 +75,7 @@ export abstract class BaseExporter implements Exporter {
    *
    * @param clippings - Array of clippings to export
    * @param options - Export options (will be validated and defaults applied)
-   * @returns Export result
+   * @returns Export result wrapped in Result type
    */
   async export(clippings: Clipping[], options?: ExporterOptions): Promise<ExportResult> {
     try {
@@ -84,7 +84,10 @@ export abstract class BaseExporter implements Exporter {
 
       if (!parseResult.success) {
         const errorMessage = `Invalid exporter options:\n${formatZodError(parseResult.error)}`;
-        return this.error(new Error(errorMessage));
+        return exportInvalidOptions(
+          errorMessage,
+          zodIssuesToValidationIssues(parseResult.error.issues),
+        );
       }
 
       // Options are now validated with defaults applied
@@ -116,14 +119,14 @@ export abstract class BaseExporter implements Exporter {
    * Create a successful export result.
    */
   protected success(output: string | Uint8Array, files?: ExportedFile[]): ExportResult {
-    return createSuccessResult(output, files);
+    return exportSuccess(output, files);
   }
 
   /**
    * Create an error export result.
    */
   protected error(err: unknown): ExportResult {
-    return createErrorResult(err);
+    return exportUnknownError(err);
   }
 
   // ========================
@@ -172,7 +175,7 @@ export abstract class BaseExporter implements Exporter {
     baseFolder: string,
     author: string,
     title: string,
-    structure: import("../core/types.js").FolderStructure,
+    structure: FolderStructure,
     extension?: string,
   ): string {
     return generateFilePathUtil(baseFolder, author, title, structure, extension || this.extension);

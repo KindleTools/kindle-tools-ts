@@ -6,10 +6,8 @@
  * @packageDocumentation
  */
 
-import { err, ok } from "neverthrow";
 import type { Clipping, ClippingLocation } from "#app-types/clipping.js";
-import { toError } from "#utils/system/errors.js";
-import type { ImportError, ImportResult, ImportSuccess } from "../core/types.js";
+import { type ImportResult, type ImportSuccess, importSuccess, importUnknownError } from "#errors";
 
 /**
  * Generate a unique ID for imported clippings that don't have one.
@@ -55,16 +53,7 @@ export function createSuccessImport(
   warnings: string[] = [],
   meta?: { [key: string]: unknown },
 ): ImportResult {
-  const successData: ImportSuccess = {
-    clippings,
-    warnings,
-  };
-
-  if (meta) {
-    successData.meta = meta;
-  }
-
-  return ok(successData);
+  return importSuccess(clippings, warnings, meta as ImportSuccess["meta"]);
 }
 
 /**
@@ -74,16 +63,6 @@ export function createSuccessImport(
  * @param warnings - Optional warnings collected before failure
  * @returns ImportResult
  */
-export function createErrorImport(
-  error: unknown,
-  warnings: string[] = [],
-  code: ImportError["code"] = "UNKNOWN_ERROR",
-): ImportResult {
-  const errObj = toError(error);
-  return err({
-    code,
-    message: errObj.message,
-    originalError: error,
-    warnings,
-  });
+export function createErrorImport(error: unknown, warnings: string[] = []): ImportResult {
+  return importUnknownError(error, warnings);
 }

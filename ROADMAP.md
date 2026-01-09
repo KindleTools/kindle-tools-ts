@@ -72,6 +72,14 @@ await importer.import(content).match(
 - ✅ ValidationErrorDetail para errores de Zod tipados
 - ✅ Pattern matching con `.match()` en CLI y GUI
 - ✅ Warnings incluidos en errores para contexto
+- ✅ **Sistema de errores centralizado en `src/errors/`:**
+  - `codes.ts` - Códigos de error con patrón `DOMAIN_ERROR_TYPE`
+  - `types.ts` - Discriminated unions type-safe para cada dominio
+  - `result.ts` - Factory functions para crear Results consistentes
+  - `index.ts` - Exportación unificada vía `#errors`
+- ✅ Unificación: Importers y Exporters usan el mismo sistema
+- ✅ `ExportResult` ahora es `Result<ExportSuccess, ExportError>` (neverthrow)
+
 
 ---
 
@@ -242,7 +250,7 @@ export enum ErrorCode {
 
 ### 3.1 Streaming Architecture
 
-**Prioridad:** ALTA | **Esfuerzo:** Alto
+**Prioridad:** ALTA | **Esfuerzo:** Alto | **Estado:** NOT PLANNED
 
 Archivos de 50MB+ pueden causar OOM.
 
@@ -486,7 +494,7 @@ export async function loadConfig(): Promise<Config> {
 
 ### 4.3 CLI & GUI Parity
 
-**Prioridad:** MEDIA | **Esfuerzo:** Medio
+**Prioridad:** MEDIA | **Esfuerzo:** Medio | **Estado:** NOT PLANNED
 
 **CLI Updates:**
 - [ ] `--exclude-types` flag (e.g., `highlight,note`)
@@ -501,7 +509,7 @@ export async function loadConfig(): Promise<Config> {
 
 ### 4.4 Interactive CLI Mode
 
-**Prioridad:** BAJA | **Esfuerzo:** Medio
+**Prioridad:** BAJA | **Esfuerzo:** Medio | **Estado:** NOT PLANNED
 
 ```typescript
 import { confirm, select, text } from '@clack/prompts';
@@ -550,7 +558,7 @@ Create `src/core/options.def.ts` to define CLI and GUI options programmatically.
 
 ### 5.1 Anki Export (.apkg / CSV)
 
-**Prioridad:** MEDIA | **Esfuerzo:** Medio
+**Prioridad:** MEDIA | **Esfuerzo:** Medio | **Estado:** NOT PLANNED
 
 ```typescript
 export class AnkiExporter extends BaseExporter {
@@ -576,7 +584,7 @@ export class AnkiExporter extends BaseExporter {
 
 ### 5.2 Notion Integration
 
-**Prioridad:** MEDIA | **Esfuerzo:** Alto
+**Prioridad:** MEDIA | **Esfuerzo:** Alto | **Estado:** NOT PLANNED
 
 ```typescript
 import { Client } from '@notionhq/client';
@@ -602,7 +610,7 @@ export class NotionExporter extends BaseExporter {
 
 ### 5.3 Direct Joplin Sync
 
-**Prioridad:** BAJA | **Esfuerzo:** Medio
+**Prioridad:** BAJA | **Esfuerzo:** Medio | **Estado:** NOT PLANNED
 
 Use Joplin's Web Clipper API (localhost:41184) to sync directly without JEX files.
 
@@ -623,7 +631,7 @@ export interface ProcessOptions {
 
 ---
 
-## 6. GUI Improvements
+## 6. GUI Improvements (NOT PLANNED)
 
 ### 6.1 High Priority
 
@@ -656,7 +664,7 @@ export interface ProcessOptions {
 
 ### 7.1 Metadata Enrichment (Book Covers)
 
-**Prioridad:** BAJA | **Esfuerzo:** Medio
+**Prioridad:** BAJA | **Esfuerzo:** Medio | **Estado:** NOT PLANNED
 
 ```typescript
 export async function fetchBookMetadata(title: string, author?: string): Promise<BookMetadata | null> {
@@ -672,7 +680,7 @@ export async function fetchBookMetadata(title: string, author?: string): Promise
 
 ### 7.2 Watch Mode (Auto-Sync)
 
-**Prioridad:** BAJA | **Esfuerzo:** Medio
+**Prioridad:** BAJA | **Esfuerzo:** Medio | **Estado:** NOT PLANNED
 
 ```typescript
 import { watch } from 'chokidar';
@@ -693,7 +701,7 @@ export function watchKindle(callback: (path: string) => void) {
 
 ### 7.3 Kobo / Apple Books Support
 
-**Prioridad:** BAJA | **Esfuerzo:** Alto
+**Prioridad:** BAJA | **Esfuerzo:** Alto | **Estado:** NOT PLANNED
 
 Explore parsers for Kobo (SQLite) and Apple Books.
 
@@ -703,7 +711,7 @@ Explore parsers for Kobo (SQLite) and Apple Books.
 
 ### 8.1 AI Enrichment (Tagging/Summarization)
 
-**Prioridad:** BAJA | **Esfuerzo:** Alto
+**Prioridad:** BAJA | **Esfuerzo:** Alto | **Estado:** NOT PLANNED
 
 ```typescript
 import Anthropic from '@anthropic-ai/sdk';
@@ -747,7 +755,7 @@ describe('TxtParser property tests', () => {
 
 ### 8.3 Incremental Exports (Diff Mode)
 
-**Prioridad:** MEDIA | **Esfuerzo:** Medio
+**Prioridad:** MEDIA | **Esfuerzo:** Medio | **Estado:** NOT PLANNED
 
 ```typescript
 export class DiffTracker {
@@ -772,7 +780,7 @@ export class DiffTracker {
 
 ### 8.4 Reading Habits Visualization ("Spotify Wrapped")
 
-**Prioridad:** BAJA | **Esfuerzo:** Medio
+**Prioridad:** BAJA | **Esfuerzo:** Medio | **Estado:** NOT PLANNED
 
 Charts for HTML export and GUI:
 - Highlights per Month
@@ -783,7 +791,7 @@ Charts for HTML export and GUI:
 
 ### 8.5 WASM & Serverless Web App
 
-**Prioridad:** BAJA | **Esfuerzo:** Alto
+**Prioridad:** BAJA | **Esfuerzo:** Alto | **Estado:** NOT PLANNED
 
 Pure client-side web tool hosted on GitHub Pages. Zero servers, maximum privacy.
 
@@ -850,7 +858,7 @@ Use `semantic-release` or `changesets` for automated versioning and changelog ge
 
 ### 10.1 E2E Testing con Playwright (GUI)
 
-**Prioridad:** MEDIA | **Esfuerzo:** Medio
+**Prioridad:** MEDIA | **Esfuerzo:** Medio | **Estado:** NOT PLANNED
 
 ```typescript
 import { test, expect } from '@playwright/test';

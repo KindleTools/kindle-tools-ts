@@ -27,7 +27,7 @@ import type {
   AuthorCase,
   Exporter,
   ExporterOptions,
-  ExportResult,
+  ExportSuccess,
   FolderStructure,
   TagCase,
 } from "#exporters/index.js";
@@ -545,19 +545,22 @@ async function handleExport(args: string[]): Promise<void> {
     const exportResult = await exporter.export(result.clippings, exportOptions);
     const elapsed = Date.now() - startTime;
 
-    if (!exportResult.success) {
-      throw exportResult.error || new Error("Export failed");
+    if (exportResult.isErr()) {
+      const err = exportResult.error;
+      throw new Error(`Export failed [${err.code}]: ${err.message}`);
     }
+
+    const exportData = exportResult.value;
 
     // Write output
     if (parsed.output) {
-      await writeExportResult(exporter, exportResult, parsed.output);
+      await writeExportResult(exporter, exportData, parsed.output);
       log(c.success(`\\u2713 Exported ${result.clippings.length} clippings to ${parsed.output}`));
       log(c.dim(`  Format: ${exporter.name}, Time: ${elapsed}ms`));
     } else {
       // Output to stdout
-      if (typeof exportResult.output === "string") {
-        log(exportResult.output);
+      if (typeof exportData.output === "string") {
+        log(exportData.output);
       } else {
         // Binary output (like JEX)
         error(c.warn("Binary output detected. Please specify --output=<path> for this format."));
@@ -1006,7 +1009,7 @@ function printDetailedStats(stats: ClippingsStats, clippings: Clipping[]): void 
  */
 async function writeExportResult(
   exporter: Exporter,
-  result: ExportResult,
+  result: ExportSuccess,
   outputPath: string,
 ): Promise<void> {
   // Handle Joplin JEX exports (TAR archive)

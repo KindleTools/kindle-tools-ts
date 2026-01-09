@@ -1,5 +1,31 @@
+/**
+ * Types for exporting clippings to various formats.
+ *
+ * @packageDocumentation
+ */
+
 import type { Clipping } from "#app-types/clipping.js";
+import type { TagCase } from "#app-types/config.js";
 import type { CustomTemplates, TemplatePreset } from "#templates/types.js";
+
+// Re-export from centralized errors
+export type {
+  ExportError,
+  ExportedFile,
+  ExportResult,
+  ExportResultAsync,
+  ExportSuccess,
+} from "#errors";
+
+export {
+  exportInvalidOptions,
+  exportNoClippings,
+  exportSuccess,
+  exportTemplateError,
+  exportUnknownError,
+  exportUnknownFormat,
+  exportWriteFailed,
+} from "#errors";
 
 /**
  * Folder structure options for Markdown-based exporters.
@@ -17,8 +43,6 @@ export type FolderStructure = "flat" | "by-book" | "by-author" | "by-author-book
  * - 'lowercase': Convert to lowercase
  */
 export type AuthorCase = "original" | "uppercase" | "lowercase";
-
-import type { TagCase } from "#app-types/config.js";
 
 export type { TagCase };
 
@@ -103,40 +127,9 @@ export interface ExporterOptions {
 }
 
 /**
- * A single exported file.
- */
-export interface ExportedFile {
-  /** Relative path of the file */
-  path: string;
-
-  /** File content */
-  content: string | Uint8Array;
-}
-
-/**
- * Result of an export operation.
- */
-export interface ExportResult {
-  /** Whether the export was successful */
-  success: boolean;
-
-  /** Generated content (for single-file exports) */
-  output: string | Uint8Array;
-
-  /**
-   * Generated files (for multi-file exports).
-   *
-   * This is always populated for Obsidian and Joplin exporters,
-   * providing access to the raw files before any optional compression/archiving.
-   */
-  files?: ExportedFile[];
-
-  /** Error if export failed */
-  error?: Error;
-}
-
-/**
  * Interface for all exporters.
+ *
+ * Exporters now return neverthrow Result types for type-safe error handling.
  */
 export interface Exporter {
   /** Name of the exporter */
@@ -150,7 +143,22 @@ export interface Exporter {
    *
    * @param clippings - Array of clippings to export
    * @param options - Export options
-   * @returns Export result
+   * @returns Export result wrapped in Result type
    */
-  export(clippings: Clipping[], options?: ExporterOptions): Promise<ExportResult>;
+  export(clippings: Clipping[], options?: ExporterOptions): Promise<import("#errors").ExportResult>;
+}
+
+// =============================================================================
+// Legacy types for gradual migration
+// =============================================================================
+
+/**
+ * @deprecated Use ExportResult from #errors instead.
+ * Legacy result type for backwards compatibility during migration.
+ */
+export interface LegacyExportResult {
+  success: boolean;
+  output: string | Uint8Array;
+  files?: import("#errors").ExportedFile[];
+  error?: Error;
 }

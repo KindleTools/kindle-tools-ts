@@ -11,8 +11,14 @@
 
 import { errAsync, ResultAsync } from "neverthrow";
 import type { Clipping } from "#app-types/clipping.js";
-import type { ImportError, Importer, ImportResult, ImportResultAsync } from "../core/types.js";
-import { createErrorImport, createSuccessImport } from "./importer-utils.js";
+import {
+  type ImportResult,
+  type ImportResultAsync,
+  importEmptyFile,
+  importSuccess,
+  importUnknownError,
+} from "#errors";
+import type { Importer } from "../core/types.js";
 
 /**
  * Abstract base class for importers.
@@ -38,9 +44,8 @@ export abstract class BaseImporter implements Importer {
   import(content: string): ImportResultAsync {
     if (!content || content.trim().length === 0) {
       return errAsync({
-        code: "EMPTY_FILE",
+        code: "IMPORT_EMPTY_FILE",
         message: "File content is empty",
-        warnings: [],
       });
     }
 
@@ -73,17 +78,20 @@ export abstract class BaseImporter implements Importer {
     warnings: string[] = [],
     meta?: { [key: string]: unknown },
   ): ImportResult {
-    return createSuccessImport(clippings, warnings, meta);
+    return importSuccess(clippings, warnings, meta);
   }
 
   /**
    * Create an error import result.
    */
-  protected error(
-    errObj: unknown,
-    warnings: string[] = [],
-    code: ImportError["code"] = "UNKNOWN_ERROR",
-  ): ImportResult {
-    return createErrorImport(errObj, warnings, code);
+  protected error(errObj: unknown, warnings: string[] = []): ImportResult {
+    return importUnknownError(errObj, warnings);
+  }
+
+  /**
+   * Create an empty file error result.
+   */
+  protected emptyFileError(message = "File is empty", warnings?: string[]): ImportResult {
+    return importEmptyFile(message, warnings);
   }
 }

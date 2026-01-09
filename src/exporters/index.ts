@@ -11,6 +11,7 @@ export type {
   Exporter,
   ExporterOptions,
   ExportResult,
+  ExportSuccess,
   FolderStructure,
   TagCase,
 } from "./core/types.js";

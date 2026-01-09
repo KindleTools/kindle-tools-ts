@@ -8,8 +8,8 @@
 
 import type { Clipping, ClippingLocation, ClippingType } from "#app-types/clipping.js";
 import type { SupportedLanguage } from "#app-types/language.js";
+import { type ImportResult, importInvalidFormat, importParseError } from "#errors";
 import { type ClippingImport, ClippingsExportSchema } from "../../schemas/clipping.schema.js";
-import type { ImportResult } from "../core/types.js";
 import { BaseImporter } from "../shared/base-importer.js";
 import { generateImportId, parseLocationString } from "../shared/index.js";
 
@@ -124,7 +124,7 @@ export class JsonImporter extends BaseImporter {
     try {
       rawJson = JSON.parse(content);
     } catch (e) {
-      return this.error(new Error(`Invalid JSON syntax: ${e}`), warnings, "PARSE_ERROR");
+      return importParseError(`Invalid JSON syntax: ${e}`);
     }
 
     const parsedData = ClippingsExportSchema.safeParse(rawJson);
@@ -134,20 +134,14 @@ export class JsonImporter extends BaseImporter {
       const issues = parsedData.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`);
 
       const details = parsedData.error.issues.map((i) => ({
-        path: i.path,
+        path: i.path.filter((p): p is string | number => typeof p !== "symbol"),
         message: i.message,
-        code: i.code,
+        code: String(i.code),
       }));
 
-      return this.error(
-        new Error("JSON content does not match expected schema"),
-        issues,
-        "INVALID_FORMAT",
-      ).mapErr((e) => {
-        if (e.code === "INVALID_FORMAT") {
-          return { ...e, details };
-        }
-        return e;
+      return importInvalidFormat("JSON content does not match expected schema", {
+        issues: details,
+        warnings: issues,
       });
     }
 
@@ -199,7 +193,7 @@ export class JsonImporter extends BaseImporter {
 
     if (clippings.length === 0) {
       warnings.push("No clippings found in JSON file");
-      return this.error(new Error("No clippings found in JSON file"), warnings, "PARSE_ERROR");
+      return importParseError("No clippings found in JSON file", { warnings });
     }
 
     return this.success(clippings, warnings);

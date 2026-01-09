@@ -8,8 +8,8 @@
  */
 
 import type { Clipping } from "#app-types/clipping.js";
-import { toError } from "#utils/system/errors.js";
-import type { AuthorCase, ExportedFile, ExportResult } from "../core/types.js";
+import { type ExportedFile, type ExportResult, exportSuccess, exportUnknownError } from "#errors";
+import type { AuthorCase, FolderStructure } from "../core/types.js";
 
 /**
  * Default value for unknown authors.
@@ -60,16 +60,7 @@ export function createSuccessResult(
   output: string | Uint8Array,
   files?: ExportedFile[],
 ): ExportResult {
-  const result: ExportResult = {
-    success: true,
-    output,
-  };
-
-  if (files !== undefined) {
-    result.files = files;
-  }
-
-  return result;
+  return exportSuccess(output, files);
 }
 
 /**
@@ -79,11 +70,7 @@ export function createSuccessResult(
  * @returns A failed ExportResult
  */
 export function createErrorResult(error: unknown): ExportResult {
-  return {
-    success: false,
-    output: "",
-    error: toError(error),
-  };
+  return exportUnknownError(error);
 }
 
 /**
@@ -198,7 +185,7 @@ export function generateFilePath(
   baseFolder: string,
   author: string,
   title: string,
-  structure: import("../core/types.js").FolderStructure,
+  structure: FolderStructure,
   extension = ".md",
 ): string {
   // Ensure extension has dot
