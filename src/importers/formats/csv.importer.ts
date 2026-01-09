@@ -6,10 +6,31 @@
  * @packageDocumentation
  */
 
+import { z } from "zod";
 import type { Clipping, ClippingType } from "#app-types/clipping.js";
 import type { ImportResult } from "../core/types.js";
 import { BaseImporter } from "../shared/base-importer.js";
 import { generateImportId, parseLocationString } from "../shared/index.js";
+
+/**
+ * Schema for validating CSV row data.
+ * All fields are optional strings since CSV parsing returns strings.
+ * Type validation is lenient here - we validate/default specific values after parsing.
+ */
+const CsvRowSchema = z.object({
+  id: z.string().optional(),
+  title: z.string().optional(),
+  author: z.string().optional(),
+  type: z.string().optional(), // Validate specific values after parsing (accepts empty string)
+  page: z.string().optional(),
+  location: z.string().optional(),
+  date: z.string().optional(),
+  content: z.string().optional(),
+  wordcount: z.string().optional(),
+  tags: z.string().optional(),
+});
+
+type CsvRow = z.infer<typeof CsvRowSchema>;
 
 /**
  * Parse CSV content, handling quoted fields with embedded commas and newlines.
@@ -127,26 +148,51 @@ export class CsvImporter extends BaseImporter {
       }
 
       try {
+        // Build row object from columns
         const getValue = (column: string): string => {
           const idx = colIndex[column];
           return idx !== undefined ? (row[idx] ?? "") : "";
         };
 
-        const id = getValue("id") || generateImportId(rowIdx);
-        const title = getValue("title") || "Unknown";
-        const author = getValue("author") || "Unknown";
-        const type = (getValue("type") || "highlight") as ClippingType;
-        const pageStr = getValue("page");
+        const rowData = {
+          id: getValue("id"),
+          title: getValue("title"),
+          author: getValue("author"),
+          type: getValue("type") as CsvRow["type"],
+          page: getValue("page"),
+          location: getValue("location"),
+          date: getValue("date"),
+          content: getValue("content"),
+          wordcount: getValue("wordcount"),
+          tags: getValue("tags"),
+        };
+
+        // Validate row data with Zod
+        const validatedRow = CsvRowSchema.safeParse(rowData);
+
+        if (!validatedRow.success) {
+          const issues = validatedRow.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`);
+          warnings.push(`Row ${rowIdx + 1} validation failed: ${issues.join(", ")}`);
+          continue;
+        }
+
+        const data = validatedRow.data;
+
+        const id = data.id || generateImportId(rowIdx);
+        const title = data.title || "Unknown";
+        const author = data.author || "Unknown";
+        const type = (data.type || "highlight") as ClippingType;
+        const pageStr = data.page;
         const page = pageStr ? Number.parseInt(pageStr, 10) : null;
-        const location = parseLocationString(getValue("location"));
-        const dateStr = getValue("date");
+        const location = parseLocationString(data.location ?? "");
+        const dateStr = data.date ?? "";
         const date = dateStr ? new Date(dateStr) : null;
-        const content = getValue("content");
-        const wordCountStr = getValue("wordcount");
+        const content = data.content ?? "";
+        const wordCountStr = data.wordcount;
         const wordCount = wordCountStr
           ? Number.parseInt(wordCountStr, 10)
           : content.split(/\s+/).filter(Boolean).length;
-        const tagsStr = getValue("tags");
+        const tagsStr = data.tags;
         const tags = tagsStr
           ? tagsStr
               .split(/[;,]/)

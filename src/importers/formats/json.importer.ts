@@ -6,80 +6,12 @@
  * @packageDocumentation
  */
 
-import { z } from "zod";
 import type { Clipping, ClippingLocation, ClippingType } from "#app-types/clipping.js";
 import type { SupportedLanguage } from "#app-types/language.js";
+import { type ClippingImport, ClippingsExportSchema } from "../../schemas/clipping.schema.js";
 import type { ImportResult } from "../core/types.js";
 import { BaseImporter } from "../shared/base-importer.js";
 import { generateImportId, parseLocationString } from "../shared/index.js";
-
-// Validation Schemas
-
-const CLIPPING_TYPE_SCHEMA = z.enum(["highlight", "note", "bookmark", "clip"]).optional();
-
-const CLIPPING_LOCATION_SCHEMA = z
-  .union([
-    z.string(),
-    z.object({
-      raw: z.string().optional(),
-      start: z.number().optional(),
-      end: z.number().nullable().optional(),
-    }),
-  ])
-  .optional();
-
-const SUPPORTED_LANGUAGE_SCHEMA = z.string().optional(); // Loosely typed to allow string import, validated later if needed
-
-const JSON_CLIPPING_SCHEMA = z.object({
-  id: z.string().optional(),
-  title: z.string().optional(),
-  titleRaw: z.string().optional(),
-  author: z.string().optional(),
-  authorRaw: z.string().optional(),
-  content: z.string().optional(),
-  contentRaw: z.string().optional(),
-  type: CLIPPING_TYPE_SCHEMA,
-  page: z.number().nullable().optional(),
-  location: CLIPPING_LOCATION_SCHEMA,
-  date: z.string().nullable().optional(),
-  dateRaw: z.string().optional(),
-  isLimitReached: z.boolean().optional(),
-  isEmpty: z.boolean().optional(),
-  language: SUPPORTED_LANGUAGE_SCHEMA,
-  source: z.enum(["kindle", "sideload"]).optional(),
-  wordCount: z.number().optional(),
-  charCount: z.number().optional(),
-  linkedNoteId: z.string().optional(),
-  linkedHighlightId: z.string().optional(),
-  note: z.string().optional(),
-  tags: z.array(z.string()).optional(),
-  blockIndex: z.number().optional(),
-  isSuspiciousHighlight: z.boolean().optional(),
-  suspiciousReason: z.enum(["too_short", "fragment", "incomplete"]).optional(),
-  similarityScore: z.number().optional(),
-  possibleDuplicateOf: z.string().optional(),
-  titleWasCleaned: z.boolean().optional(),
-  contentWasCleaned: z.boolean().optional(),
-});
-
-type JsonClipping = z.infer<typeof JSON_CLIPPING_SCHEMA>;
-
-const JSON_EXPORT_SCHEMA = z.union([
-  // Array format
-  z.array(JSON_CLIPPING_SCHEMA),
-  // Object format
-  z.object({
-    clippings: z.array(JSON_CLIPPING_SCHEMA).optional(),
-    books: z.record(z.string(), z.array(JSON_CLIPPING_SCHEMA)).optional(),
-    meta: z
-      .object({
-        total: z.number().optional(),
-        totalBooks: z.number().optional(),
-        totalClippings: z.number().optional(),
-      })
-      .optional(),
-  }),
-]);
 
 /**
  * Parse a location value that could be a string or object.
@@ -109,7 +41,7 @@ function parseLocation(
 /**
  * Convert a JSON clipping to a full Clipping object.
  */
-function jsonToClipping(json: JsonClipping, index: number): Clipping {
+function jsonToClipping(json: ClippingImport, index: number): Clipping {
   const content = json.content ?? json.contentRaw ?? "";
   const title = json.title ?? json.titleRaw ?? "Unknown";
   const author = json.author ?? json.authorRaw ?? "Unknown";
@@ -125,8 +57,10 @@ function jsonToClipping(json: JsonClipping, index: number): Clipping {
     contentRaw: json.contentRaw ?? content,
     type: (json.type as ClippingType) ?? "highlight",
     page: json.page ?? null,
-    location: parseLocation(json.location),
-    date: json.date ? new Date(json.date) : null,
+    location: parseLocation(
+      json.location as string | { raw?: string; start?: number; end?: number | null } | undefined,
+    ),
+    date: json.date instanceof Date ? json.date : null,
     dateRaw: json.dateRaw ?? "",
     isLimitReached: json.isLimitReached ?? false,
     isEmpty: json.isEmpty ?? content.trim().length === 0,
@@ -193,7 +127,7 @@ export class JsonImporter extends BaseImporter {
       return this.error(new Error(`Invalid JSON syntax: ${e}`), warnings, "PARSE_ERROR");
     }
 
-    const parsedData = JSON_EXPORT_SCHEMA.safeParse(rawJson);
+    const parsedData = ClippingsExportSchema.safeParse(rawJson);
 
     if (!parsedData.success) {
       // Map Zod errors to readable warnings

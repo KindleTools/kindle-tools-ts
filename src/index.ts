@@ -52,6 +52,26 @@ export {
   JsonImporter,
   TxtImporter,
 } from "./importers/index.js";
+// Zod Schemas (for external validation)
+export {
+  ClippingImportSchema,
+  ClippingLocationObjectSchema,
+  ClippingLocationSchema,
+  ClippingSourceSchema,
+  ClippingsExportSchema,
+  ClippingTypeSchema,
+  ImportedDataSchema,
+  SupportedLanguageSchema,
+  SuspiciousReasonSchema,
+} from "./schemas/clipping.schema.js";
+export {
+  ConfigFileSchema,
+  GeoLocationSchema,
+  ParseOptionsSchema,
+  parseParseOptions,
+  safeParseParseOptions,
+  TagCaseSchema,
+} from "./schemas/config.schema.js";
 // Types
 export type {
   Clipping,

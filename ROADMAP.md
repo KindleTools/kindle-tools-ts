@@ -75,40 +75,56 @@ await importer.import(content).match(
 
 ---
 
-### 1.3 Validacion de Schema con Zod en Importers
+### 1.3 ~~Validacion de Schema con Zod en Importers~~ ✅ COMPLETADO
 
-**Prioridad:** CRITICA | **Esfuerzo:** Medio
+**Prioridad:** CRITICA | **Esfuerzo:** Medio | **Estado:** COMPLETADO
 
-Zod ya esta instalado pero no se usa para validar inputs externos.
+> **Implementado:** Schemas Zod centralizados en `src/schemas/` para validación de datos importados.
+
+**Implementación actual:**
+
+- `src/schemas/clipping.schema.ts` - Schemas para Clipping, ClippingImport, ClippingsExport
+- `src/schemas/config.schema.ts` - Schemas para ParseOptions, GeoLocation, ConfigFile
+- `src/schemas/index.ts` - Re-exportación centralizada
+
+**Schemas principales:**
 
 ```typescript
 // src/schemas/clipping.schema.ts
-import { z } from 'zod';
-
-export const ClippingSchema = z.object({
+export const ClippingImportSchema = z.object({
   id: z.string().optional(),
-  title: z.string().min(1, 'Title required'),
-  author: z.string().default('Unknown'),
-  content: z.string(),
-  type: z.enum(['highlight', 'note', 'bookmark', 'clip', 'article']),
+  title: z.string().min(1, "Title is required").optional(),
+  author: z.string().optional(),
+  content: z.string().optional(),
+  type: ClippingTypeSchema.optional(),
   page: z.number().nullable().optional(),
-  location: z.object({
-    raw: z.string(),
-    start: z.number(),
-    end: z.number().nullable(),
-  }),
-  date: z.coerce.date().nullable().optional(),
+  location: ClippingLocationSchema.optional(),
+  date: z.union([z.string(), z.date(), z.null()]).transform(...).optional(),
   tags: z.array(z.string()).optional(),
+  // ... otros campos opcionales
 });
 
-export const ImportedDataSchema = z.object({
-  clippings: z.array(ClippingSchema).optional(),
-  books: z.record(z.array(ClippingSchema)).optional(),
-}).refine(
-  data => data.clippings || data.books,
-  { message: 'Must have "clippings" array or "books" object' }
-);
+export const ClippingsExportSchema = z.union([
+  z.array(ClippingImportSchema),
+  z.object({
+    clippings: z.array(ClippingImportSchema).optional(),
+    books: z.record(z.string(), z.array(ClippingImportSchema)).optional(),
+    meta: z.object({ ... }).optional(),
+  }),
+]);
 ```
+
+**Uso en Importers:**
+
+- `JsonImporter` - Usa `ClippingsExportSchema` para validar JSON importado
+- `CsvImporter` - Usa `CsvRowSchema` para validar cada fila del CSV
+
+**Características implementadas:**
+- ✅ Schemas centralizados reutilizables
+- ✅ Validación de datos externos (JSON, CSV)
+- ✅ Transformación de fechas (string → Date)
+- ✅ Errores tipados con `ValidationErrorDetail`
+- ✅ Schema para configuración CLI/config files
 
 ---
 
