@@ -312,36 +312,68 @@ export class MemoryFileSystemAdapter implements FileSystemPort { /* ... */ }
 
 ---
 
-### 3.3 Plugin Architecture
+### 3.3 ~~Plugin Architecture~~ ✅ COMPLETADO
 
-**Prioridad:** MEDIA | **Esfuerzo:** Alto
+**Prioridad:** MEDIA | **Esfuerzo:** Alto | **Estado:** COMPLETADO
+
+> **Implementado:** Sistema de plugins extensible en `src/plugins/` con:
+> - `types.ts` - Interfaces para ImporterPlugin y ExporterPlugin
+> - `registry.ts` - PluginRegistry con validación, eventos y gestión de ciclo de vida
+> - `adapters.ts` - Integración con ImporterFactory y ExporterFactory existentes
+> - `index.ts` - Exportación unificada vía `kindle-tools-ts/plugins`
+
+**Uso del sistema de plugins:**
 
 ```typescript
-// src/plugins/types.ts
-export interface ExporterPlugin {
-  name: string;
-  version: string;
-  format: string;
-  export(clippings: Clipping[], options: ExportOptions): Promise<ExportResult>;
-}
+import {
+  pluginRegistry,
+  type ExporterPlugin,
+  type ImporterPlugin,
+  enableAutoSync,
+} from 'kindle-tools-ts/plugins';
 
-// src/plugins/registry.ts
-class PluginRegistry {
-  private exporters = new Map<string, ExporterPlugin>();
+// Habilitar sincronización automática con factories
+const cleanup = enableAutoSync();
 
-  register(plugin: ExporterPlugin): void {
-    this.exporters.set(plugin.format, plugin);
-  }
+// Registrar un exporter personalizado
+const notionPlugin: ExporterPlugin = {
+  name: 'notion-exporter',
+  version: '1.0.0',
+  format: 'notion',
+  description: 'Export to Notion database',
+  create: () => new NotionExporter(),
+};
 
-  get(format: string): ExporterPlugin | undefined {
-    return this.exporters.get(format);
-  }
-}
+pluginRegistry.registerExporter(notionPlugin);
 
-export const pluginRegistry = new PluginRegistry();
+// Registrar un importer personalizado
+const koboPlugin: ImporterPlugin = {
+  name: 'kobo-importer',
+  version: '1.0.0',
+  extensions: ['.xml', '.kobo'],
+  description: 'Import Kobo annotations',
+  create: () => new KoboImporter(),
+};
+
+pluginRegistry.registerImporter(koboPlugin);
+
+// Consultar plugins registrados
+console.log(pluginRegistry.getExporterFormats());  // ['notion']
+console.log(pluginRegistry.getImporterExtensions()); // ['.xml', '.kobo']
 ```
 
+**Características implementadas:**
+- ✅ Interfaces tipadas para plugins (PluginMeta, ImporterPlugin, ExporterPlugin)
+- ✅ PluginRegistry singleton con registro/desregistro de plugins
+- ✅ Validación de plugins (nombre, versión, formato/extensiones)
+- ✅ Sistema de eventos (importer:registered, exporter:registered, etc.)
+- ✅ Integración con ImporterFactory y ExporterFactory
+- ✅ Type guards (isImporterPlugin, isExporterPlugin)
+- ✅ Auto-sync mode para sincronización automática
+- ✅ Tests unitarios completos
+
 ---
+
 
 ### 3.4 Monorepo Structure (pnpm workspaces)
 
@@ -979,7 +1011,7 @@ These would add significant complexity for limited value:
 | Snyk Security | Alto | Bajo | Pendiente |
 | Config File | Medio | Medio | Backlog |
 | Streaming | Alto | Alto | Backlog |
-| Plugin System | Medio | Alto | Backlog |
+| ~~Plugin System~~ | Medio | Alto | ✅ Done |
 | Monorepo | Medio | Alto | Backlog |
 | AI Enrichment | Bajo | Alto | Opcional |
 
@@ -992,6 +1024,7 @@ These would add significant complexity for limited value:
 - [x] Factory Pattern for importers/exporters
 - [x] Native Node.js subpath imports (`#`)
 - [x] Dual package ESM/CJS with tsup
+- [x] Plugin Architecture (`kindle-tools-ts/plugins`)
 
 ### TypeScript (Strictest Config 2025)
 - [x] TypeScript strict mode completo
@@ -1010,7 +1043,7 @@ These would add significant complexity for limited value:
 - [x] `arethetypeswrong` CI check
 
 ### Testing
-- [x] Unit + Integration tests (367 tests)
+- [x] Unit + Integration tests (462+ tests)
 - [x] Benchmark configuration preparada
 
 ---
@@ -1035,5 +1068,5 @@ These would add significant complexity for limited value:
 
 ---
 
-*Documento actualizado: 2026-01-08*
-*Mejoras totales: 60+ | Completadas: 6*
+*Documento actualizado: 2026-01-09*
+*Mejoras totales: 60+ | Completadas: 7*

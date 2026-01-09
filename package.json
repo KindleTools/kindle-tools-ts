@@ -40,6 +40,16 @@
         "types": "./dist/cli.d.cts",
         "default": "./dist/cli.cjs"
       }
+    },
+    "./plugins": {
+      "import": {
+        "types": "./dist/plugins/index.d.ts",
+        "default": "./dist/plugins/index.js"
+      },
+      "require": {
+        "types": "./dist/plugins/index.d.cts",
+        "default": "./dist/plugins/index.cjs"
+      }
     }
   },
   "imports": {
@@ -62,7 +72,9 @@
     "#templates/*.js": "./src/templates/*.ts",
     "#domain/*.js": "./src/domain/*.ts",
     "#errors": "./src/errors/index.ts",
-    "#errors/*.js": "./src/errors/*.ts"
+    "#errors/*.js": "./src/errors/*.ts",
+    "#plugins": "./src/plugins/index.ts",
+    "#plugins/*.js": "./src/plugins/*.ts"
   },
   "files": [
     "dist",
