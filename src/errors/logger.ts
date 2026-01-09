@@ -71,6 +71,21 @@ export function logError(error: AppError, context?: ErrorLogContext): void {
 
 /**
  * Log a warning with structured context.
+ *
+ * @param message - The warning message
+ * @param context - Optional context for the warning
+ *
+ * @example
+ * ```typescript
+ * import { logWarning } from '#errors';
+ *
+ * if (result.warnings.length > 0) {
+ *   logWarning('Some clippings had issues', {
+ *     operation: 'import',
+ *     data: { count: result.warnings.length }
+ *   });
+ * }
+ * ```
  */
 export function logWarning(message: string, context?: ErrorLogContext): void {
   const entry: ErrorLogEntry = {

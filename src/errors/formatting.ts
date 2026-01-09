@@ -137,13 +137,45 @@ export function formatUserMessage(error: AppError): string {
 
 /**
  * Format error with details for debugging (shows code + message).
+ *
+ * Useful for log files where you need both the code and message.
+ *
+ * @param error - The error to format
+ * @returns A string in the format `[CODE] message`
+ *
+ * @example
+ * ```typescript
+ * import { formatErrorDetail } from '#errors';
+ *
+ * console.error(formatErrorDetail(error));
+ * // Output: [IMPORT_PARSE_ERROR] Invalid JSON syntax
+ * ```
  */
 export function formatErrorDetail(error: AppError): string {
   return `[${error.code}] ${error.message}`;
 }
 
 /**
- * Get a short error code suitable for logging.
+ * Get the error code from an AppError.
+ *
+ * Useful for programmatic error handling or logging.
+ *
+ * @param error - The error to get the code from
+ * @returns The error code string
+ *
+ * @example
+ * ```typescript
+ * import { getErrorCode } from '#errors';
+ *
+ * switch (getErrorCode(error)) {
+ *   case 'IMPORT_PARSE_ERROR':
+ *     // Handle parse error
+ *     break;
+ *   case 'IMPORT_EMPTY_FILE':
+ *     // Handle empty file
+ *     break;
+ * }
+ * ```
  */
 export function getErrorCode(error: AppError): string {
   return error.code;
