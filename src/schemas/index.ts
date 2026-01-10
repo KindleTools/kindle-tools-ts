@@ -7,7 +7,6 @@
  * @packageDocumentation
  */
 
-export * from "./cli.schema.js";
 export * from "./clipping.schema.js";
 export * from "./config.schema.js";
 export * from "./exporter.schema.js";

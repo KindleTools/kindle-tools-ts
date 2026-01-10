@@ -34,7 +34,7 @@ export default defineConfig({
   // Entry points
   entry: {
     index: "src/index.ts",
-    cli: "src/cli/index.ts",
+
     node: "src/node/index.ts",
     "plugins/index": "src/plugins/index.ts",
   },
