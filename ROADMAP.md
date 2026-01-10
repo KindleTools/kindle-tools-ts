@@ -2,7 +2,9 @@
 
 Documento consolidado con todas las mejoras pendientes, organizadas por prioridad.
 
-**Estado del proyecto:** Clean Architecture / DDD con toolchain moderno (Biome 2.3+, Vitest 4+, tsup, Turborepo).
+**Estado del proyecto:** Libreria TypeScript Pura + Visual Workbench de Pruebas. Clean Architecture / DDD con toolchain moderno (Biome 2.3+, Vitest 4+, tsup, Turborepo).
+
+> **Nota:** La CLI ha sido eliminada. El proyecto ahora es una libreria pura con un workbench visual en `tests/workbench/` para pruebas y demostraciones.
 
 ---
 
@@ -17,45 +19,7 @@ Documento consolidado con todas las mejoras pendientes, organizadas por priorida
 
 ## 1. Mejoras Alta Prioridad
 
-### 1.1 Migrar CLI a citty
-
-**Prioridad:** ALTA | **Esfuerzo:** Medio | **Estado:** NOT-PLANNED
-
-La CLI actual implementa parsing manual de argumentos. Migrar a [citty](https://github.com/unjs/citty) proporcionaria:
-- Definicion de comandos mas limpia
-- Generacion automatica de help
-- Manejo de errores integrado
-- Parsing de argumentos type-safe
-
-| Library | Bundle Size | TypeScript | Recomendacion |
-|---------|-------------|------------|---------------|
-| **citty** | 12KB | Excelente | Recomendado |
-| commander | 45KB | Bueno | Alternativa |
-| yargs | 120KB | Bueno | Overkill |
-
-```typescript
-import { defineCommand, runMain } from 'citty';
-
-const main = defineCommand({
-  meta: { name: 'kindle-tools', version: '1.0.0' },
-  args: {
-    input: { type: 'positional', required: true },
-    format: { type: 'string', alias: 'f', default: 'json' },
-    output: { type: 'string', alias: 'o' },
-    'highlights-only': { type: 'boolean', default: false },
-    quiet: { type: 'boolean', alias: 'q', default: false },
-  },
-  async run({ args }) {
-    await runPipeline(args.input, args);
-  },
-});
-
-runMain(main);
-```
-
----
-
-### 1.2 Snyk - Escaneo de Dependencias
+### 1.1 Snyk - Escaneo de Dependencias
 
 **Prioridad:** ALTA | **Esfuerzo:** Bajo | **Estado:** NOT-PLANNED
 
@@ -87,15 +51,16 @@ jobs:
 
 ### 1.3 ESLint Plugin para Neverthrow
 
-**Prioridad:** ALTA | **Esfuerzo:** Bajo
+**Prioridad:** ALTA | **Esfuerzo:** Bajo | **Estado:** DONE
 
-Actualmente hay usos de `_unsafeUnwrap()` en el codigo (ej: `src/importers/shared/base-importer.ts`). Instalar [eslint-plugin-neverthrow](https://github.com/mdbetancourt/eslint-plugin-neverthrow) para:
-- Forzar manejo explicito de errores
-- Detectar unwraps inseguros
-- Asegurar que los Result se consuman correctamente
+Implementado mediante `eslint` + `eslint-plugin-neverthrow` en modo híbrido junto con Biome.
+- Configuración en `eslint.config.mjs`
+- Script: `pnpm run lint:eslint`
+- Integrado en `pnpm run check`
+- Prohíbe explícitamente `_unsafeUnwrap` y `_unsafeUnwrapErr`
 
 ```bash
-pnpm add -D eslint-plugin-neverthrow
+pnpm run lint:eslint
 ```
 
 ---

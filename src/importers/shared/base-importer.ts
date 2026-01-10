@@ -51,7 +51,18 @@ export abstract class BaseImporter implements Importer {
 
     // Wrap the doImport promise safely
     return ResultAsync.fromPromise(this.doImport(content), (error) =>
-      this.error(error)._unsafeUnwrapErr(),
+      this.error(error).match(
+        () => {
+          // This should never happen as this.error() always returns an Err
+          // specific to import errors. We construct a fallback error just in case.
+          return {
+            code: "IMPORT_UNKNOWN" as const,
+            message: "Unexpected success while handling import error",
+            cause: error,
+          };
+        },
+        (e) => e,
+      ),
     ).andThen((result) => {
       // doImport returns Promise<Result<...>> so we check the result
       return new ResultAsync(Promise.resolve(result));
