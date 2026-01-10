@@ -2,25 +2,25 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
+const Dirname = dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   plugins: [],
 
-  root: resolve(__dirname, "src/gui"),
-  publicDir: resolve(__dirname, "src/gui/public"),
+  root: Dirname,
+  publicDir: resolve(Dirname, "public"),
 
   resolve: {
     alias: {
-      "@": resolve(__dirname, "src/gui"),
-      "#core": resolve(__dirname, "src/core"),
-      "#utils": resolve(__dirname, "src/utils"),
-      "#types": resolve(__dirname, "src/types"),
+      "@": Dirname,
+      "#core": resolve(Dirname, "../../src/core"),
+      "#utils": resolve(Dirname, "../../src/utils"),
+      "#types": resolve(Dirname, "../../src/types"),
     },
   },
 
   build: {
-    outDir: resolve(__dirname, "dist-gui"),
+    outDir: resolve(Dirname, "../../dist-gui"),
     emptyOutDir: true,
 
     // Modern target for better performance

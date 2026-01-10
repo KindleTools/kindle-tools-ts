@@ -19,7 +19,7 @@ Documento consolidado con todas las mejoras pendientes, organizadas por priorida
 
 ### 1.1 Migrar CLI a citty
 
-**Prioridad:** ALTA | **Esfuerzo:** Medio
+**Prioridad:** ALTA | **Esfuerzo:** Medio | **Estado:** NOT-PLANNED
 
 La CLI actual implementa parsing manual de argumentos. Migrar a [citty](https://github.com/unjs/citty) proporcionaria:
 - Definicion de comandos mas limpia
@@ -57,7 +57,7 @@ runMain(main);
 
 ### 1.2 Snyk - Escaneo de Dependencias
 
-**Prioridad:** ALTA | **Esfuerzo:** Bajo
+**Prioridad:** ALTA | **Esfuerzo:** Bajo | **Estado:** NOT-PLANNED
 
 ```bash
 pnpm add -D snyk
@@ -114,7 +114,7 @@ Actualmente la logica de fechas esta dividida entre:
 
 ### 1.5 Extraer Constantes CLI
 
-**Prioridad:** ALTA | **Esfuerzo:** Bajo
+**Prioridad:** ALTA | **Esfuerzo:** Bajo | **Estado:** NOT-PLANNED
 
 Mover constantes hardcodeadas de `src/cli/index.ts` a archivos separados:
 - Colores ANSI (lineas 84-105) -> `src/cli/colors.ts`
@@ -144,11 +144,107 @@ export const FILE_THRESHOLDS = {
 
 ---
 
+### 1.7 Limpiar Artefactos de Debug en GUI
+
+**Prioridad:** ALTA (BLOQUEANTE) | **Esfuerzo:** Bajo
+
+Eliminar 10 statements de `console.log/error` en `src/gui/main.ts`:
+- Lineas 301, 302: `console.log("Parse result:", ...)` - debug de parsing
+- Linea 311: `console.error("Parse error:", ...)` - error handling
+- Lineas 636, 707, 751, 802, 942: `console.error` en exports
+- Linea 1090: `console.log("initialized")` - startup debug
+
+**Accion:** Eliminar todos o reemplazar con sistema de logging condicional (ej: `if (DEBUG) console.log(...)`).
+
+---
+
+### 1.8 Corregir XSS Potencial en GUI
+
+**Prioridad:** ALTA (BLOQUEANTE) | **Esfuerzo:** Bajo
+
+En `src/gui/main.ts:521`, `c.location.raw` se interpola sin escape:
+
+```typescript
+// ANTES (vulnerable)
+<td>${c.location.raw}</td>
+
+// DESPUES (seguro)
+<td>${escapeHtml(c.location.raw)}</td>
+```
+
+Aunque los datos vienen de archivos locales del usuario, es buena practica escapar todo contenido dinamico para prevenir XSS.
+
+---
+
+### 1.9 Proteccion Path Traversal en Exports
+
+**Prioridad:** ALTA | **Esfuerzo:** Bajo
+
+En `src/exporters/shared/exporter-utils.ts:194-221`, la funcion `generateFilePath` no valida path traversal:
+
+```typescript
+// Si author = "../../../etc" podria escapar del directorio
+return `${prefix}${cleanAuthor}/${cleanTitle}${ext}`;
+```
+
+**Solucion:**
+```typescript
+import path from 'node:path';
+
+function generateFilePath(...): string {
+  const result = `${prefix}${cleanAuthor}/${cleanTitle}${ext}`;
+  // Normalizar y validar que no escape del base
+  const normalized = path.normalize(result);
+  if (normalized.startsWith('..')) {
+    throw new Error('Path traversal detected');
+  }
+  return normalized;
+}
+```
+
+---
+
+### 1.10 Usar Tipos de Error Custom en Lugar de throw Error()
+
+**Prioridad:** ALTA | **Esfuerzo:** Bajo
+
+9 lugares usan `throw new Error()` generico en lugar de los tipos de error del proyecto:
+
+| Archivo | Lineas | Contexto |
+|---------|--------|----------|
+| `src/cli/index.ts` | 352, 358, 551 | Error de usuario |
+| `src/config/loader.ts` | 114 | Config invalida |
+| `src/plugins/registry.ts` | 167, 185, 272, 289 | Plugin invalido |
+| `src/schemas/cli.schema.ts` | 135 | Args invalidos |
+
+**Accion:** Reemplazar con tipos de `src/errors/types.ts` o retornar `Result<T, E>`.
+
+---
+
+### 1.11 Tests para Archivos con 0% Coverage
+
+**Prioridad:** ALTA | **Esfuerzo:** Medio
+
+Archivos criticos sin tests (0% coverage):
+
+| Archivo | Lineas | Funcionalidad |
+|---------|--------|---------------|
+| `src/utils/fs/tar.ts` | ~100 | Creacion de archivos TAR |
+| `src/utils/fs/zip.ts` | ~80 | Creacion de archivos ZIP |
+| `src/utils/text/encoding.ts` | ~50 | Deteccion de BOM/encoding |
+| `src/plugins/discovery.ts` | ~200 | Carga dinamica de plugins |
+| `src/errors/logger.ts` | ~80 | Logging estructurado |
+| `src/core/processing/tag-processor.ts` | ~60 | Extraccion de tags |
+
+**Coverage actual:** 74.93% statements, 63.39% branches (umbral: 80%)
+
+---
+
 ## 2. Mejoras Media Prioridad
 
 ### 2.1 SonarQube - Analisis Estatico
 
-**Prioridad:** MEDIA | **Esfuerzo:** Medio
+**Prioridad:** MEDIA | **Esfuerzo:** Medio | **Estado:** NOT-PLANNED
 
 ```properties
 # sonar-project.properties
@@ -327,26 +423,7 @@ Cuando los importers fallan en filas especificas:
 
 ---
 
-### 2.13 Reducir Complejidad Cognitiva en Biome
-
-**Prioridad:** MEDIA | **Esfuerzo:** Bajo
-
-Actualmente `maxAllowedComplexity: 50` en biome.json. Reducir gradualmente a 25:
-
-```json
-"complexity": {
-  "noExcessiveCognitiveComplexity": {
-    "level": "warn",
-    "options": {
-      "maxAllowedComplexity": 25
-    }
-  }
-}
-```
-
----
-
-### 2.14 Coverage Thresholds por Glob Pattern
+### 2.13 Coverage Thresholds por Glob Pattern
 
 **Prioridad:** MEDIA | **Esfuerzo:** Bajo
 
@@ -368,7 +445,7 @@ coverage: {
 
 ---
 
-### 2.15 Merged Output Mode
+### 2.14 Merged Output Mode
 
 **Prioridad:** MEDIA | **Esfuerzo:** Bajo
 
@@ -588,16 +665,24 @@ Las siguientes mejoras no estan planificadas en el corto/medio plazo debido a su
 
 | Mejora | Impacto | Esfuerzo | Estado |
 |--------|---------|----------|--------|
-| CLI Library (citty) | Alto | Medio | Pendiente |
-| Snyk Security | Alto | Bajo | Pendiente |
+| **BLOQUEANTES PRODUCCION** |  |  |  |
+| Limpiar console.log GUI | Alto | Bajo | **Pendiente** |
+| Corregir XSS GUI | Alto | Bajo | **Pendiente** |
+| Path Traversal Protection | Alto | Bajo | **Pendiente** |
+| **ALTA PRIORIDAD** |  |  |  |
 | ESLint Neverthrow | Alto | Bajo | Pendiente |
+| Tests 0% Coverage | Alto | Medio | Pendiente |
+| Usar Error Types Custom | Alto | Bajo | Pendiente |
 | Consolidar Fechas | Alto | Bajo | Pendiente |
-| Extraer Constantes CLI | Alto | Bajo | Pendiente |
+| Constantes Limites Archivo | Alto | Bajo | Pendiente |
+| **MEDIA PRIORIDAD** |  |  |  |
 | Config File Improvements | Medio | Medio | Backlog |
 | FileSystem Abstraction | Medio | Alto | Backlog |
 | Multi-File Exporter Base | Medio | Medio | Backlog |
 | Property-Based Testing | Medio | Medio | Backlog |
+| Coverage por Glob | Medio | Bajo | Backlog |
 | TypeDoc | Medio | Bajo | Backlog |
+| **BAJA PRIORIDAD** |  |  |  |
 | Monorepo Structure | Bajo | Alto | Opcional |
 | Browser Entry Point | Bajo | Medio | Opcional |
 
@@ -636,4 +721,4 @@ Las siguientes mejoras no estan planificadas en el corto/medio plazo debido a su
 ---
 
 *Documento actualizado: 2026-01-10*
-*Mejoras pendientes: 30+ | Not Planned: 25+*
+*Mejoras pendientes: 35+ (5 bloqueantes) | Not Planned: 25+*
