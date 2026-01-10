@@ -7,4 +7,10 @@
  * @packageDocumentation
  */
 
-export { getFormulaPrefixes, isFormulaSuspicious, sanitizeCSVField } from "./csv-sanitizer.js";
+export {
+  getFormulaPrefixes,
+  isFormulaSuspicious,
+  type SanitizeMode,
+  type SanitizeOptions,
+  sanitizeCSVField,
+} from "./csv-sanitizer.js";

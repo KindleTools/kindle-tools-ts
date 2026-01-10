@@ -24,38 +24,84 @@
 const FORMULA_PREFIXES = ["=", "+", "-", "@", "\t", "\r"] as const;
 
 /**
+ * Sanitization mode for CSV fields.
+ *
+ * - `escape` - Prefix dangerous content with single quote (default, preserves data)
+ * - `reject` - Return empty string for dangerous content (strict mode)
+ */
+export type SanitizeMode = "escape" | "reject";
+
+/**
+ * Options for CSV field sanitization.
+ */
+export interface SanitizeOptions {
+  /**
+   * Sanitization mode.
+   * - `escape` (default): Prefix with single quote to neutralize formulas
+   * - `reject`: Replace dangerous content with empty string
+   */
+  mode?: SanitizeMode;
+
+  /**
+   * Optional callback invoked when suspicious content is detected.
+   * Useful for logging, telemetry, or alerting.
+   *
+   * @param value - The original suspicious value
+   * @param sanitized - The sanitized result
+   */
+  onSuspicious?: (value: string, sanitized: string) => void;
+}
+
+/**
  * Sanitize a CSV field to prevent formula injection attacks.
  *
  * If the value starts with any character that could trigger formula execution
- * in spreadsheet applications, it prefixes the value with a single quote (')
- * which is the standard way to escape formula interpretation.
+ * in spreadsheet applications, it applies the configured sanitization mode.
  *
  * @param value - The field value to sanitize
+ * @param options - Optional sanitization options
  * @returns Sanitized value safe for CSV export
  *
  * @example
  * ```typescript
+ * // Default mode (escape)
  * sanitizeCSVField("=SUM(A1:A10)")  // Returns "'=SUM(A1:A10)"
  * sanitizeCSVField("+1-2-3")        // Returns "'+1-2-3"
  * sanitizeCSVField("-100")          // Returns "'-100"
  * sanitizeCSVField("@username")     // Returns "'@username"
  * sanitizeCSVField("Normal text")   // Returns "Normal text" (unchanged)
- * sanitizeCSVField("")              // Returns ""
- * sanitizeCSVField(null)            // Returns null
+ *
+ * // Strict mode (reject)
+ * sanitizeCSVField("=SUM(A1)", { mode: "reject" })  // Returns ""
+ *
+ * // With callback
+ * sanitizeCSVField("=SUM(A1)", {
+ *   onSuspicious: (val, result) => console.warn(`Sanitized: ${val}`)
+ * })
  * ```
  */
-export function sanitizeCSVField<T extends string | null | undefined>(value: T): T {
+export function sanitizeCSVField<T extends string | null | undefined>(
+  value: T,
+  options?: SanitizeOptions,
+): T {
   if (!value) return value;
+
+  const mode = options?.mode ?? "escape";
+  const onSuspicious = options?.onSuspicious;
 
   // Check for formula prefixes on the original value first (catches \t and \r)
   if (FORMULA_PREFIXES.some((prefix) => value.startsWith(prefix))) {
-    return `'${value}` as T;
+    const sanitized = mode === "reject" ? "" : `'${value}`;
+    onSuspicious?.(value, sanitized);
+    return sanitized as T;
   }
 
   // Then check trimmed value for formulas hidden after whitespace
   const trimmed = value.trim();
   if (trimmed !== value && FORMULA_PREFIXES.some((prefix) => trimmed.startsWith(prefix))) {
-    return `'${trimmed}` as T;
+    const sanitized = mode === "reject" ? "" : `'${trimmed}`;
+    onSuspicious?.(value, sanitized);
+    return sanitized as T;
   }
 
   return value;

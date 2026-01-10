@@ -4,7 +4,7 @@
  * @see https://owasp.org/www-community/attacks/CSV_Injection
  */
 
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { escapeCSV } from "../../src/exporters/shared/exporter-utils.js";
 import {
   getFormulaPrefixes,
@@ -125,6 +125,59 @@ describe("CSV Security", () => {
       expect(prefixes).toContain("@");
       expect(prefixes).toContain("\t");
       expect(prefixes).toContain("\r");
+    });
+  });
+
+  describe("sanitization options", () => {
+    describe("mode: escape (default)", () => {
+      it("should prefix with single quote", () => {
+        expect(sanitizeCSVField("=SUM(A1)", { mode: "escape" })).toBe("'=SUM(A1)");
+      });
+
+      it("should be the default behavior", () => {
+        expect(sanitizeCSVField("=formula")).toBe(sanitizeCSVField("=formula", { mode: "escape" }));
+      });
+    });
+
+    describe("mode: reject", () => {
+      it("should return empty string for dangerous content", () => {
+        expect(sanitizeCSVField("=SUM(A1)", { mode: "reject" })).toBe("");
+        expect(sanitizeCSVField("+100", { mode: "reject" })).toBe("");
+        expect(sanitizeCSVField("-50", { mode: "reject" })).toBe("");
+        expect(sanitizeCSVField("@mention", { mode: "reject" })).toBe("");
+      });
+
+      it("should pass through safe content", () => {
+        expect(sanitizeCSVField("Normal text", { mode: "reject" })).toBe("Normal text");
+        expect(sanitizeCSVField("email@example.com", { mode: "reject" })).toBe("email@example.com");
+      });
+    });
+
+    describe("onSuspicious callback", () => {
+      it("should call callback when suspicious content detected", () => {
+        const callback = vi.fn();
+        sanitizeCSVField("=formula", { onSuspicious: callback });
+
+        expect(callback).toHaveBeenCalledTimes(1);
+        expect(callback).toHaveBeenCalledWith("=formula", "'=formula");
+      });
+
+      it("should not call callback for safe content", () => {
+        const callback = vi.fn();
+        sanitizeCSVField("Normal text", { onSuspicious: callback });
+
+        expect(callback).not.toHaveBeenCalled();
+      });
+
+      it("should provide sanitized result in callback", () => {
+        const results: [string, string][] = [];
+        sanitizeCSVField("=SUM", {
+          mode: "reject",
+          onSuspicious: (val, sanitized) => results.push([val, sanitized]),
+        });
+
+        expect(results).toEqual([["=SUM", ""]]);
+      });
     });
   });
 

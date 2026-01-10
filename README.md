@@ -74,6 +74,7 @@ A robust TypeScript library to parse and process Amazon Kindle `My Clippings.txt
 - 📘 **TypeScript-first** — Full type definitions with strict mode
 - 🪶 **Lightweight** — Minimal runtime dependencies (date-fns, zod, handlebars, jszip)
 - 🔒 **Non-destructive** — Always preserves original data (titleRaw, contentRaw) for user review
+- 🛡️ **Security hardened** — CSV export includes formula injection protection (OWASP compliant)
 
 ---
 
@@ -130,7 +131,24 @@ The library includes powerful pre-parsing filters that are often overlooked:
 - **Type Filtering**: Ignore specific types like `'bookmark'` or `'note'` (`excludeTypes`).
 - **Noise Reduction**: Use `minContentLength` (e.g., 10) to automatically discard accidental one-word highlights or gibberish.
 
+### Security: CSV Injection Protection
+CSV exports are automatically protected against formula injection attacks (also known as CSV Injection or Formula Injection). This is a security vulnerability where malicious content can be interpreted as formulas by spreadsheet applications like Excel, Google Sheets, or LibreOffice Calc.
+
+**Protection mechanism:**
+- Fields starting with `=`, `+`, `-`, `@`, `\t`, or `\r` are prefixed with a single quote (`'`)
+- This neutralizes formula execution while preserving the original data
+- Applied automatically to all CSV exports via the `escapeCSV()` function
+
+**Example:**
+```
+Original:  =SUM(A1:A10)
+Sanitized: '=SUM(A1:A10)
+```
+
+> 📖 **Reference:** [OWASP - CSV Injection](https://owasp.org/www-community/attacks/CSV_Injection)
+
 ---
+
 
 ## 📦 Installation
 
