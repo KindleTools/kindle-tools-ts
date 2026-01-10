@@ -199,23 +199,30 @@ sonar.javascript.lcov.reportPaths=coverage/lcov.info
 
 ---
 
-### 2.3 CSV Injection Protection
+### 2.3 ~~CSV Injection Protection~~ ✅ COMPLETADO
 
-**Prioridad:** ALTA | **Esfuerzo:** Bajo
+**Prioridad:** ALTA | **Esfuerzo:** Bajo | **Estado:** COMPLETADO
+
+> **Implementado:** Módulo de seguridad en `src/utils/security/csv-sanitizer.ts` con protección contra ataques de inyección CSV/fórmula.
+
+**Funcionalidades implementadas:**
 
 ```typescript
 // src/utils/security/csv-sanitizer.ts
 const FORMULA_PREFIXES = ['=', '+', '-', '@', '\t', '\r'];
 
-export function sanitizeCSVField(value: string): string {
-  if (!value) return value;
-  const trimmed = value.trim();
-  if (FORMULA_PREFIXES.some(prefix => trimmed.startsWith(prefix))) {
-    return `'${trimmed}`;
-  }
-  return value;
-}
+export function sanitizeCSVField<T extends string | null | undefined>(value: T): T;
+export function isFormulaSuspicious(value: string | null | undefined): boolean;
+export function getFormulaPrefixes(): readonly string[];
 ```
+
+**Integración:**
+- ✅ `escapeCSV()` en `exporter-utils.ts` ahora aplica sanitización automáticamente
+- ✅ Protección contra ataques DDE, HYPERLINK y macro injection
+- ✅ Prefijos peligrosos neutralizados con comilla simple (`'`)
+- ✅ Tests unitarios exhaustivos (29 casos) incluyendo vectores de ataque reales
+- ✅ Documentación JSDoc con referencias a OWASP
+
 
 ---
 

@@ -9,6 +9,7 @@
 
 import type { Clipping } from "#app-types/clipping.js";
 import { type ExportedFile, type ExportResult, exportSuccess, exportUnknownError } from "#errors";
+import { sanitizeCSVField } from "../../utils/security/csv-sanitizer.js";
 import type { AuthorCase, FolderStructure } from "../core/types.js";
 
 /**
@@ -139,14 +140,23 @@ export function escapeHtml(str: string): string {
  * Wraps in quotes and escapes internal quotes by doubling them.
  * Also replaces newlines with spaces.
  *
+ * **Security:** This function applies CSV injection protection by prefixing
+ * potentially dangerous formula characters (=, +, -, @, tab, CR) with a
+ * single quote to prevent spreadsheet applications from executing them.
+ *
  * @param value - Value to escape
  * @returns Escaped string safe for CSV
+ *
+ * @see https://owasp.org/www-community/attacks/CSV_Injection
  */
 export function escapeCSV(value: string): string {
   if (!value) return '""';
 
+  // First, sanitize against CSV injection attacks
+  const sanitized = sanitizeCSVField(value);
+
   // Replace newlines with spaces
-  const cleaned = value.replace(/[\r\n]+/g, " ");
+  const cleaned = sanitized.replace(/[\r\n]+/g, " ");
 
   // Escape quotes by doubling them
   const escaped = cleaned.replace(/"/g, '""');
