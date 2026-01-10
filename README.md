@@ -20,13 +20,12 @@ A robust TypeScript library to parse and process Amazon Kindle `My Clippings.txt
 - [🧠 Technical Details](#-technical-details)
 - [📦 Installation](#-installation)
 - [🚀 Quick Start](#-quick-start)
-- [💻 CLI Usage](#-cli-usage)
-- [🖥️ GUI (Graphical Interface)](#️-gui-graphical-interface)
 - [📚 API Reference](#-api-reference)
 - [📤 Export Formats](#-export-formats)
 - [🔌 Plugin System](#-plugin-system)
 - [🌍 Supported Languages](#-supported-languages)
 - [🌐 Browser Compatibility](#-browser-compatibility)
+- [🛠️ Workbench (Visual Testing)](#️-workbench-visual-testing)
 - [❓ FAQ](#-faq)
 - [🛠️ Development](#️-development)
 - [🤝 Contributing](#-contributing)
@@ -48,7 +47,7 @@ A robust TypeScript library to parse and process Amazon Kindle `My Clippings.txt
 
 **Perfect for:**
 - 📚 **Obsidian/Joplin users** — Import highlights directly into your vault/notebooks
-- 🤖 **Automation enthusiasts** — Pipe CLI output to scripts with `--json` flag
+- 🤖 **Automation enthusiasts** — Integrate into your scripts and workflows
 - 💻 **Developers** — Full TypeScript types, tree-shakeable, dual ESM/CJS build
 - 🌐 **Multilingual readers** — Works with Kindle devices in any supported language
 
@@ -70,8 +69,8 @@ A robust TypeScript library to parse and process Amazon Kindle `My Clippings.txt
 - 📥 **Multiple input formats** — Parse from Kindle TXT, or re-import from previously exported JSON/CSV
 - 📚 **6 export formats** — JSON, CSV, Markdown, Obsidian, Joplin JEX, HTML
 - 📊 **Extended statistics** — Avg words/highlight, avg highlights/book, and more
-- 🖥️ **CLI included** — Full command-line interface for quick operations
 - 📘 **TypeScript-first** — Full type definitions with strict mode
+- 🔌 **Plugin system** — Extend with custom importers/exporters
 - 🪶 **Lightweight** — Minimal runtime dependencies (date-fns, zod, handlebars, jszip)
 - 🔒 **Non-destructive** — Always preserves original data (titleRaw, contentRaw) for user review
 - 🛡️ **Security hardened** — CSV export includes formula injection protection (OWASP compliant)
@@ -152,22 +151,12 @@ Sanitized: '=SUM(A1:A10)
 
 ## 📦 Installation
 
-### As a library
-
 ```bash
 npm install kindle-tools-ts
 # or
 pnpm add kindle-tools-ts
 # or
 yarn add kindle-tools-ts
-```
-
-### As a CLI tool (global)
-
-```bash
-npm install -g kindle-tools-ts
-# Then use:
-kindle-tools --help
 ```
 
 ### Requirements
@@ -251,216 +240,6 @@ const jex = await joplinExporter.export(result.clippings, {
   outputPath: './clippings.jex'
 });
 ```
-
----
-
-## 💻 CLI Usage
-
-After installing globally or using `npx`, you can use the CLI:
-
-```bash
-kindle-tools <command> [options]
-```
-
-### Commands
-
-#### `parse` — Parse and show summary
-
-```bash
-kindle-tools parse "My Clippings.txt"
-kindle-tools parse "My Clippings.txt" --verbose
-kindle-tools parse "My Clippings.txt" --json --pretty
-```
-
-Output:
-```
-📚 Kindle Clippings Parsed Successfully
-────────────────────────────────────────
-
-  • Total clippings: 1,234
-  • Highlights: 1,100
-  • Notes: 89
-  • Bookmarks: 45
-
-  • Books: 42
-  • Authors: 38
-  • Total words: 25,000
-
-  Language: EN | Parsed in 45ms | 23 duplicates removed
-```
-
-#### `export` — Export to different formats
-
-```bash
-# Export to JSON
-kindle-tools export "My Clippings.txt" --format=json --output=clippings.json
-
-# Export to Markdown
-kindle-tools export "My Clippings.txt" --format=md --output=highlights.md
-
-# Export to CSV (Excel compatible)
-kindle-tools export "My Clippings.txt" --format=csv --output=clippings.csv
-
-# Export to Obsidian vault (one file per book)
-kindle-tools export "My Clippings.txt" --format=obsidian --output=./vault/books/
-
-# Export to Joplin JEX archive
-kindle-tools export "My Clippings.txt" --format=joplin --output=clippings.jex
-
-# Export to standalone HTML (with dark mode and search)
-kindle-tools export "My Clippings.txt" --format=html --output=clippings.html
-
-# Convert JSON to CSV (use previously exported file as input)
-kindle-tools export clippings.json --format=csv --output=clippings.csv
-
-# Convert CSV to Markdown
-kindle-tools export clippings.csv --format=md --output=notes.md
-```
-
-#### `stats` — Show detailed statistics
-
-```bash
-kindle-tools stats "My Clippings.txt"
-kindle-tools stats "My Clippings.txt" --json --pretty
-```
-
-Output:
-```
-📊 Kindle Clippings Statistics
-══════════════════════════════════════════════════════════════
-
-  Overview
-  ────────────────────────────────────────
-  Total Clippings:     1,234
-  ├─ Highlights:       1,100
-  ├─ Notes:            89
-  ├─ Bookmarks:        45
-  └─ Clips/Articles:   0
-
-  Books:               42
-  Authors:             38
-
-  Content
-  ────────────────────────────────────────
-  Total Words:         25,000
-  Avg Words/Highlight: 23
-  Avg Highlights/Book: 26
-
-  Top 10 Books by Highlights
-  ────────────────────────────────────────────────────────────
-   1) Deep Work
-      by Cal Newport
-      89 highlights | 12 notes | 2,100 words
-  ...
-```
-
-#### `validate` — Validate file format
-
-```bash
-kindle-tools validate "My Clippings.txt"
-kindle-tools validate "My Clippings.txt" --json
-```
-
-Output:
-```
-  Kindle Clippings File Validation
-  ─────────────────────────────────
-
-  File: My Clippings.txt
-  Size: 1.2 MB
-  Detected Language: EN
-
-  ✓ Valid Kindle clippings file
-
-  • Total blocks: 1,300
-  • Valid clippings: 1,234
-  • Unparseable blocks: 66
-```
-
-### Options
-
-| Option | Alias | Description |
-|--------|-------|-------------|
-| `--format <fmt>` | `-f` | Export format: `json`, `csv`, `md`, `obsidian`, `joplin`, `html` |
-| `--output <path>` | `-o` | Output file or directory path |
-| `--lang <code>` | `-l` | Force language: `en`, `es`, `pt`, `de`, `fr`, `it`, `zh`, `ja`, `ko`, `nl`, `ru` |
-| `--no-merge` | | Disable smart merging of overlapping highlights |
-| `--no-dedup` | | Disable deduplication |
-| `--highlights-only` | | Return only highlights with embedded notes (no separate notes/bookmarks) |
-| `--json` | | Output as JSON (for scripting/automation) |
-| `--verbose` | | Show detailed output (top books, warnings) |
-| `--pretty` | | Pretty print JSON output |
-| `--group-by-book` | | Group output by book |
-| `--structure <type>` | | Folder structure: `flat`, `by-book`, `by-author`, `by-author-book` |
-| `--author-case <case>` | | Author folder case: `original`, `uppercase`, `lowercase` |
-| `--extract-tags` | | Extract tags from notes (hashtag format) |
-| `--tag-case <case>` | | Tag case: `original` (as typed), `uppercase`, `lowercase` (default) |
-| `--include-tags` | | Include clipping tags in exports |
-| `--no-tags` | | Exclude tags from output |
-| `--title <text>` | | HTML page title or Joplin notebook name |
-| `--creator <text>` | | Author attribution for notes (Joplin) |
-| `--help` | `-h` | Show help message |
-| `--version` | `-v` | Show version |
-
-### Examples
-
-```bash
-# Parse Spanish clippings file
-kindle-tools parse "Mis recortes.txt" --lang=es
-
-# Export without smart merging
-kindle-tools export "My Clippings.txt" --format=json --no-merge --output=raw.json
-
-# Export to Obsidian with author folders in uppercase
-kindle-tools export "My Clippings.txt" --format=obsidian \
-  --structure=by-author --author-case=uppercase --output=./vault/
-
-# Export to Joplin with 3-level hierarchy (Root > Author > Book)
-kindle-tools export "My Clippings.txt" --format=joplin \
-  --structure=by-author-book --output=clippings.jex
-
-# Extract tags from notes and include in export
-kindle-tools export "My Clippings.txt" --format=json \
-  --extract-tags --include-tags --output=with-tags.json
-
-# Export only highlights with embedded notes (merged output)
-kindle-tools export "My Clippings.txt" --format=json \
-  --highlights-only --output=merged.json
-
-# Get stats as JSON for scripting
-kindle-tools stats "My Clippings.txt" --json | jq '.totalBooks'
-
-# Validate and capture result in script
-if kindle-tools validate "My Clippings.txt" --json | jq -e '.valid' > /dev/null; then
-  echo "File is valid!"
-fi
-```
-
----
-
-## 🖥️ GUI (Graphical Interface)
-
-A browser-based GUI is included for testing and demonstration purposes:
-
-```bash
-# Clone the repository
-git clone https://github.com/KindleTools/kindle-tools-ts.git
-cd kindle-tools-ts
-
-# Install dependencies
-pnpm install
-
-# Start the GUI development server
-pnpm gui
-```
-
-This opens a local Vite server where you can:
-- 📤 Drag and drop your `My Clippings.txt` file
-- 👀 Preview parsed clippings with search and filter
-- 📊 View statistics about your reading habits
-- 💾 Export to any supported format
-
-> **Note**: The GUI is for development/testing. For production use, integrate the library directly or use the CLI.
 
 ---
 
@@ -1099,11 +878,16 @@ These are NOT deleted — just flagged for your review via `isSuspiciousHighligh
 
 Yes! Export to JSON or CSV, edit in your favorite tool, then re-import:
 
-```bash
-# Export → Edit → Re-export to different format
-kindle-tools export "My Clippings.txt" -f json -o clippings.json
-# ... edit clippings.json ...
-kindle-tools export clippings.json -f obsidian -o ./vault/
+```typescript
+import { JsonImporter, ObsidianExporter } from 'kindle-tools-ts';
+
+// Import from edited JSON
+const importer = new JsonImporter();
+const result = await importer.import(editedJsonContent);
+
+// Re-export to Obsidian
+const exporter = new ObsidianExporter();
+await exporter.export(result.clippings, { outputPath: './vault/' });
 ```
 
 </details>
@@ -1116,12 +900,12 @@ Add tags to your Kindle notes in these formats:
 - Comma-separated: `productivity, habits`
 - Newline-separated (one tag per line)
 
-Then enable tag extraction:
-```bash
-kindle-tools export "My Clippings.txt" -f obsidian --extract-tags -o ./vault/
-```
+Then enable tag extraction in your parse options:
 
-Tags will appear in the YAML frontmatter of Obsidian files.
+```typescript
+const result = parseString(content, { extractTags: true });
+// Tags will be in each clipping's `tags` array
+```
 
 </details>
 
@@ -1144,6 +928,32 @@ The library is designed for Node.js 18+ but should work in:
 - **Cloudflare Workers**: `parseString()` works, but `parseFile()` requires fs module ⚠️
 
 </details>
+
+---
+
+## 🛠️ Workbench (Visual Testing)
+
+A browser-based workbench is included for testing and demonstration purposes:
+
+```bash
+# Clone the repository
+git clone https://github.com/KindleTools/kindle-tools-ts.git
+cd kindle-tools-ts
+
+# Install dependencies
+pnpm install
+
+# Start the workbench
+pnpm gui
+```
+
+This opens a local Vite server where you can:
+- 📤 Drag and drop your `My Clippings.txt` file
+- 👀 Preview parsed clippings with search and filter
+- 📊 View statistics about your reading habits
+- 💾 Export to any supported format
+
+> **Note**: The workbench is for development/testing only and is not distributed with the npm package.
 
 ---
 
@@ -1181,21 +991,24 @@ pnpm format
 ```
 kindle-tools-ts/
 ├── src/
-│   ├── core/           # Parser, processor, tokenizer, language detection
+│   ├── core/           # Processor, processing modules (dedup, merge, link, quality)
+│   ├── domain/         # Pure business logic (stats, sanitizers, tags, languages)
 │   ├── exporters/      # Export format implementations (JSON, CSV, MD, Obsidian, Joplin, HTML)
-│   │   └── shared/     # Base exporter class and shared utilities
-│   ├── importers/      # JSON and CSV importers for re-processing exported files
-│   │   └── shared/     # Base importer utilities
-│   ├── gui/            # Browser-based testing GUI (Vite)
+│   ├── importers/      # Import implementations (TXT, JSON, CSV)
+│   ├── plugins/        # Plugin system (registry, hooks, discovery)
+│   ├── schemas/        # Zod validation schemas
 │   ├── templates/      # Handlebars template presets
 │   ├── types/          # TypeScript interfaces and type definitions
-│   ├── utils/          # Utility functions (dates, hashing, similarity, etc.)
-│   ├── index.ts        # Library entry point (all public exports)
-│   └── cli/            # CLI implementation
+│   ├── utils/          # Utility functions (text, fs, system, security)
+│   ├── errors/         # Error handling (neverthrow Result types)
+│   ├── config/         # Configuration loading (cosmiconfig)
+│   ├── node/           # Node.js-specific entry point (parseFile)
+│   └── index.ts        # Library entry point (browser-safe)
 ├── tests/
 │   ├── unit/           # Unit tests per module
 │   ├── integration/    # Full pipeline tests
-│   └── fixtures/       # Test data and sample clippings
+│   ├── fixtures/       # Test data and sample clippings
+│   └── workbench/      # Visual testing GUI (Vite app)
 ├── dist/               # Built output (ESM + CJS + DTS)
 └── package.json
 ```

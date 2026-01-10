@@ -80,18 +80,7 @@ Actualmente la logica de fechas esta dividida entre:
 
 ---
 
-### 1.5 Extraer Constantes CLI
-
-**Prioridad:** ALTA | **Esfuerzo:** Bajo | **Estado:** NOT-PLANNED
-
-Mover constantes hardcodeadas de `src/cli/index.ts` a archivos separados:
-- Colores ANSI (lineas 84-105) -> `src/cli/colors.ts`
-- Version CLI -> Leer de package.json
-- Strings de ayuda -> `src/cli/help-text.ts`
-
----
-
-### 1.6 Crear Constantes de Limites de Archivo
+### 1.5 Crear Constantes de Limites de Archivo
 
 **Prioridad:** ALTA | **Esfuerzo:** Bajo
 
@@ -112,25 +101,27 @@ export const FILE_THRESHOLDS = {
 
 ---
 
-### 1.7 Limpiar Artefactos de Debug en GUI
+### 1.6 Limpiar Artefactos de Debug en Workbench
 
-**Prioridad:** ALTA (BLOQUEANTE) | **Esfuerzo:** Bajo
+**Prioridad:** MEDIA | **Esfuerzo:** Bajo
 
-Eliminar 10 statements de `console.log/error` en `src/gui/main.ts`:
-- Lineas 301, 302: `console.log("Parse result:", ...)` - debug de parsing
-- Linea 311: `console.error("Parse error:", ...)` - error handling
-- Lineas 636, 707, 751, 802, 942: `console.error` en exports
-- Linea 1090: `console.log("initialized")` - startup debug
+> **Nota:** El workbench es solo para desarrollo/testing, no para produccion. Estos console.log son aceptables pero podrian limpiarse.
 
-**Accion:** Eliminar todos o reemplazar con sistema de logging condicional (ej: `if (DEBUG) console.log(...)`).
+Eliminar statements de `console.log/error` en `tests/workbench/main.ts`:
+- Debug de parsing y exports
+- Mensaje de inicializacion
+
+**Accion:** Opcional - el workbench no se distribuye con la libreria.
 
 ---
 
-### 1.8 Corregir XSS Potencial en GUI
+### 1.7 Corregir XSS Potencial en Workbench
 
-**Prioridad:** ALTA (BLOQUEANTE) | **Esfuerzo:** Bajo
+**Prioridad:** BAJA | **Esfuerzo:** Bajo
 
-En `src/gui/main.ts:521`, `c.location.raw` se interpola sin escape:
+> **Nota:** El workbench procesa archivos locales del usuario y no se distribuye. Riesgo XSS es minimo.
+
+En `tests/workbench/main.ts`, `c.location.raw` se interpola sin escape:
 
 ```typescript
 // ANTES (vulnerable)
@@ -172,24 +163,22 @@ function generateFilePath(...): string {
 
 ---
 
-### 1.10 Usar Tipos de Error Custom en Lugar de throw Error()
+### 1.9 Usar Tipos de Error Custom en Lugar de throw Error()
 
 **Prioridad:** ALTA | **Esfuerzo:** Bajo
 
-9 lugares usan `throw new Error()` generico en lugar de los tipos de error del proyecto:
+Algunos lugares usan `throw new Error()` generico en lugar de los tipos de error del proyecto:
 
 | Archivo | Lineas | Contexto |
 |---------|--------|----------|
-| `src/cli/index.ts` | 352, 358, 551 | Error de usuario |
 | `src/config/loader.ts` | 114 | Config invalida |
 | `src/plugins/registry.ts` | 167, 185, 272, 289 | Plugin invalido |
-| `src/schemas/cli.schema.ts` | 135 | Args invalidos |
 
 **Accion:** Reemplazar con tipos de `src/errors/types.ts` o retornar `Result<T, E>`.
 
 ---
 
-### 1.11 Tests para Archivos con 0% Coverage
+### 1.10 Tests para Archivos con 0% Coverage
 
 **Prioridad:** ALTA | **Esfuerzo:** Medio
 
@@ -446,8 +435,7 @@ Agregar campo `"browser"` en `package.json` apuntando a bundle sin dependencias 
 kindle-tools-ts/
   packages/
     core/           # Logica pura, sin deps de Node
-    cli/            # CLI con Node.js deps
-    gui/            # Vite app
+    node/           # Node.js adapters (fs)
     shared/         # Tipos compartidos
   pnpm-workspace.yaml
   turbo.json
@@ -481,9 +469,6 @@ interface Logger {
   warn: (msg: string, ctx?: object) => void;
   error: (msg: string, ctx?: object) => void;
 }
-
-// --json flag for machine-readable output
-// --quiet flag to suppress output
 ```
 
 ---
@@ -492,7 +477,7 @@ interface Logger {
 
 **Prioridad:** BAJA | **Esfuerzo:** Medio
 
-Crear `src/core/options.def.ts` para definir opciones CLI y GUI programaticamente.
+Crear `src/core/options.def.ts` para definir opciones de procesamiento programaticamente.
 
 ---
 
@@ -551,7 +536,7 @@ Mover CSS de `HtmlExporter` a archivo separado.
 docs/
   guide/
     getting-started.md
-    cli-usage.md
+    api-usage.md
   recipes/
     obsidian-workflow.md
     joplin-setup.md
@@ -579,11 +564,7 @@ Las siguientes mejoras no estan planificadas en el corto/medio plazo debido a su
 ### Arquitectura
 
 - **Streaming Architecture**: Archivos de 50MB+ pueden causar OOM, pero es un caso de uso muy raro para este tipo de herramienta.
-
-### CLI y GUI
-
-- **CLI & GUI Parity**: Flags adicionales como `--exclude-types`, `--min-length`, `--filter-books`
-- **Interactive CLI Mode**: Modo interactivo con @clack/prompts
+- **CLI**: La CLI ha sido eliminada. El proyecto es ahora una libreria pura. Usuarios que necesiten CLI pueden crear wrappers usando la API.
 
 ### Exporters
 
@@ -591,18 +572,15 @@ Las siguientes mejoras no estan planificadas en el corto/medio plazo debido a su
 - **Notion Integration**: API propietaria, ecosistema cerrado
 - **Direct Joplin Sync**: Usar Web Clipper API directamente
 
-### GUI Improvements
+### Workbench Improvements
+
+> El workbench (`tests/workbench/`) es solo para desarrollo y testing. Estas mejoras son opcionales.
 
 - **Sort/Order**: Agregar `sortBy` y `sortOrder` al state
 - **Copy to Clipboard**: `navigator.clipboard.writeText()`
 - **Date Range Filter**: Filtrar por `clip.date`
-- **Multi-Book Selection**: Checkboxes en lugar de dropdown
 - **Statistics Charts**: Chart.js con datos de `calculateStats()`
-- **Batch Processing**: Aceptar multiples archivos
-- **Similarity Threshold**: Slider 0-100 para fuzzy matching
 - **Theme Toggle**: CSS variables + localStorage
-- **Keyboard Shortcuts**: Hook `useHotkeys`
-- **PWA Support**: Service Worker + manifest.json
 
 ### Integraciones
 
@@ -633,15 +611,12 @@ Las siguientes mejoras no estan planificadas en el corto/medio plazo debido a su
 
 | Mejora | Impacto | Esfuerzo | Estado |
 |--------|---------|----------|--------|
-| **BLOQUEANTES PRODUCCION** |  |  |  |
-| Limpiar console.log GUI | Alto | Bajo | **Pendiente** |
-| Corregir XSS GUI | Alto | Bajo | **Pendiente** |
-| Path Traversal Protection | Alto | Bajo | **Pendiente** |
 | **ALTA PRIORIDAD** |  |  |  |
-| ESLint Neverthrow | Alto | Bajo | Pendiente |
+| ESLint Neverthrow | Alto | Bajo | ✅ DONE |
+| Consolidar Fechas | Alto | Bajo | ✅ DONE |
+| Path Traversal Protection | Alto | Bajo | Pendiente |
 | Tests 0% Coverage | Alto | Medio | Pendiente |
 | Usar Error Types Custom | Alto | Bajo | Pendiente |
-| Consolidar Fechas | Alto | Bajo | Pendiente |
 | Constantes Limites Archivo | Alto | Bajo | Pendiente |
 | **MEDIA PRIORIDAD** |  |  |  |
 | Config File Improvements | Medio | Medio | Backlog |
@@ -650,6 +625,7 @@ Las siguientes mejoras no estan planificadas en el corto/medio plazo debido a su
 | Property-Based Testing | Medio | Medio | Backlog |
 | Coverage por Glob | Medio | Bajo | Backlog |
 | TypeDoc | Medio | Bajo | Backlog |
+| Limpiar console.log Workbench | Bajo | Bajo | Opcional |
 | **BAJA PRIORIDAD** |  |  |  |
 | Monorepo Structure | Bajo | Alto | Opcional |
 | Browser Entry Point | Bajo | Medio | Opcional |
@@ -674,8 +650,7 @@ Las siguientes mejoras no estan planificadas en el corto/medio plazo debido a su
 ### Security
 - [CSV Injection - OWASP](https://owasp.org/www-community/attacks/CSV_Injection)
 
-### CLI
-- [citty](https://github.com/unjs/citty)
+### Configuration
 - [cosmiconfig](https://github.com/cosmiconfig/cosmiconfig)
 
 ### Testing
@@ -689,4 +664,4 @@ Las siguientes mejoras no estan planificadas en el corto/medio plazo debido a su
 ---
 
 *Documento actualizado: 2026-01-10*
-*Mejoras pendientes: 35+ (5 bloqueantes) | Not Planned: 25+*
+*Mejoras pendientes: 30+ (2 DONE) | Not Planned: 20+*

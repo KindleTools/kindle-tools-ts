@@ -2,6 +2,8 @@
 
 Technical overview of kindle-tools-ts for contributors and developers who want to understand or extend the codebase.
 
+> **Note:** This is a **pure TypeScript library**. The CLI has been removed. A visual workbench for testing is available in `tests/workbench/`.
+
 ## Project Structure
 
 ```
@@ -9,57 +11,50 @@ kindle-tools-ts/
 ├── src/
 │   ├── core/               # Orchestration & System-wide logic
 │   │   ├── constants.ts    # System constants
-│   │   └── processor.ts    # Dedup, merge, link notes (The "Processor")
+│   │   ├── processor.ts    # Dedup, merge, link notes (The "Processor")
+│   │   └── processing/     # Processing modules (dedup, merge, link, quality)
 │   │
 │   ├── domain/             # Pure Business Logic (Entities & Rules)
 │   │   ├── index.ts        # Barrel export for all domain modules
 │   │   ├── stats.ts        # Statistics logic
-│   │   ├── geo-location.ts # Coordinates & Distance
-│   │   ├── tag-extractor.ts # Business rules for cleaning tags
-│   │   ├── page-utils.ts   # Page estimation heuristics
+│   │   ├── geography.ts    # Coordinates & Distance
+│   │   ├── tags.ts         # Business rules for cleaning tags
+│   │   ├── locations.ts    # Page/location utilities
 │   │   └── sanitizers.ts   # Title/Author cleaning rules
 │   │
 │   ├── importers/          # Data Ingestion
 │   │   ├── index.ts        # Barrel export
-│   │   ├── importer.factory.ts  # Factory (creates importer based on file type)
-│   │   ├── importer.types.ts    # Importer interface & ImportResult
-│   │   ├── csv.importer.ts
-│   │   ├── json.importer.ts
-│   │   ├── txt/            # Kindle TXT parser details
-│   │   │   ├── core/       # Tokenizer, Parser, Language Detector
-│   │   │   └── utils/      # Parser-specific utils (e.g. date-parser)
+│   │   ├── core/           # Factory & types
+│   │   ├── formats/        # Concrete implementations (txt, json, csv)
+│   │   │   └── txt/        # Kindle TXT parser (tokenizer, parser, language detector)
 │   │   └── shared/         # Base classes & utilities
 │   │
 │   ├── exporters/          # Export Adapters
 │   │   ├── index.ts        # Barrel export
-│   │   ├── exporter.factory.ts  # Factory (creates exporter based on format)
-│   │   ├── exporter.types.ts    # Exporter interface & ExportResult
-│   │   ├── json.exporter.ts
-│   │   ├── csv.exporter.ts
-│   │   ├── markdown.exporter.ts
-│   │   ├── obsidian.exporter.ts
-│   │   ├── joplin.exporter.ts
-│   │   ├── html.exporter.ts
+│   │   ├── core/           # Factory & types
+│   │   ├── formats/        # Concrete implementations (json, csv, md, obsidian, joplin, html)
 │   │   └── shared/         # Base classes & utilities
 │   │
 │   ├── utils/              # Generic, App-Agnostic Utilities
-│   │   ├── normalizers.ts  # String normalization
-│   │   ├── dates.ts        # Date formatting
-│   │   ├── hashing.ts      # SHA-256 generation
-│   │   ├── similarity.ts   # Math/Algo (Jaccard)
-│   │   ├── tar.ts          # Archive creation
-│   │   └── zip.ts          # Archive creation
+│   │   ├── text/           # Normalizers, patterns, similarity, encoding
+│   │   ├── fs/             # Archive creation (tar, zip)
+│   │   ├── system/         # Dates, errors
+│   │   └── security/       # CSV sanitizer
 │   │
 │   ├── types/              # Shared Types
-│   ├── gui/                # Browser Testing GUI
+│   ├── schemas/            # Zod validation schemas
 │   ├── templates/          # Handlebars templates
-│   ├── cli/                # Command Line Interface
-│   └── index.ts            # Public API
+│   ├── plugins/            # Plugin system (registry, hooks, discovery)
+│   ├── errors/             # Error handling (neverthrow Result types)
+│   ├── config/             # Configuration loading (cosmiconfig)
+│   ├── node/               # Node.js-specific entry point (parseFile)
+│   └── index.ts            # Public API (browser-safe)
 │
 ├── tests/
 │   ├── unit/               # Unit tests
 │   ├── integration/        # Pipeline tests
-│   └── fixtures/           # Test data
+│   ├── fixtures/           # Test data
+│   └── workbench/          # Visual testing GUI (Vite app)
 │
 └── dist/                   # Build output
 ```
@@ -312,10 +307,10 @@ tests/
 
 The library is isomorphic (works in Node.js and browser):
 
-- **Node.js**: File system access for `parseFile()`
-- **Browser**: String parsing only via `parseString()`
+- **Node.js**: File system access for `parseFile()` (import from `kindle-tools-ts/node`)
+- **Browser**: String parsing only via `parseString()` (import from `kindle-tools-ts`)
 
-The GUI (`src/gui/`) uses Vite for development and demonstrates browser usage.
+The workbench (`tests/workbench/`) uses Vite for development and demonstrates browser usage.
 
 ## Error Handling & Result Pattern
 
@@ -583,13 +578,17 @@ src/
 ├── templates/            # 🎨 Export Templates (Handlebars)
 │   └── default.ts        # Default layouts
 │
-│
 ├── node/                 # 🟢 Node.js Entry Point
 │   └── index.ts          # Node-specific exports (FileSystem access)
 │
-└── gui/                  # 🖥️ Web Interface (Vite/Vanilla JS)
-    └── main.ts
+├── plugins/              # 🔌 Plugin System
+│   └── registry.ts       # Plugin registry, hooks, discovery
+│
+└── errors/               # ⚠️ Error Handling (neverthrow)
+    └── result.ts         # Result types and factory functions
 ```
+
+> **Note:** The visual workbench for testing is at `tests/workbench/main.ts` (not in src/).
 
 ---
 
