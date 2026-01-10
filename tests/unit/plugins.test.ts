@@ -4,14 +4,22 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { Clipping } from "#app-types/clipping.js";
 import {
+  AnkiExporter,
+  ankiExporterPlugin,
+  createHeaderHook,
+  createHighlightsOnlyFilter,
+  createMinLengthFilter,
   type ExporterPlugin,
+  HookRegistry,
+  hookRegistry,
   type ImporterPlugin,
   isExporterPlugin,
   isImporterPlugin,
   PluginRegistry,
   pluginRegistry,
-} from "../src/plugins/index.js";
+} from "#plugins";
 
 describe("Plugin System", () => {
   describe("PluginRegistry", () => {
@@ -394,6 +402,240 @@ describe("Plugin System", () => {
       });
 
       expect(pluginRegistry.hasExporter("singleton")).toBe(true);
+    });
+  });
+});
+
+describe("HookRegistry", () => {
+  let registry: HookRegistry;
+
+  beforeEach(() => {
+    registry = new HookRegistry();
+  });
+
+  afterEach(() => {
+    registry.clear();
+    hookRegistry.clear();
+  });
+
+  describe("beforeImport hooks", () => {
+    it("should run beforeImport hooks", async () => {
+      registry.add("beforeImport", (content: string) => content.toUpperCase());
+      const result = await registry.runBeforeImport("test content");
+      expect(result).toBe("TEST CONTENT");
+    });
+
+    it("should chain multiple hooks", async () => {
+      registry.add("beforeImport", (content: string) => content + " first");
+      registry.add("beforeImport", (content: string) => content + " second");
+      const result = await registry.runBeforeImport("start");
+      expect(result).toBe("start first second");
+    });
+  });
+
+  describe("beforeExport hooks", () => {
+    it("should run beforeExport hooks and filter clippings", async () => {
+      const clippings = [
+        { id: "1", content: "short", type: "highlight" },
+        { id: "2", content: "this is a longer highlight content", type: "highlight" },
+      ] as never[];
+
+      registry.add("beforeExport", (clips: Clipping[]) =>
+        clips.filter((c) => (c.content?.length ?? 0) > 10),
+      );
+
+      const result = await registry.runBeforeExport(clippings, "json");
+      expect(result).toHaveLength(1);
+    });
+  });
+
+  describe("afterExport hooks", () => {
+    it("should run afterExport hooks and transform output", async () => {
+      registry.add("afterExport", (output: string) => `<!-- Header -->\n${output}`);
+      const result = await registry.runAfterExport("content", "md");
+      expect(result).toBe("<!-- Header -->\ncontent");
+    });
+
+    it("should pass format to hook", async () => {
+      let capturedFormat = "";
+      registry.add("afterExport", (output: string, format: string) => {
+        capturedFormat = format;
+        return output;
+      });
+      await registry.runAfterExport("content", "json");
+      expect(capturedFormat).toBe("json");
+    });
+  });
+
+  describe("hook management", () => {
+    it("should unregister hooks", () => {
+      const unsubscribe = registry.add("beforeImport", (c: string) => c);
+      expect(registry.hasHooks("beforeImport")).toBe(true);
+
+      unsubscribe();
+      expect(registry.hasHooks("beforeImport")).toBe(false);
+    });
+
+    it("should get hook counts", () => {
+      registry.add("beforeImport", (c: string) => c);
+      registry.add("afterImport", (c: Clipping[]) => c);
+      registry.add("beforeExport", (c: Clipping[]) => c);
+
+      const counts = registry.getHookCount();
+      expect(counts.beforeImport).toBe(1);
+      expect(counts.afterImport).toBe(1);
+      expect(counts.beforeExport).toBe(1);
+      expect(counts.afterExport).toBe(0);
+    });
+
+    it("should clear specific hook type", () => {
+      registry.add("beforeImport", (c: string) => c);
+      registry.add("afterExport", (c: string) => c);
+
+      registry.clearType("beforeImport");
+
+      expect(registry.hasHooks("beforeImport")).toBe(false);
+      expect(registry.hasHooks("afterExport")).toBe(true);
+    });
+  });
+
+  describe("utility hooks", () => {
+    it("createMinLengthFilter should filter by content length", async () => {
+      const filter = createMinLengthFilter(10);
+      const clippings = [{ content: "short" }, { content: "longer content here" }] as never[];
+
+      const result = await filter(clippings, "json");
+      expect(result).toHaveLength(1);
+    });
+
+    it("createHighlightsOnlyFilter should filter by type", async () => {
+      const filter = createHighlightsOnlyFilter();
+      const clippings = [
+        { type: "highlight", content: "test" },
+        { type: "note", content: "note" },
+        { type: "bookmark", content: "" },
+      ] as never[];
+
+      const result = await filter(clippings, "json");
+      expect(result).toHaveLength(1);
+    });
+
+    it("createHeaderHook should add header", async () => {
+      const hook = createHeaderHook("// Generated");
+      const result = await hook("content", "md");
+      expect(result).toBe("// Generated\ncontent");
+    });
+  });
+});
+
+describe("AnkiExporter", () => {
+  describe("ankiExporterPlugin", () => {
+    it("should have correct metadata", () => {
+      expect(ankiExporterPlugin.name).toBe("anki-exporter");
+      expect(ankiExporterPlugin.version).toBe("1.0.0");
+      expect(ankiExporterPlugin.format).toBe("anki");
+      expect(ankiExporterPlugin.aliases).toContain("anki-tsv");
+    });
+
+    it("should create exporter instances", () => {
+      const exporter = ankiExporterPlugin.create();
+      expect(exporter.name).toBe("Anki Exporter");
+      expect(exporter.extension).toBe(".txt");
+    });
+  });
+
+  describe("AnkiExporter.export()", () => {
+    const exporter = new AnkiExporter();
+
+    const sampleClippings = [
+      {
+        id: "1",
+        title: "The Art of War",
+        author: "Sun Tzu",
+        content: "All warfare is based on deception.",
+        type: "highlight",
+        location: { start: 100, end: 105, raw: "100-105" },
+        tags: ["strategy"],
+      },
+      {
+        id: "2",
+        title: "Deep Work",
+        author: "Cal Newport",
+        content: "Focus is the new IQ.",
+        type: "highlight",
+        location: { start: 50, end: 55, raw: "50-55" },
+      },
+    ] as never[];
+
+    it("should export to TSV format", async () => {
+      const result = await exporter.export(sampleClippings);
+
+      expect(result.isOk()).toBe(true);
+      if (result.isOk()) {
+        const output = result.value.output as string;
+        expect(output).toContain("#separator:tab");
+        expect(output).toContain("#deck:Kindle Highlights");
+        expect(output).toContain("The Art of War");
+        expect(output).toContain("All warfare is based on deception");
+      }
+    });
+
+    it("should use custom deck name", async () => {
+      const result = await exporter.export(sampleClippings, {
+        deckName: "My Reading Notes",
+      });
+
+      expect(result.isOk()).toBe(true);
+      if (result.isOk()) {
+        expect(result.value.output).toContain("#deck:My Reading Notes");
+      }
+    });
+
+    it("should filter to highlights only by default", async () => {
+      const mixedClippings = [
+        ...sampleClippings,
+        { id: "3", title: "Test", content: "A note", type: "note" },
+      ] as never[];
+
+      const result = await exporter.export(mixedClippings, {
+        highlightsOnly: true,
+      });
+
+      expect(result.isOk()).toBe(true);
+      if (result.isOk()) {
+        const lines = (result.value.output as string)
+          .split("\n")
+          .filter((l) => !l.startsWith("#") && l.trim());
+        expect(lines).toHaveLength(2); // Only highlights
+      }
+    });
+
+    it("should include tags", async () => {
+      const result = await exporter.export(sampleClippings);
+
+      expect(result.isOk()).toBe(true);
+      if (result.isOk()) {
+        expect(result.value.output).toContain("book::the_art_of_war");
+        expect(result.value.output).toContain("author::sun_tzu");
+        expect(result.value.output).toContain("strategy");
+      }
+    });
+
+    it("should return error for empty clippings", async () => {
+      const result = await exporter.export([]);
+      expect(result.isErr()).toBe(true);
+    });
+
+    it("should include HTML formatting by default", async () => {
+      const result = await exporter.export(sampleClippings, {
+        htmlEnabled: true,
+      });
+
+      expect(result.isOk()).toBe(true);
+      if (result.isOk()) {
+        expect(result.value.output).toContain("<b>");
+        expect(result.value.output).toContain("</b>");
+      }
     });
   });
 });
