@@ -14,13 +14,12 @@ kindle-tools-ts/
 │   │   ├── processor.ts    # Dedup, merge, link notes (The "Processor")
 │   │   └── processing/     # Processing modules (dedup, merge, link, quality)
 │   │
+│   │
 │   ├── domain/             # Pure Business Logic (Entities & Rules)
 │   │   ├── index.ts        # Barrel export for all domain modules
-│   │   ├── stats.ts        # Statistics logic
-│   │   ├── geography.ts    # Coordinates & Distance
-│   │   ├── tags.ts         # Business rules for cleaning tags
-│   │   ├── locations.ts    # Page/location utilities
-│   │   └── sanitizers.ts   # Title/Author cleaning rules
+│   │   ├── core/           # Core entities (Identity, Locations, Constants)
+│   │   ├── parsing/        # Parsing logic (Dates, Languages, Sanitizers)
+│   │   └── analytics/      # Statistics & Aggregation
 │   │
 │   ├── importers/          # Data Ingestion
 │   │   ├── index.ts        # Barrel export
@@ -555,10 +554,9 @@ src/
 │   └── constants.ts      # Domain constants
 │
 ├── domain/               # 📦 Domain Entities & Pure Logic
-│   ├── stats.ts          # Statistics calculation
-│   ├── sanitizers.ts     # Data cleaning rules
-│   ├── languages.ts      # Language definitions & patterns
-│   └── geography.ts      # Geolocation extensions
+│   ├── core/             # Core Entities (Identity, Locations)
+│   ├── parsing/          # Parsing Rules (Dates, Languages, Tags)
+│   └── analytics/        # Business Intelligence (Stats)
 │
 ├── importers/            # 📥 Data Ingestion
 │   ├── core/             # Base interfaces and factories

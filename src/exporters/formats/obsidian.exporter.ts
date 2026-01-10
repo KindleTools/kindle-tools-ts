@@ -11,8 +11,8 @@
  */
 
 import type { Clipping } from "#app-types/clipping.js";
-import { getPageInfo } from "#domain/locations.js";
-import { groupByBook } from "#domain/stats.js";
+import { groupByBook } from "#domain/analytics/stats.js";
+import { getPageInfo } from "#domain/core/locations.js";
 import type { ExporterOptionsParsed } from "#schemas/exporter.schema.js";
 import { formatDateISO } from "#utils/system/dates.js";
 import type { ExportedFile, ExportResult } from "../core/types.js";

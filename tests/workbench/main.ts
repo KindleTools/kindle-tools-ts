@@ -7,8 +7,7 @@ import type { Clipping, ClippingType } from "#app-types/clipping.js";
 import type { ParseOptions, ParseResult } from "#app-types/config.js";
 import type { SupportedLanguage } from "#app-types/language.js";
 import { process } from "#core/processor.js";
-import * as GeoUtils from "#domain/geography.js";
-import * as StatUtils from "#domain/stats.js";
+import * as StatUtils from "#domain/analytics/stats.js";
 import { type ExportResult, type ExportSuccess, formatUserMessage } from "#errors";
 import {
   type AuthorCase,
@@ -27,6 +26,7 @@ import type { TarEntry } from "#utils/fs/tar.js";
 import * as TarUtils from "#utils/fs/tar.js";
 import type { ZipEntry } from "#utils/fs/zip.js";
 import * as ZipUtils from "#utils/fs/zip.js";
+import * as GeoUtils from "#utils/geo/index.js";
 import * as DateUtils from "#utils/system/dates.js";
 import * as TextUtils from "#utils/text/normalizers.js";
 

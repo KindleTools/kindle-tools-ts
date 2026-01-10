@@ -10,7 +10,7 @@ import type { Locale } from "date-fns";
 import { isValid, parse as parseDateFns } from "date-fns";
 import { de, enUS, es, fr, it, ja, ko, nl, pt, ru, zhCN } from "date-fns/locale";
 import type { SupportedLanguage } from "#app-types/language.js";
-import { LANGUAGE_MAP, SUPPORTED_LANGUAGES } from "#domain/languages.js";
+import { LANGUAGE_MAP, SUPPORTED_LANGUAGES } from "#domain/parsing/languages.js";
 
 /**
  * Locale map for date-fns.

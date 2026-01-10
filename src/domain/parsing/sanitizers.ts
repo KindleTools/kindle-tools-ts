@@ -4,7 +4,11 @@
  * @packageDocumentation
  */
 
-import { COMMON_PATTERNS, DRM_LIMIT_MESSAGES, TITLE_NOISE_PATTERNS } from "#domain/constants.js";
+import {
+  COMMON_PATTERNS,
+  DRM_LIMIT_MESSAGES,
+  TITLE_NOISE_PATTERNS,
+} from "#domain/core/constants.js";
 import { normalizeWhitespace } from "#utils/text/normalizers.js";
 
 /**

@@ -11,7 +11,7 @@ import {
   getPageInfo,
   LOCATIONS_PER_PAGE,
   PAGE_PADDING_LENGTH,
-} from "#domain/locations.js";
+} from "#domain/core/locations.js";
 
 describe("page-utils", () => {
   describe("constants", () => {
@@ -118,14 +118,14 @@ describe("page-utils", () => {
     });
 
     it("should estimate correctly for different locations", () => {
-      expect(getEffectivePage(null, { start: 1, end: null, raw: "1" })).toBe(1);
-      expect(getEffectivePage(null, { start: 100, end: null, raw: "100" })).toBe(7);
-      expect(getEffectivePage(null, { start: 1000, end: null, raw: "1000" })).toBe(63);
+      expect(getEffectivePage(null, { start: 1 })).toBe(1);
+      expect(getEffectivePage(null, { start: 100 })).toBe(7);
+      expect(getEffectivePage(null, { start: 1000 })).toBe(63);
     });
   });
 
   describe("getPageInfo", () => {
-    const location = { start: 160, end: null, raw: "160" };
+    const location = { start: 160 };
 
     it("should return correct info for actual page", () => {
       const info = getPageInfo(42, location);
@@ -163,13 +163,13 @@ describe("page-utils", () => {
     });
 
     it("should handle single-digit pages", () => {
-      const info = getPageInfo(5, { start: 50, end: null, raw: "50" });
+      const info = getPageInfo(5, { start: 50 });
 
       expect(info.formatted).toBe("[0005]");
     });
 
     it("should handle large page numbers", () => {
-      const info = getPageInfo(12345, { start: 160, end: null, raw: "160" });
+      const info = getPageInfo(12345, { start: 160 });
 
       expect(info.formatted).toBe("[12345]");
     });

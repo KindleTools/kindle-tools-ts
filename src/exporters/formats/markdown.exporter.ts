@@ -10,7 +10,7 @@
  */
 
 import type { Clipping } from "#app-types/clipping.js";
-import { groupByBook } from "#domain/stats.js";
+import { groupByBook } from "#domain/analytics/stats.js";
 import type { ExporterOptionsParsed } from "#schemas/exporter.schema.js";
 import { getTemplatePreset, TemplateEngine, type TemplatePreset } from "#templates/index.js";
 import type { ExportedFile, ExportResult } from "../core/types.js";

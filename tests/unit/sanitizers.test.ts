@@ -3,7 +3,12 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { extractAuthor, isSideloaded, sanitizeContent, sanitizeTitle } from "#domain/sanitizers.js";
+import {
+  extractAuthor,
+  isSideloaded,
+  sanitizeContent,
+  sanitizeTitle,
+} from "#domain/parsing/sanitizers.js";
 
 describe("sanitizers", () => {
   describe("sanitizeTitle", () => {

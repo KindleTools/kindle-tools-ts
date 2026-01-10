@@ -1,5 +1,5 @@
 import type { Clipping } from "#app-types/clipping.js";
-import { groupByBook } from "#domain/stats.js";
+import { groupByBook } from "#domain/analytics/stats.js";
 
 const MAX_DISTANCE = 10;
 

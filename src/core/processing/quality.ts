@@ -1,9 +1,9 @@
 import type { Clipping } from "#app-types/clipping.js";
+import { groupByBook } from "#domain/analytics/stats.js";
 import {
   DEFAULT_SIMILARITY_THRESHOLD,
   SUSPICIOUS_HIGHLIGHT_THRESHOLDS,
-} from "#domain/constants.js";
-import { groupByBook } from "#domain/stats.js";
+} from "#domain/core/constants.js";
 import { jaccardSimilarity } from "#utils/text/similarity.js";
 
 /**

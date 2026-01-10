@@ -3,7 +3,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { extractTagsFromNote, looksLikeTagNote } from "#domain/tags.js";
+import { extractTagsFromNote, looksLikeTagNote } from "#domain/parsing/tags.js";
 
 describe("tag-extractor", () => {
   describe("extractTagsFromNote", () => {

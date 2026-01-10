@@ -11,11 +11,16 @@ import type { Clipping, ClippingLocation, ClippingType } from "#app-types/clippi
 import type { ParseOptions, ParseResult, ParseWarning } from "#app-types/config.js";
 import type { SupportedLanguage } from "#app-types/language.js";
 import { process } from "#core/processor.js";
-import { parseKindleDate } from "#domain/dates.js";
-import { generateClippingId } from "#domain/identity.js";
-import { LANGUAGE_MAP } from "#domain/languages.js";
-import { extractAuthor, isSideloaded, sanitizeContent, sanitizeTitle } from "#domain/sanitizers.js";
-import { calculateStats } from "#domain/stats.js";
+import { calculateStats } from "#domain/analytics/stats.js";
+import { generateClippingId } from "#domain/core/identity.js";
+import { parseKindleDate } from "#domain/parsing/dates.js";
+import { LANGUAGE_MAP } from "#domain/parsing/languages.js";
+import {
+  extractAuthor,
+  isSideloaded,
+  sanitizeContent,
+  sanitizeTitle,
+} from "#domain/parsing/sanitizers.js";
 import { countWords } from "#utils/text/counting.js";
 import { normalizeWhitespace, removeBOM } from "#utils/text/normalizers.js";
 import { detectLanguage } from "./language-detector.js";

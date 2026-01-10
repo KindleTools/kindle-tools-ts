@@ -7,6 +7,8 @@
  * @packageDocumentation
  */
 
+// Statistics utilities
+export { calculateStats, groupByBook } from "./analytics/stats.js";
 // Page number utilities
 export {
   estimatePageFromLocation,
@@ -17,8 +19,7 @@ export {
   LOCATIONS_PER_PAGE,
   PAGE_PADDING_LENGTH,
   type PageInfo,
-} from "./locations.js";
-
+} from "./core/locations.js";
 // Sanitization utilities
 export {
   extractAuthor,
@@ -28,10 +29,7 @@ export {
   sanitizeTitle,
   type TitleAuthorResult,
   type TitleSanitizeResult,
-} from "./sanitizers.js";
-
-// Statistics utilities
-export { calculateStats, groupByBook } from "./stats.js";
+} from "./parsing/sanitizers.js";
 
 // Tag extraction utilities
 export {
@@ -40,4 +38,4 @@ export {
   type TagCase,
   type TagExtractionOptions,
   type TagExtractionResult,
-} from "./tags.js";
+} from "./parsing/tags.js";

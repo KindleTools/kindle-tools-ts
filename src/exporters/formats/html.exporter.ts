@@ -12,7 +12,7 @@
  */
 
 import type { Clipping } from "#app-types/clipping.js";
-import { groupByBook } from "#domain/stats.js";
+import { groupByBook } from "#domain/analytics/stats.js";
 import type { ExporterOptionsParsed } from "#schemas/exporter.schema.js";
 import { formatDateHuman } from "#utils/system/dates.js";
 import type { ExportedFile, ExportResult } from "../core/types.js";

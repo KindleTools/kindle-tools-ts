@@ -5,7 +5,7 @@
  */
 
 import type { SupportedLanguage } from "#app-types/language.js";
-import { LANGUAGE_MAP, SUPPORTED_LANGUAGES } from "#domain/languages.js";
+import { LANGUAGE_MAP, SUPPORTED_LANGUAGES } from "#domain/parsing/languages.js";
 import type { TokenizedBlock } from "./tokenizer.js";
 
 /**

@@ -3,7 +3,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { parseKindleDate, parseKindleDateAuto } from "#domain/dates.js";
+import { parseKindleDate, parseKindleDateAuto } from "#domain/parsing/dates.js";
 import { formatDateHuman, formatDateISO } from "#utils/system/dates.js";
 
 describe("date utilities", () => {
