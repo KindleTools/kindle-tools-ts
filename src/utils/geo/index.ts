@@ -1,11 +1,7 @@
 /**
- * Geographic location utilities for Kindle clippings.
+ * Geographic location utilities.
  *
- * Some users want to track where they were reading when they made highlights.
- * This is useful for:
- * - Personal knowledge management (Notion, Roam, Obsidian)
- * - Travel logs
- * - Reading journals
+ * Generic utilities for handling coordinates, formatting, and distance calculations.
  *
  * @packageDocumentation
  */
@@ -131,7 +127,6 @@ export function parseGeoLocation(input: string): GeoLocation | null {
 
   const cleaned = input.trim();
 
-  // Try decimal degrees format: "40.7128, -74.0060" or "40.7128 -74.0060"
   // Try decimal degrees format: "40.7128, -74.0060" or "40.7128 -74.0060"
   const decimalMatch = cleaned.match(/^(-?\d+\.?\d*)[,\s]+(-?\d+\.?\d*)$/);
   if (decimalMatch?.length === 3) {

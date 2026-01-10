@@ -17,10 +17,10 @@
 
 import type { Clipping } from "#app-types/clipping.js";
 import type { GeoLocation } from "#app-types/geo.js";
-import { sha256Sync } from "#domain/identity.js";
 import { formatPage, getEffectivePage } from "#domain/locations.js";
 import { groupByBook } from "#domain/stats.js";
 import type { ExporterOptionsParsed } from "#schemas/exporter.schema.js";
+import { sha256Sync } from "#utils/security/hashing.js";
 import { formatDateHuman } from "#utils/system/dates.js";
 import type { ExportedFile, ExportResult } from "../core/types.js";
 import { BaseExporter } from "../shared/base-exporter.js";

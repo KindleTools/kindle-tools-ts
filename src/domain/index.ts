@@ -7,16 +7,6 @@
  * @packageDocumentation
  */
 
-// Geographic location utilities
-export {
-  distanceBetween,
-  formatGeoLocation,
-  isValidGeoLocation,
-  parseGeoLocation,
-  toGoogleMapsUrl,
-  toOpenStreetMapUrl,
-} from "./geography.js";
-
 // Page number utilities
 export {
   estimatePageFromLocation,
@@ -41,7 +31,7 @@ export {
 } from "./sanitizers.js";
 
 // Statistics utilities
-export { calculateStats, countWords, groupByBook } from "./stats.js";
+export { calculateStats, groupByBook } from "./stats.js";
 
 // Tag extraction utilities
 export {

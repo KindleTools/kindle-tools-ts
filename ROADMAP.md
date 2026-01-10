@@ -67,13 +67,16 @@ pnpm run lint:eslint
 
 ### 1.4 Consolidar Logica de Fechas
 
-**Prioridad:** ALTA | **Esfuerzo:** Bajo
+**Prioridad:** ALTA | **Esfuerzo:** Bajo | **Estado:** DONE
 
 Actualmente la logica de fechas esta dividida entre:
 - `src/domain/dates.ts` - Parsing con soporte multi-idioma
 - `src/utils/system/dates.ts` - Utilidades de formateo
 
-**Accion:** Unificar en `src/utils/system/dates.ts` y que domain importe de ahi.
+**Accion:** Restaurar separación correcta.
+- `src/domain/dates.ts`: Lógica de parsing (negocio).
+- `src/utils/system/dates.ts`: Lógica de formateo (genérica).
+- **Extra:** Movido `sha256Sync` a `utils/security`, `countWords` a `utils/text` y `geography` a `utils/geo`.
 
 ---
 

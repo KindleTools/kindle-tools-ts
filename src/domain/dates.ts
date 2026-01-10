@@ -1,5 +1,7 @@
 /**
- * Date parsing utilities for Kindle clippings.
+ * Date parsing logic specifically for Kindle clippings.
+ *
+ * Contains business logic regarding supported languages and date formats.
  *
  * @packageDocumentation
  */
@@ -8,7 +10,7 @@ import type { Locale } from "date-fns";
 import { isValid, parse as parseDateFns } from "date-fns";
 import { de, enUS, es, fr, it, ja, ko, nl, pt, ru, zhCN } from "date-fns/locale";
 import type { SupportedLanguage } from "#app-types/language.js";
-import { LANGUAGE_MAP, SUPPORTED_LANGUAGES } from "./languages.js";
+import { LANGUAGE_MAP, SUPPORTED_LANGUAGES } from "#domain/languages.js";
 
 /**
  * Locale map for date-fns.
@@ -49,6 +51,10 @@ export interface DateParseAutoResult {
 export function parseKindleDate(dateString: string, language: SupportedLanguage): Date | null {
   const patterns = LANGUAGE_MAP[language];
   const locale = LOCALE_MAP[language];
+
+  if (!patterns || !locale) {
+    return null;
+  }
 
   const cleanDate = dateString.trim();
 
