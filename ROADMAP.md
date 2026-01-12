@@ -462,27 +462,7 @@ Cuando los importers fallan en filas especificas:
 
 ---
 
-### 2.16 Coverage Thresholds por Glob Pattern
 
-**Prioridad:** MEDIA | **Esfuerzo:** Bajo | **Estado:** Backlog
-
-Aprovechar la caracteristica de Vitest para thresholds por patron:
-
-```typescript
-coverage: {
-  thresholds: {
-    // Global
-    lines: 80,
-    // Critico: 95%
-    'src/core/**.ts': { lines: 95, functions: 95 },
-    'src/errors/**.ts': { lines: 95, functions: 95 },
-    // Utils: 85%
-    'src/utils/**.ts': { lines: 85 },
-  }
-}
-```
-
----
 
 ### 2.17 Merged Output Mode
 
@@ -802,6 +782,19 @@ Implementado en `tests/stress/parser.properties.test.ts` usando `fast-check`.
 
 ---
 
+### 4.7 Coverage Thresholds por Glob Pattern
+
+**Prioridad:** MEDIA | **Esfuerzo:** Bajo | **Estado:** DONE
+
+Configurado en `vitest.config.ts` para exigir mayor calidad en el núcleo:
+- **Global**: 80%
+- **Core (`src/core`)**: 95%
+- **Errors (`src/errors`)**: 95%
+- **Domain (`src/domain`)**: 90%
+- **Utils**: 85%
+
+---
+
 ## 5. Not Planned
 
 Las siguientes mejoras no estan planificadas en el corto/medio plazo:
@@ -880,7 +873,6 @@ Las siguientes mejoras no estan planificadas en el corto/medio plazo:
 | FileSystem Abstraction | Medio | Alto | Backlog |
 | Config File Improvements | Medio | Medio | Backlog |
 | Multi-File Exporter Base | Medio | Medio | Backlog |
-| Coverage por Glob | Medio | Bajo | Backlog |
 | TypeDoc | Medio | Bajo | Backlog |
 | **BAJA PRIORIDAD** |  |  |  |
 | Renombrar `process` | Bajo | Bajo | Backlog |
@@ -895,6 +887,7 @@ Las siguientes mejoras no estan planificadas en el corto/medio plazo:
 | Path Traversal Protection | Alto | Bajo | DONE |
 | Real-World Stress Testing | Medio | Medio | DONE |
 | Property-Based Testing | Medio | Medio | DONE |
+| Coverage Thresholds | Medio | Bajo | DONE |
 
 ---
 
@@ -930,4 +923,4 @@ Las siguientes mejoras no estan planificadas en el corto/medio plazo:
 ---
 
 *Documento actualizado: 2026-01-12*
-*Mejoras pendientes: ~22 | En Progreso: 1 | Completado: 11 | Not Planned: 20+*
+*Mejoras pendientes: ~21 | En Progreso: 1 | Completado: 12 | Not Planned: 20+*

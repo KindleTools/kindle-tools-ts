@@ -38,14 +38,39 @@ export default defineConfig({
         "src/**/index.ts",
       ],
 
-      // Coverage thresholds (ROADMAP 1.4)
+      // Coverage thresholds (ROADMAP 1.4 & 2.16)
       thresholds: {
         statements: 80,
         branches: 80,
         functions: 80,
         lines: 80,
-        // Enforce per-file thresholds
+        // Enforce per-file thresholds for generic files
         perFile: true,
+        // Specific Strict Thresholds
+        "src/core/**/*.ts": {
+          statements: 95,
+          branches: 90,
+          functions: 95,
+          lines: 95,
+        },
+        "src/domain/**/*.ts": {
+          statements: 90,
+          branches: 85,
+          functions: 90,
+          lines: 90,
+        },
+        "src/errors/**/*.ts": {
+          statements: 95,
+          branches: 95,
+          functions: 95,
+          lines: 95,
+        },
+        "src/utils/**/*.ts": {
+          statements: 85,
+          branches: 80,
+          functions: 85,
+          lines: 85,
+        },
       },
 
       // Clean coverage before running
