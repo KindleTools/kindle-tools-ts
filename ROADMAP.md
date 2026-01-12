@@ -450,13 +450,7 @@ describe('TxtParser property tests', () => {
 
 ---
 
-### 2.12 Real-World Stress Testing
 
-**Prioridad:** MEDIA | **Esfuerzo:** Medio | **Estado:** Backlog
-
-Suite de tests con archivos "feos": idiomas mezclados, formatos legacy, separadores malformados.
-
----
 
 ### 2.13 TypeDoc API Documentation
 
@@ -805,6 +799,18 @@ En `src/exporters/shared/exporter-utils.ts:199-227`, la funcion `generateFilePat
 
 ---
 
+### 4.5 Real-World Stress Testing
+
+**Prioridad:** MEDIA | **Esfuerzo:** Medio | **Estado:** DONE
+
+Implementada suite en `tests/stress/` que incluye:
+- **Naughty Strings**: Inyección de caracteres problemáticos (Unicode, Zalgo, SQL, Path Traversal) en todos los campos.
+- **Garbage Fuzzing**: Tests de robustez contra archivos binarios o aleatorios.
+- **Massive Files**: Validación de performance con archivos de 5MB+ y miles de clippings.
+- **Broken Structures**: Validación de manejo de errores con estructuras malformadas.
+
+---
+
 ## 5. Not Planned
 
 Las siguientes mejoras no estan planificadas en el corto/medio plazo:
@@ -897,6 +903,7 @@ Las siguientes mejoras no estan planificadas en el corto/medio plazo:
 | Consolidar Fechas | Alto | Bajo | DONE |
 | Constantes Limites Archivo | Alto | Bajo | DONE |
 | Path Traversal Protection | Alto | Bajo | DONE |
+| Real-World Stress Testing | Medio | Medio | DONE |
 
 ---
 
@@ -932,4 +939,4 @@ Las siguientes mejoras no estan planificadas en el corto/medio plazo:
 ---
 
 *Documento actualizado: 2026-01-12*
-*Mejoras pendientes: ~24 | En Progreso: 1 | Completado: 9 | Not Planned: 20+*
+*Mejoras pendientes: ~23 | En Progreso: 1 | Completado: 10 | Not Planned: 20+*
