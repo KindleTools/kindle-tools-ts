@@ -432,6 +432,38 @@ describe("ObsidianExporter", () => {
 
       expect(output).not.toContain("- secret-tag");
     });
+
+    it("should prevent path traversal in base folder", async () => {
+      const result = await exporter.export(SAMPLE_CLIPPINGS, {
+        folder: "../../unsafe",
+      });
+
+      expect(result.isErr()).toBe(true);
+      if (result.isErr()) {
+        expect(result.error.message).toContain("Path traversal detected");
+      }
+    });
+
+    it("should sanitize dangerous filenames", async () => {
+      const dangerousClipping = [
+        {
+          ...(SAMPLE_CLIPPINGS[0] as Clipping),
+          title: "../../etc/passwd",
+          author: "Cool/Author",
+        },
+      ];
+      const result = await exporter.export(dangerousClipping);
+      const { files } = getExportSuccess(result);
+
+      // Should sanitize slashes and dots to prevent traversal
+      // ../../etc/passwd -> ..-..-etc-passwd
+      // Cool/Author -> COOL-AUTHOR (default uppercase)
+      const path = files?.[0]?.path;
+      expect(path).toBeDefined();
+      expect(path).not.toContain("../");
+      expect(path).toContain("..-..-etc-passwd");
+      expect(path).toContain("COOL-AUTHOR");
+    });
   });
 });
 

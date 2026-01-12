@@ -201,9 +201,25 @@ export function generateFilePath(
   // Ensure extension has dot
   const ext = extension.startsWith(".") ? extension : `.${extension}`;
 
-  // Clean inputs just in case, though they should be sanitized by caller
-  const cleanTitle = title.trim();
-  const cleanAuthor = author.trim();
+  // Clean inputs to prevent slash injection and filesystem issues
+  const cleanTitle = sanitizeFilename(title.trim());
+  const cleanAuthor = sanitizeFilename(author.trim());
+
+  // Prevent "." or ".." as filenames which could cause traversal
+  if (cleanTitle === "." || cleanTitle === "..") {
+    throw new Error(`Invalid title: '${cleanTitle}' is reserved`);
+  }
+  if (cleanAuthor === "." || cleanAuthor === "..") {
+    throw new Error(`Invalid author: '${cleanAuthor}' is reserved`);
+  }
+
+  // Check baseFolder for traversal
+  if (baseFolder && baseFolder !== ".") {
+    const parts = baseFolder.split(/[/\\]/);
+    if (parts.includes("..")) {
+      throw new Error(`Path traversal detected in base folder: '${baseFolder}'`);
+    }
+  }
 
   // If baseFolder is ".", treat as empty (root)
   const prefix = baseFolder && baseFolder !== "." ? `${baseFolder}/` : "";
@@ -214,6 +230,9 @@ export function generateFilePath(
     case "by-author":
       return `${prefix}${cleanAuthor}/${cleanTitle}${ext}`;
     case "by-author-book":
+      // Author is a folder here, ensure it's not empty if something went wrong with sanitization
+      // (sanitizeFilename can return empty string if input was all bad chars)
+      // but assuming reasonable input or default "Unknown"
       return `${prefix}${cleanAuthor}/${cleanTitle}/${cleanTitle}${ext}`;
     default: // flat
       return `${prefix}${cleanTitle}${ext}`;

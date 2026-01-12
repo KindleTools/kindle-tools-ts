@@ -135,31 +135,11 @@ Aunque los datos vienen de archivos locales del usuario, es buena practica escap
 
 ---
 
-### 1.9 Proteccion Path Traversal en Exports
+### 1.8 Proteccion Path Traversal en Exports
 
-**Prioridad:** ALTA | **Esfuerzo:** Bajo
+**Prioridad:** ALTA | **Esfuerzo:** Bajo | **Estado:** DONE
 
-En `src/exporters/shared/exporter-utils.ts:194-221`, la funcion `generateFilePath` no valida path traversal:
-
-```typescript
-// Si author = "../../../etc" podria escapar del directorio
-return `${prefix}${cleanAuthor}/${cleanTitle}${ext}`;
-```
-
-**Solucion:**
-```typescript
-import path from 'node:path';
-
-function generateFilePath(...): string {
-  const result = `${prefix}${cleanAuthor}/${cleanTitle}${ext}`;
-  // Normalizar y validar que no escape del base
-  const normalized = path.normalize(result);
-  if (normalized.startsWith('..')) {
-    throw new Error('Path traversal detected');
-  }
-  return normalized;
-}
-```
+En `src/exporters/shared/exporter-utils.ts:194-221`, la funcion `generateFilePath` ahora valida path traversal sanitizando componentes y verificando `..`.
 
 ---
 
@@ -614,7 +594,7 @@ Las siguientes mejoras no estan planificadas en el corto/medio plazo debido a su
 | **ALTA PRIORIDAD** |  |  |  |
 | ESLint Neverthrow | Alto | Bajo | ✅ DONE |
 | Consolidar Fechas | Alto | Bajo | ✅ DONE |
-| Path Traversal Protection | Alto | Bajo | Pendiente |
+| Path Traversal Protection | Alto | Bajo | ✅ DONE |
 | Tests 0% Coverage | Alto | Medio | Pendiente |
 | Usar Error Types Custom | Alto | Bajo | Pendiente |
 | Constantes Limites Archivo | Alto | Bajo | Pendiente |
