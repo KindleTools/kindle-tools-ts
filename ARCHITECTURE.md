@@ -10,14 +10,15 @@ Technical overview of kindle-tools-ts for contributors and developers who want t
 kindle-tools-ts/
 ├── src/
 │   ├── core/               # Orchestration & System-wide logic
-│   │   ├── constants.ts    # System constants
+│   │   ├── limits.ts       # System limits (File size, filename lengths)
 │   │   ├── processor.ts    # Dedup, merge, link notes (The "Processor")
 │   │   └── processing/     # Processing modules (dedup, merge, link, quality)
 │   │
 │   │
 │   ├── domain/             # Pure Business Logic (Entities & Rules)
 │   │   ├── index.ts        # Barrel export for all domain modules
-│   │   ├── core/           # Core entities (Identity, Locations, Constants)
+│   │   ├── rules.ts        # Business Rules (Thresholds, Heuristics, Regex)
+│   │   ├── core/           # Core entities (Identity, Locations, Constants [Legacy])
 │   │   ├── parsing/        # Parsing logic (Dates, Languages, Sanitizers)
 │   │   └── analytics/      # Statistics & Aggregation
 │   │
@@ -549,11 +550,12 @@ This project follows a **Feature/Domain-based Architecture**, moving away from a
 src/
 ├── core/                 # 🧠 The Brain: Domain Logic (Business Rules)
 │   ├── processor.ts      # Main pipeline orchestration
+│   ├── limits.ts         # System constraints (Infrastructure)
 │   ├── hashing.ts        # ID generation logic (Business Rule)
-│   ├── similarity.ts     # Fuzzy duplicate detection logic (Business Rule)
-│   └── constants.ts      # Domain constants
+│   └── similarity.ts     # Fuzzy duplicate detection logic (Business Rule)
 │
 ├── domain/               # 📦 Domain Entities & Pure Logic
+│   ├── rules.ts          # Business Rules & Heuristics
 │   ├── core/             # Core Entities (Identity, Locations)
 │   ├── parsing/          # Parsing Rules (Dates, Languages, Tags)
 │   └── analytics/        # Business Intelligence (Stats)
