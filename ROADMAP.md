@@ -429,26 +429,7 @@ export function sanitizeFilename(name: string): string {
 
 ---
 
-### 2.11 Property-Based Testing (fast-check)
 
-**Prioridad:** MEDIA | **Esfuerzo:** Medio | **Estado:** Backlog
-
-```typescript
-import { fc } from '@fast-check/vitest';
-
-describe('TxtParser property tests', () => {
-  it('should never throw on arbitrary input', () => {
-    fc.assert(
-      fc.property(fc.string(), (input) => {
-        const result = parser.parse(input);
-        expect(result).toBeDefined();
-      })
-    );
-  });
-});
-```
-
----
 
 
 
@@ -811,6 +792,16 @@ Implementada suite en `tests/stress/` que incluye:
 
 ---
 
+### 4.6 Property-Based Testing (fast-check)
+
+**Prioridad:** MEDIA | **Esfuerzo:** Medio | **Estado:** DONE
+
+Implementado en `tests/stress/parser.properties.test.ts` usando `fast-check`.
+- Verifica que el parser nunca explota con input arbitrario (Fuzzing).
+- Verifica que bloques válidos generados sintéticamente siempre se parsean correctamente (Oracle).
+
+---
+
 ## 5. Not Planned
 
 Las siguientes mejoras no estan planificadas en el corto/medio plazo:
@@ -889,7 +880,6 @@ Las siguientes mejoras no estan planificadas en el corto/medio plazo:
 | FileSystem Abstraction | Medio | Alto | Backlog |
 | Config File Improvements | Medio | Medio | Backlog |
 | Multi-File Exporter Base | Medio | Medio | Backlog |
-| Property-Based Testing | Medio | Medio | Backlog |
 | Coverage por Glob | Medio | Bajo | Backlog |
 | TypeDoc | Medio | Bajo | Backlog |
 | **BAJA PRIORIDAD** |  |  |  |
@@ -904,6 +894,7 @@ Las siguientes mejoras no estan planificadas en el corto/medio plazo:
 | Constantes Limites Archivo | Alto | Bajo | DONE |
 | Path Traversal Protection | Alto | Bajo | DONE |
 | Real-World Stress Testing | Medio | Medio | DONE |
+| Property-Based Testing | Medio | Medio | DONE |
 
 ---
 
@@ -939,4 +930,4 @@ Las siguientes mejoras no estan planificadas en el corto/medio plazo:
 ---
 
 *Documento actualizado: 2026-01-12*
-*Mejoras pendientes: ~23 | En Progreso: 1 | Completado: 10 | Not Planned: 20+*
+*Mejoras pendientes: ~22 | En Progreso: 1 | Completado: 11 | Not Planned: 20+*
