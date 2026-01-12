@@ -1,0 +1,29 @@
+import * as fs from "fs";
+import * as path from "path";
+import { describe, expect, it } from "vitest";
+import { parse } from "../../src/importers/formats/txt/parser.js";
+
+describe("Parser Snapshot Tests", () => {
+  it("should match standard file output snapshot", async () => {
+    const fixturePath = path.resolve(__dirname, "fixtures/standard.txt");
+    const content = fs.readFileSync(fixturePath, "utf-8");
+
+    const result = parse(content);
+
+    // We normalize the parseTime in the meta stats because it's dynamic
+    const normalizedResult = {
+      ...result,
+      meta: {
+        ...result.meta,
+        parseTime: 0, // Stub out dynamic time
+      },
+    };
+
+    // toMatchFileSnapshot compares the serialized result against a file content.
+    // If the file doesn't exist, it creates it.
+    // Ideally, we start with a JSON snapshot.
+    const snapshotPath = path.resolve(__dirname, "fixtures/standard.output.json");
+
+    await expect(JSON.stringify(normalizedResult, null, 2)).toMatchFileSnapshot(snapshotPath);
+  });
+});

@@ -1,0 +1,171 @@
+{
+  "clippings": [
+    {
+      "id": "807043193d05",
+      "title": "My Book",
+      "titleRaw": "My Book (Author Name)",
+      "author": "Author Name",
+      "authorRaw": "My Book (Author Name)",
+      "content": "This is a highlight content.",
+      "contentRaw": "\nThis is a highlight content.",
+      "type": "highlight",
+      "page": 10,
+      "location": {
+        "raw": "100-110",
+        "start": 100,
+        "end": 110
+      },
+      "date": "2023-12-31T23:00:00.000Z",
+      "dateRaw": "Monday, January 1, 2024 12:00:00 AM",
+      "isLimitReached": false,
+      "isEmpty": false,
+      "language": "en",
+      "source": "kindle",
+      "wordCount": 5,
+      "charCount": 28,
+      "blockIndex": 0
+    },
+    {
+      "id": "fddccd805b7f",
+      "title": "Another Book",
+      "titleRaw": "Another Book (Different Author)",
+      "author": "Different Author",
+      "authorRaw": "Another Book (Different Author)",
+      "content": "This is a note content attached to a highlight maybe?",
+      "contentRaw": "\nThis is a note content attached to a highlight maybe?",
+      "type": "note",
+      "page": 12,
+      "location": {
+        "raw": "120",
+        "start": 120,
+        "end": null
+      },
+      "date": "2024-02-02T21:30:00.000Z",
+      "dateRaw": "Tuesday, February 2, 2024 10:30:00 PM",
+      "isLimitReached": false,
+      "isEmpty": false,
+      "language": "en",
+      "source": "kindle",
+      "wordCount": 10,
+      "charCount": 53,
+      "blockIndex": 1
+    },
+    {
+      "id": "56cde21c775f",
+      "title": "My Book",
+      "titleRaw": "My Book (Author Name)",
+      "author": "Author Name",
+      "authorRaw": "My Book (Author Name)",
+      "content": "Another highlight from the first book.",
+      "contentRaw": "\nAnother highlight from the first book.",
+      "type": "highlight",
+      "page": 15,
+      "location": {
+        "raw": "150-160",
+        "start": 150,
+        "end": 160
+      },
+      "date": "2024-03-03T08:15:00.000Z",
+      "dateRaw": "Wednesday, March 3, 2024 09:15:00 AM",
+      "isLimitReached": false,
+      "isEmpty": false,
+      "language": "en",
+      "source": "kindle",
+      "wordCount": 6,
+      "charCount": 38,
+      "blockIndex": 2
+    },
+    {
+      "id": "501fb6dce7bb",
+      "title": "Sideloaded Doc",
+      "titleRaw": "Sideloaded Doc",
+      "author": "Unknown",
+      "authorRaw": "Sideloaded Doc",
+      "content": "Clipping from a document without author in parenthesis correctly? No, actually sideloaded docs often lack author.",
+      "contentRaw": "\nClipping from a document without author in parenthesis correctly? No, actually sideloaded docs often lack author.",
+      "type": "highlight",
+      "page": null,
+      "location": {
+        "raw": "500-510",
+        "start": 500,
+        "end": 510
+      },
+      "date": "2024-04-04T16:45:00.000Z",
+      "dateRaw": "Thursday, April 4, 2024 06:45:00 PM",
+      "isLimitReached": false,
+      "isEmpty": false,
+      "language": "en",
+      "source": "kindle",
+      "wordCount": 16,
+      "charCount": 113,
+      "blockIndex": 3
+    }
+  ],
+  "stats": {
+    "total": 4,
+    "totalHighlights": 3,
+    "totalNotes": 1,
+    "totalBookmarks": 0,
+    "totalClips": 0,
+    "totalBooks": 3,
+    "totalAuthors": 3,
+    "booksList": [
+      {
+        "title": "My Book",
+        "author": "Author Name",
+        "highlights": 2,
+        "notes": 0,
+        "bookmarks": 0,
+        "wordCount": 11,
+        "dateRange": {
+          "earliest": "2023-12-31T23:00:00.000Z",
+          "latest": "2024-03-03T08:15:00.000Z"
+        }
+      },
+      {
+        "title": "Sideloaded Doc",
+        "author": "Unknown",
+        "highlights": 1,
+        "notes": 0,
+        "bookmarks": 0,
+        "wordCount": 16,
+        "dateRange": {
+          "earliest": "2024-04-04T16:45:00.000Z",
+          "latest": "2024-04-04T16:45:00.000Z"
+        }
+      },
+      {
+        "title": "Another Book",
+        "author": "Different Author",
+        "highlights": 0,
+        "notes": 1,
+        "bookmarks": 0,
+        "wordCount": 10,
+        "dateRange": {
+          "earliest": "2024-02-02T21:30:00.000Z",
+          "latest": "2024-02-02T21:30:00.000Z"
+        }
+      }
+    ],
+    "duplicatesRemoved": 0,
+    "mergedHighlights": 0,
+    "linkedNotes": 0,
+    "emptyRemoved": 0,
+    "drmLimitReached": 0,
+    "dateRange": {
+      "earliest": "2023-12-31T23:00:00.000Z",
+      "latest": "2024-04-04T16:45:00.000Z"
+    },
+    "totalWords": 37,
+    "avgWordsPerHighlight": 12,
+    "avgHighlightsPerBook": 1
+  },
+  "warnings": [],
+  "meta": {
+    "fileSize": 755,
+    "parseTime": 0,
+    "detectedLanguage": "en",
+    "totalBlocks": 4,
+    "parsedBlocks": 4
+  }
+}

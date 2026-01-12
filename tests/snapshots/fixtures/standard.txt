@@ -1,0 +1,20 @@
+My Book (Author Name)
+- Your Highlight on page 10 | Location 100-110 | Added on Monday, January 1, 2024 12:00:00 AM
+
+This is a highlight content.
+==========
+Another Book (Different Author)
+- Your Note on page 12 | Location 120 | Added on Tuesday, February 2, 2024 10:30:00 PM
+
+This is a note content attached to a highlight maybe?
+==========
+My Book (Author Name)
+- Your Highlight on page 15 | Location 150-160 | Added on Wednesday, March 3, 2024 09:15:00 AM
+
+Another highlight from the first book.
+==========
+Sideloaded Doc
+- Your Highlight on Location 500-510 | Added on Thursday, April 4, 2024 06:45:00 PM
+
+Clipping from a document without author in parenthesis correctly? No, actually sideloaded docs often lack author.
+==========
