@@ -472,12 +472,9 @@ resetLogger();
 To silence all logs (useful for tests or production):
 
 ```typescript
-import { setLogger } from 'kindle-tools-ts';
+import { setLogger, nullLogger } from 'kindle-tools-ts';
 
-setLogger({
-  error: () => {},
-  warn: () => {},
-});
+setLogger(nullLogger);
 ```
 
 ---

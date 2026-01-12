@@ -377,6 +377,38 @@ result.match(
 - **Composable**: Chain operations with `.andThen()`, `.map()`, `.orElse()`
 - **Async support**: `ResultAsync` wraps Promise-based operations
 
+### Logger Injection
+
+The logging system uses dependency injection to allow consumers to redirect logs to their preferred backend.
+
+```typescript
+// src/errors/logger.ts
+
+// Interface for custom loggers
+export interface Logger {
+  error(entry: ErrorLogEntry): void;
+  warn(entry: ErrorLogEntry): void;
+}
+
+// Default implementation (console)
+const defaultLogger: Logger = {
+  error: (entry) => console.error(JSON.stringify(entry)),
+  warn: (entry) => console.warn(JSON.stringify(entry)),
+};
+
+// Injection API
+let currentLogger: Logger = defaultLogger;
+export function setLogger(logger: Logger): void { currentLogger = logger; }
+export function resetLogger(): void { currentLogger = defaultLogger; }
+export function getLogger(): Logger { return currentLogger; }
+```
+
+**Benefits:**
+- **No global state pollution**: Library doesn't force console output
+- **Integration-friendly**: Works with Pino, Winston, Sentry, Datadog, etc.
+- **Testable**: Inject mock loggers in tests
+- **Silenceable**: Use a null logger for production if desired
+
 ## Plugin System
 
 The project includes an extensible plugin architecture for custom importers/exporters.

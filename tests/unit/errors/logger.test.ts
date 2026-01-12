@@ -4,6 +4,7 @@ import {
   type Logger,
   logError,
   logWarning,
+  nullLogger,
   resetLogger,
   setLogger,
 } from "#errors/logger.js";
@@ -189,6 +190,17 @@ describe("logger", () => {
           stack: expect.any(String),
         }),
       );
+    });
+
+    it("nullLogger should silence all logs", () => {
+      setLogger(nullLogger);
+
+      const error: AppError = { code: "TEST", message: "test" };
+      logError(error);
+      logWarning("test warning");
+
+      expect(consoleErrorSpy).not.toHaveBeenCalled();
+      expect(consoleWarnSpy).not.toHaveBeenCalled();
     });
   });
 });

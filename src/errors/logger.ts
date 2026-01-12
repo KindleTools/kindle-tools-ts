@@ -77,6 +77,7 @@ export interface Logger {
 
 /**
  * Default logger implementation using console.
+ * Uses pretty print in development, single-line JSON in production.
  */
 const defaultLogger: Logger = {
   error: (entry) => {
@@ -97,6 +98,25 @@ const defaultLogger: Logger = {
       console.warn(JSON.stringify(entry));
     }
   },
+};
+
+/**
+ * Null logger that discards all log entries.
+ *
+ * Useful for silencing logs in tests or production environments
+ * where you don't want any logging output.
+ *
+ * @example
+ * ```typescript
+ * import { setLogger, nullLogger } from 'kindle-tools-ts';
+ *
+ * // Silence all logs
+ * setLogger(nullLogger);
+ * ```
+ */
+export const nullLogger: Logger = {
+  error: () => {},
+  warn: () => {},
 };
 
 /**

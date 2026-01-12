@@ -460,18 +460,7 @@ Archivos que exceden ~400 lineas y podrian beneficiarse de refactoring:
 
 Se crean multiples instancias de `TemplateEngine` (cada una compila templates Handlebars). Podria optimizarse con caching o factory pattern.
 
-### 2.18 Type Testing (expectTypeOf)
 
-**Prioridad:** MEDIA | **Esfuerzo:** Bajo | **Estado:** Pendiente
-
-Asegurar la integridad de los tipos exportados para evitar regresiones silenciosas en la API pública.
-
-```typescript
-import { expectTypeOf } from 'vitest'
-expectTypeOf(parser.parse(input)).toEqualTypeOf<ParseResult>()
-```
-
----
 
 ### 2.19 Snapshot Testing para Parsers
 
@@ -844,7 +833,6 @@ Las siguientes mejoras no estan planificadas en el corto/medio plazo:
 | Tests Coverage < 80% | Alto | Medio | En Progreso |
 | Eliminar bin package.json | Bajo | Trivial | DONE |
 | Mejoras Post-AppException | Medio | Bajo | Pendiente |
-| Type Testing | Medio | Bajo | Pendiente |
 | Snapshot Testing Parsers | Medio | Medio | Pendiente |
 | **MEDIA PRIORIDAD** |  |  |  |
 | Carga Dinamica Locales | Bajo | Medio | Backlog |
@@ -869,6 +857,7 @@ Las siguientes mejoras no estan planificadas en el corto/medio plazo:
 | Property-Based Testing | Medio | Medio | DONE |
 | Coverage Thresholds | Medio | Bajo | DONE |
 | Logger Injection | Medio | Medio | DONE |
+| Type Testing | Medio | Bajo | DONE |
 
 ---
 
@@ -904,4 +893,4 @@ Las siguientes mejoras no estan planificadas en el corto/medio plazo:
 ---
 
 *Documento actualizado: 2026-01-12*
-*Mejoras pendientes: ~22 | En Progreso: 1 | Completado: 13 | Not Planned: 21+*
+*Mejoras pendientes: ~21 | En Progreso: 1 | Completado: 14 | Not Planned: 21+*

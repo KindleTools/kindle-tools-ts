@@ -159,6 +159,7 @@ export {
   getLogger,
   logError,
   logWarning,
+  nullLogger,
   resetLogger,
   setLogger,
 } from "./errors/logger.js";
