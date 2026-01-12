@@ -111,7 +111,11 @@ function processResult(result: CosmiconfigResult): LoadedConfig | null {
 
   if (!parseResult.success) {
     const errorMessage = formatZodError(parseResult.error);
-    throw new Error(`Invalid configuration in ${result.filepath}:\n${errorMessage}`);
+    throw new AppException({
+      code: "CONFIG_INVALID",
+      message: `Invalid configuration in ${result.filepath}:\n${errorMessage}`,
+      path: result.filepath,
+    });
   }
 
   return {

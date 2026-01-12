@@ -22,7 +22,7 @@ Documento consolidado con todas las mejoras pendientes, organizadas por priorida
 
 ### 1.1 BUG CRITICO: Imports Rotos en index.ts
 
-**Prioridad:** CRITICA | **Esfuerzo:** Trivial | **Estado:** Pendiente
+**Prioridad:** CRITICA | **Esfuerzo:** Trivial | **Estado:** DONE
 
 **Ubicacion:** `src/index.ts:128-129`
 
@@ -49,7 +49,7 @@ X [ERROR] Could not resolve "./domain/stats.js"
 
 ### 1.2 Bug: Cache de Configuracion (cosmiconfig Singleton)
 
-**Prioridad:** ALTA | **Esfuerzo:** Bajo | **Estado:** Pendiente
+**Prioridad:** ALTA | **Esfuerzo:** Bajo | **Estado:** DONE
 
 **Ubicacion:** `src/config/loader.ts`
 
@@ -87,7 +87,7 @@ export function clearConfigCache(): void {
 
 ### 1.3 Magic Numbers en Parser
 
-**Prioridad:** ALTA | **Esfuerzo:** Bajo | **Estado:** Pendiente
+**Prioridad:** ALTA | **Esfuerzo:** Bajo | **Estado:** DONE
 
 **Ubicacion:** `src/importers/formats/txt/parser.ts`
 
@@ -122,7 +122,7 @@ Si Amazon cambia el formato y anade una linea extra de metadata, sera facil de r
 
 ### 1.4 Usar Tipos de Error Custom en Lugar de throw Error()
 
-**Prioridad:** ALTA | **Esfuerzo:** Bajo | **Estado:** Pendiente
+**Prioridad:** ALTA | **Esfuerzo:** Bajo | **Estado:** DONE
 
 Algunos lugares usan `throw new Error()` generico en lugar de los tipos de error del proyecto o `Result<T, E>`:
 
@@ -161,7 +161,7 @@ Archivos criticos con cobertura insuficiente:
 
 ### 1.6 Eliminar Entry "bin" del package.json
 
-**Prioridad:** ALTA | **Esfuerzo:** Trivial | **Estado:** Pendiente
+**Prioridad:** ALTA | **Esfuerzo:** Trivial | **Estado:** DONE
 
 **Ubicacion:** `package.json:10-12`
 
@@ -846,13 +846,13 @@ Las siguientes mejoras no estan planificadas en el corto/medio plazo:
 | Mejora | Impacto | Esfuerzo | Estado |
 |--------|---------|----------|--------|
 | **CRITICA** |  |  |  |
-| Imports rotos index.ts | Critico | Trivial | Pendiente |
+| Imports rotos index.ts | Critico | Trivial | DONE |
 | **ALTA PRIORIDAD** |  |  |  |
-| Bug Cache Configuracion | Alto | Bajo | Pendiente |
-| Magic Numbers Parser | Medio | Bajo | Pendiente |
-| Error Types Custom | Medio | Bajo | Pendiente |
+| Bug Cache Configuracion | Alto | Bajo | DONE |
+| Magic Numbers Parser | Medio | Bajo | DONE |
+| Error Types Custom | Medio | Bajo | DONE |
 | Tests Coverage < 80% | Alto | Medio | Pendiente |
-| Eliminar bin package.json | Bajo | Trivial | Pendiente |
+| Eliminar bin package.json | Bajo | Trivial | DONE |
 | **MEDIA PRIORIDAD** |  |  |  |
 | Logger Injection | Medio | Medio | Backlog |
 | Carga Dinamica Locales | Bajo | Medio | Backlog |
@@ -910,4 +910,4 @@ Las siguientes mejoras no estan planificadas en el corto/medio plazo:
 ---
 
 *Documento actualizado: 2026-01-12*
-*Mejoras pendientes: ~30 | Completado: 4 | Not Planned: 20+*
+*Mejoras pendientes: ~25 | Completado: 9 | Not Planned: 20+*

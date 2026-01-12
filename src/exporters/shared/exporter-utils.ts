@@ -8,7 +8,13 @@
  */
 
 import type { Clipping } from "#app-types/clipping.js";
-import { type ExportedFile, type ExportResult, exportSuccess, exportUnknownError } from "#errors";
+import {
+  AppException,
+  type ExportedFile,
+  type ExportResult,
+  exportSuccess,
+  exportUnknownError,
+} from "#errors";
 import { DEFAULTS } from "../../config/defaults.js";
 import { SYSTEM_LIMITS } from "../../core/limits.js";
 import { sanitizeCSVField } from "../../utils/security/csv-sanitizer.js";
@@ -87,7 +93,7 @@ export function createErrorResult(error: unknown): ExportResult {
  */
 export function sanitizeFilename(
   name: string,
-  maxLength = SYSTEM_LIMITS.MAX_FILENAME_LENGTH,
+  maxLength: number = SYSTEM_LIMITS.MAX_FILENAME_LENGTH,
 ): string {
   return name
     .replace(/[<>:"/\\|?*]/g, "-")
@@ -212,17 +218,29 @@ export function generateFilePath(
 
   // Prevent "." or ".." as filenames which could cause traversal
   if (cleanTitle === "." || cleanTitle === "..") {
-    throw new Error(`Invalid title: '${cleanTitle}' is reserved`);
+    throw new AppException({
+      code: "VALIDATION_ARGS",
+      message: `Invalid title: '${cleanTitle}' is reserved`,
+      args: { title: cleanTitle },
+    });
   }
   if (cleanAuthor === "." || cleanAuthor === "..") {
-    throw new Error(`Invalid author: '${cleanAuthor}' is reserved`);
+    throw new AppException({
+      code: "VALIDATION_ARGS",
+      message: `Invalid author: '${cleanAuthor}' is reserved`,
+      args: { author: cleanAuthor },
+    });
   }
 
   // Check baseFolder for traversal
   if (baseFolder && baseFolder !== ".") {
     const parts = baseFolder.split(/[/\\]/);
     if (parts.includes("..")) {
-      throw new Error(`Path traversal detected in base folder: '${baseFolder}'`);
+      throw new AppException({
+        code: "VALIDATION_ARGS",
+        message: `Path traversal detected in base folder: '${baseFolder}'`,
+        args: { baseFolder },
+      });
     }
   }
 

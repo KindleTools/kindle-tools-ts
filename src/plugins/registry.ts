@@ -26,6 +26,7 @@
  * @packageDocumentation
  */
 
+import { AppException } from "#errors";
 import type {
   ExporterInstance,
   ExporterPlugin,
@@ -164,7 +165,11 @@ class PluginRegistry {
   registerImporter(plugin: ImporterPlugin, options?: { allowOverwrite?: boolean }): void {
     const validation = validateImporterPlugin(plugin);
     if (!validation.valid) {
-      throw new Error(`Invalid importer plugin '${plugin.name}': ${validation.errors.join(", ")}`);
+      throw new AppException({
+        code: "VALIDATION_SCHEMA",
+        message: `Invalid importer plugin '${plugin.name}': ${validation.errors.join(", ")}`,
+        schema: "ImporterPlugin",
+      });
     }
 
     // Log warnings
@@ -182,9 +187,14 @@ class PluginRegistry {
         : `.${ext.toLowerCase()}`;
 
       if (this.importers.has(normalized) && !options?.allowOverwrite) {
-        throw new Error(
-          `Extension '${normalized}' is already registered by plugin '${this.importers.get(normalized)?.plugin.name}'`,
-        );
+        throw new AppException({
+          code: "VALIDATION_ARGS",
+          message: `Extension '${normalized}' is already registered by plugin '${this.importers.get(normalized)?.plugin.name}'`,
+          args: {
+            extension: normalized,
+            existingPlugin: this.importers.get(normalized)?.plugin.name,
+          },
+        });
       }
 
       normalizedExtensions.push(normalized);
@@ -269,7 +279,11 @@ class PluginRegistry {
   registerExporter(plugin: ExporterPlugin, options?: { allowOverwrite?: boolean }): void {
     const validation = validateExporterPlugin(plugin);
     if (!validation.valid) {
-      throw new Error(`Invalid exporter plugin '${plugin.name}': ${validation.errors.join(", ")}`);
+      throw new AppException({
+        code: "VALIDATION_SCHEMA",
+        message: `Invalid exporter plugin '${plugin.name}': ${validation.errors.join(", ")}`,
+        schema: "ExporterPlugin",
+      });
     }
 
     // Log warnings
@@ -286,9 +300,11 @@ class PluginRegistry {
 
     for (const format of formats) {
       if (this.exporters.has(format) && !options?.allowOverwrite) {
-        throw new Error(
-          `Format '${format}' is already registered by plugin '${this.exporters.get(format)?.plugin.name}'`,
-        );
+        throw new AppException({
+          code: "VALIDATION_ARGS",
+          message: `Format '${format}' is already registered by plugin '${this.exporters.get(format)?.plugin.name}'`,
+          args: { format, existingPlugin: this.exporters.get(format)?.plugin.name },
+        });
       }
     }
 
