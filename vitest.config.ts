@@ -10,7 +10,7 @@ export default defineConfig({
     environment: "node",
 
     // Include patterns for test files
-    include: ["tests/**/*.{test,spec}.{ts,js}", "src/**/*.{test,spec}.{ts,js}"],
+    include: ["tests/**/*.{test,spec,test-d}.{ts,js}", "src/**/*.{test,spec,test-d}.{ts,js}"],
 
     // Exclude patterns
     exclude: ["**/node_modules/**", "**/dist/**", "**/dist-gui/**", "**/e2e/**"],

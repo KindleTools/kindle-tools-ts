@@ -449,6 +449,36 @@ The `AppError` type union covers:
 - `VALIDATION_*`: schema or argument errors
 - `FS_*`: file system errors
 
+### Custom Logger
+
+By default, the library logs errors and warnings to `console`. You can inject your own logger to redirect logs to your preferred backend (Pino, Winston, Sentry, Datadog, etc.):
+
+```typescript
+import { setLogger, resetLogger, type Logger } from 'kindle-tools-ts';
+import pino from 'pino';
+
+const pinoLogger = pino();
+
+// Inject custom logger
+setLogger({
+  error: (entry) => pinoLogger.error(entry),
+  warn: (entry) => pinoLogger.warn(entry),
+});
+
+// Later, reset to default console logger
+resetLogger();
+```
+
+To silence all logs (useful for tests or production):
+
+```typescript
+import { setLogger } from 'kindle-tools-ts';
+
+setLogger({
+  error: () => {},
+  warn: () => {},
+});
+```
 
 ---
 
