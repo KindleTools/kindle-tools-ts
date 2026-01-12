@@ -462,17 +462,7 @@ Se crean multiples instancias de `TemplateEngine` (cada una compila templates Ha
 
 
 
-### 2.19 Snapshot Testing para Parsers
 
-**Prioridad:** MEDIA | **Esfuerzo:** Medio | **Estado:** Pendiente
-
-Sustituir aserciones repetitivas por snapshots estables para validar la salida completa de los parsers.
-
-```typescript
-expect(parser.parse(file)).toMatchFileSnapshot('./output.json')
-```
-
----
 
 
 
@@ -833,7 +823,6 @@ Las siguientes mejoras no estan planificadas en el corto/medio plazo:
 | Tests Coverage < 80% | Alto | Medio | En Progreso |
 | Eliminar bin package.json | Bajo | Trivial | DONE |
 | Mejoras Post-AppException | Medio | Bajo | Pendiente |
-| Snapshot Testing Parsers | Medio | Medio | Pendiente |
 | **MEDIA PRIORIDAD** |  |  |  |
 | Carga Dinamica Locales | Bajo | Medio | Backlog |
 | Type Assertions Plugins | Medio | Medio | Backlog |
@@ -848,7 +837,19 @@ Las siguientes mejoras no estan planificadas en el corto/medio plazo:
 | TemplateEngine Cache | Bajo | Bajo | Backlog |
 | Monorepo Structure | Bajo | Alto | Backlog |
 | Browser Entry Point | Bajo | Medio | Backlog |
-| **COMPLETADO** |  |  |  |
+| 
+### 4.10 Snapshot Testing para Parsers
+
+**Prioridad:** MEDIA | **Esfuerzo:** Medio | **Estado:** DONE
+
+Implementado en `tests/snapshots/parser.snapshot.test.ts`.
+- Usa `toMatchFileSnapshot` para validar salidas complejas JSON.
+- Asegura que cualquier cambio en la lógica de parsing sea intencional y visible en el diff.
+- Utiliza fixtures realistas (`tests/snapshots/fixtures/standard.txt`).
+
+---
+
+**COMPLETADO** |  |  |  |
 | ESLint Neverthrow | Alto | Bajo | DONE |
 | Consolidar Fechas | Alto | Bajo | DONE |
 | Constantes Limites Archivo | Alto | Bajo | DONE |
@@ -858,6 +859,7 @@ Las siguientes mejoras no estan planificadas en el corto/medio plazo:
 | Coverage Thresholds | Medio | Bajo | DONE |
 | Logger Injection | Medio | Medio | DONE |
 | Type Testing | Medio | Bajo | DONE |
+| Snapshot Testing | Medio | Medio | DONE |
 
 ---
 
@@ -893,4 +895,4 @@ Las siguientes mejoras no estan planificadas en el corto/medio plazo:
 ---
 
 *Documento actualizado: 2026-01-12*
-*Mejoras pendientes: ~21 | En Progreso: 1 | Completado: 14 | Not Planned: 21+*
+*Mejoras pendientes: ~20 | En Progreso: 1 | Completado: 15 | Not Planned: 21+*
