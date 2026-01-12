@@ -138,24 +138,23 @@ Algunos lugares usan `throw new Error()` generico en lugar de los tipos de error
 
 ### 1.5 Tests para Archivos con Bajo/0% Coverage
 
-**Prioridad:** ALTA | **Esfuerzo:** Medio | **Estado:** Pendiente
+**Prioridad:** ALTA | **Esfuerzo:** Medio | **Estado:** En Progreso
 
-**Coverage actual:** 75.92% statements, 64.25% branches (umbral: 80%)
+**Coverage actual:** 88.47% statements, 76.38% branches (umbral: 80%)
 
-Archivos criticos con cobertura insuficiente:
+Archivos con cobertura completada (100%):
+- `src/core/processing/tag-processor.ts` - DONE
+- `src/core/processing/filter.ts` - DONE
+- `src/utils/fs/tar.ts` - DONE (80% branches)
+- `src/utils/fs/zip.ts` - DONE
+- `src/utils/text/encoding.ts` - DONE
+
+Archivos pendientes:
 
 | Archivo | Statements | Branches | Funcionalidad |
 |---------|------------|----------|---------------|
-| `src/core/processing/tag-processor.ts` | 0% | 0% | Extraccion de tags |
-| `src/core/processing/filter.ts` | 57.89% | 40% | Filtrado de clippings |
-| `src/core/processing/merger.ts` | 73.68% | 55.73% | Merge de highlights |
-| `src/core/processing/quality.ts` | 74.54% | 59.37% | Quality checks |
-| `src/errors/codes.ts` | 54.54% | - | Error codes |
-| `src/utils/fs/tar.ts` | ~0% | ~0% | Creacion de archivos TAR |
-| `src/utils/fs/zip.ts` | ~0% | ~0% | Creacion de archivos ZIP |
-| `src/utils/text/encoding.ts` | ~0% | ~0% | Deteccion de BOM/encoding |
-| `src/plugins/discovery.ts` | ~0% | ~0% | Carga dinamica de plugins |
-| `src/errors/logger.ts` | ~0% | ~0% | Logging estructurado |
+| `src/errors/logger.ts` | 0% | 0% | Logging estructurado |
+| `src/plugins/discovery.ts` | 85.91% | 74.13% | Carga dinamica de plugins (falta branches) |
 
 ---
 
@@ -176,6 +175,28 @@ Archivos criticos con cobertura insuficiente:
 El archivo `dist/cli.js` existe pero solo contiene un shebang vacio. Esto puede confundir a usuarios que intenten usar la CLI.
 
 **Accion:** Eliminar la seccion `"bin"` del `package.json`.
+
+---
+
+### 1.7 Mejoras Post-AppException
+
+**Prioridad:** ALTA | **Esfuerzo:** Bajo | **Estado:** Pendiente
+
+Tras la implementacion de `AppException`, hay mejoras de seguimiento:
+
+1. **Tests para AppException** - Validar que `code` y `appError` funcionan correctamente
+2. **Actualizar tests de plugins** - Verificar que lanzan `AppException` en lugar de solo `Error`:
+   ```typescript
+   // Actualmente:
+   expect(() => pluginRegistry.registerImporter(invalidPlugin)).toThrow();
+
+   // Mejorar a:
+   expect(() => pluginRegistry.registerImporter(invalidPlugin)).toThrow(AppException);
+   ```
+3. **Documentar AppException** - Añadir ejemplos de manejo de errores tipados en README
+4. **Considerar PluginError especifico** - En vez de reutilizar `ValidationError` generico
+
+**Nota arquitectonica:** A largo plazo, migrar funciones de registro de plugins a retornar `Result<void, ValidationError>` seria mas idiomatico con el uso de neverthrow en el proyecto.
 
 ---
 
@@ -851,8 +872,9 @@ Las siguientes mejoras no estan planificadas en el corto/medio plazo:
 | Bug Cache Configuracion | Alto | Bajo | DONE |
 | Magic Numbers Parser | Medio | Bajo | DONE |
 | Error Types Custom | Medio | Bajo | DONE |
-| Tests Coverage < 80% | Alto | Medio | Pendiente |
+| Tests Coverage < 80% | Alto | Medio | En Progreso |
 | Eliminar bin package.json | Bajo | Trivial | DONE |
+| Mejoras Post-AppException | Medio | Bajo | Pendiente |
 | **MEDIA PRIORIDAD** |  |  |  |
 | Logger Injection | Medio | Medio | Backlog |
 | Carga Dinamica Locales | Bajo | Medio | Backlog |
@@ -910,4 +932,4 @@ Las siguientes mejoras no estan planificadas en el corto/medio plazo:
 ---
 
 *Documento actualizado: 2026-01-12*
-*Mejoras pendientes: ~25 | Completado: 9 | Not Planned: 20+*
+*Mejoras pendientes: ~24 | En Progreso: 1 | Completado: 9 | Not Planned: 20+*
