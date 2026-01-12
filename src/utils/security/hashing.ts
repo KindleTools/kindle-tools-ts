@@ -28,8 +28,15 @@ export function sha256Sync(input: string): string {
     // Crypto not available, fall through to browser implementation
   }
 
-  // Browser/fallback environment - use simple hash (djb2 + fnv1a combined for better distribution)
-  // Note: This is NOT cryptographically secure, but sufficient for ID generation
+  // Browser/fallback environment - use simple hash
+  return simpleHash(input);
+}
+
+/**
+ * Simple non-cryptographic hash function (djb2 + fnv1a combined).
+ * Exported for testing purposes.
+ */
+export function simpleHash(input: string): string {
   let h1 = 0xdeadbeef;
   let h2 = 0x41c6ce57;
 

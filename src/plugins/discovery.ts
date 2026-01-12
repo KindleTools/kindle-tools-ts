@@ -42,6 +42,7 @@
  * @packageDocumentation
  */
 
+import { dynamicImport } from "./importer.js";
 import { pluginRegistry } from "./registry.js";
 import {
   type ExporterPlugin,
@@ -220,7 +221,7 @@ export async function loadPlugin(
 
   try {
     // Dynamically import the package
-    const pluginModule = (await import(packageName)) as Record<string, unknown>;
+    const pluginModule = (await dynamicImport(packageName)) as Record<string, unknown>;
 
     // Look for plugins in the module
     const plugins: Plugin[] = [];

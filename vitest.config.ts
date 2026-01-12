@@ -21,7 +21,7 @@ export default defineConfig({
       provider: "v8",
 
       // Coverage reporters
-      reporter: ["text", "text-summary", "html", "lcov", "json"],
+      reporter: ["text", "text-summary", "html", "lcov", "json", "json-summary"],
 
       // Files to include in coverage
       include: ["src/**/*.ts"],
