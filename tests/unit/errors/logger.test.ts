@@ -1,5 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { logError, logWarning } from "#errors/logger.js";
+import {
+  getLogger,
+  type Logger,
+  logError,
+  logWarning,
+  resetLogger,
+  setLogger,
+} from "#errors/logger.js";
 import type { AppError } from "#errors/types.js";
 
 describe("logger", () => {
@@ -16,6 +23,7 @@ describe("logger", () => {
   afterEach(() => {
     vi.restoreAllMocks();
     process.env.NODE_ENV = originalEnv;
+    resetLogger(); // Always restore default logger after each test
   });
 
   describe("logError", () => {
@@ -93,6 +101,94 @@ describe("logger", () => {
       logWarning("Dev warn");
 
       expect(consoleWarnSpy).toHaveBeenCalledWith("[WARN]", expect.stringContaining("{\n"));
+    });
+  });
+
+  describe("logger injection", () => {
+    it("setLogger should replace the default logger", () => {
+      const customError = vi.fn();
+      const customWarn = vi.fn();
+      const customLogger: Logger = {
+        error: customError,
+        warn: customWarn,
+      };
+
+      setLogger(customLogger);
+      const error: AppError = { code: "TEST", message: "test" };
+      logError(error);
+
+      expect(customError).toHaveBeenCalledOnce();
+      expect(consoleErrorSpy).not.toHaveBeenCalled();
+    });
+
+    it("setLogger should work for warnings too", () => {
+      const customError = vi.fn();
+      const customWarn = vi.fn();
+      const customLogger: Logger = {
+        error: customError,
+        warn: customWarn,
+      };
+
+      setLogger(customLogger);
+      logWarning("test warning");
+
+      expect(customWarn).toHaveBeenCalledOnce();
+      expect(consoleWarnSpy).not.toHaveBeenCalled();
+    });
+
+    it("resetLogger should restore the default logger", () => {
+      const customLogger: Logger = {
+        error: vi.fn(),
+        warn: vi.fn(),
+      };
+
+      setLogger(customLogger);
+      resetLogger();
+
+      const error: AppError = { code: "TEST", message: "test" };
+      logError(error);
+
+      expect(customLogger.error).not.toHaveBeenCalled();
+      expect(consoleErrorSpy).toHaveBeenCalled();
+    });
+
+    it("getLogger should return the current logger", () => {
+      const customLogger: Logger = {
+        error: vi.fn(),
+        warn: vi.fn(),
+      };
+
+      const defaultLogger = getLogger();
+      setLogger(customLogger);
+      const currentLogger = getLogger();
+
+      expect(currentLogger).toBe(customLogger);
+      expect(currentLogger).not.toBe(defaultLogger);
+    });
+
+    it("custom logger should receive full ErrorLogEntry", () => {
+      const customError = vi.fn();
+      const customLogger: Logger = {
+        error: customError,
+        warn: vi.fn(),
+      };
+
+      setLogger(customLogger);
+      const cause = new Error("root cause");
+      const error: AppError = { code: "TEST_CODE", message: "test message", cause };
+      logError(error, { operation: "import", path: "/tmp/file.txt", data: { extra: "info" } });
+
+      expect(customError).toHaveBeenCalledWith(
+        expect.objectContaining({
+          level: "error",
+          code: "TEST_CODE",
+          message: "test message",
+          operation: "import",
+          path: "/tmp/file.txt",
+          data: { extra: "info" },
+          stack: expect.any(String),
+        }),
+      );
     });
   });
 });

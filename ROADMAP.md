@@ -460,7 +460,32 @@ Archivos que exceden ~400 lineas y podrian beneficiarse de refactoring:
 
 Se crean multiples instancias de `TemplateEngine` (cada una compila templates Handlebars). Podria optimizarse con caching o factory pattern.
 
+### 2.18 Type Testing (expectTypeOf)
+
+**Prioridad:** MEDIA | **Esfuerzo:** Bajo | **Estado:** Pendiente
+
+Asegurar la integridad de los tipos exportados para evitar regresiones silenciosas en la API pública.
+
+```typescript
+import { expectTypeOf } from 'vitest'
+expectTypeOf(parser.parse(input)).toEqualTypeOf<ParseResult>()
+```
+
 ---
+
+### 2.19 Snapshot Testing para Parsers
+
+**Prioridad:** MEDIA | **Esfuerzo:** Medio | **Estado:** Pendiente
+
+Sustituir aserciones repetitivas por snapshots estables para validar la salida completa de los parsers.
+
+```typescript
+expect(parser.parse(file)).toMatchFileSnapshot('./output.json')
+```
+
+---
+
+
 
 ### 3.4 Missing Return Types Explicitos
 
@@ -738,9 +763,13 @@ Configurado en `vitest.config.ts` para exigir mayor calidad en el núcleo:
 **Prioridad:** MEDIA | **Esfuerzo:** Medio | **Estado:** DONE
 
 Se implementó el patrón de Logger Injection en `src/errors/logger.ts`.
-- `Logger` interface exportada.
-- `setLogger()` permite inyectar loggers externos (Winston, Pino, etc).
+- `Logger` interface exportada con métodos `error()` y `warn()`.
+- `setLogger()` permite inyectar loggers externos (Winston, Pino, Sentry, Datadog, etc).
+- `resetLogger()` restaura el logger por defecto.
+- `getLogger()` obtiene el logger actual (útil para tests).
 - `defaultLogger` mantiene el comportamiento original (console).
+- API exportada en `src/index.ts`: `Logger`, `ErrorLogEntry`, `ErrorLogContext`, `setLogger`, `resetLogger`, `getLogger`, `logError`, `logWarning`.
+- Tests completos en `tests/unit/errors/logger.test.ts` (11 tests).
 
 ---
 
@@ -792,6 +821,7 @@ Las siguientes mejoras no estan planificadas en el corto/medio plazo:
 ### Testing
 
 - **E2E Testing con Playwright (GUI)**: Tests end-to-end para la GUI
+- **Mutation Testing (Stryker)**: Demasiado costoso en tiempo de CPU/CI para el beneficio actual.
 
 ### Permanentemente Descartados
 
@@ -814,6 +844,8 @@ Las siguientes mejoras no estan planificadas en el corto/medio plazo:
 | Tests Coverage < 80% | Alto | Medio | En Progreso |
 | Eliminar bin package.json | Bajo | Trivial | DONE |
 | Mejoras Post-AppException | Medio | Bajo | Pendiente |
+| Type Testing | Medio | Bajo | Pendiente |
+| Snapshot Testing Parsers | Medio | Medio | Pendiente |
 | **MEDIA PRIORIDAD** |  |  |  |
 | Carga Dinamica Locales | Bajo | Medio | Backlog |
 | Type Assertions Plugins | Medio | Medio | Backlog |
@@ -872,4 +904,4 @@ Las siguientes mejoras no estan planificadas en el corto/medio plazo:
 ---
 
 *Documento actualizado: 2026-01-12*
-*Mejoras pendientes: ~20 | En Progreso: 1 | Completado: 13 | Not Planned: 20+*
+*Mejoras pendientes: ~22 | En Progreso: 1 | Completado: 13 | Not Planned: 21+*

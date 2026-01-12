@@ -145,3 +145,20 @@ export {
   getErrorMessage,
   toError,
 } from "./utils/system/errors.js";
+
+// =============================================================================
+// Logger API (Dependency Injection)
+// =============================================================================
+
+export type {
+  ErrorLogContext,
+  ErrorLogEntry,
+  Logger,
+} from "./errors/logger.js";
+export {
+  getLogger,
+  logError,
+  logWarning,
+  resetLogger,
+  setLogger,
+} from "./errors/logger.js";

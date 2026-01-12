@@ -51,11 +51,27 @@ export interface ErrorLogEntry {
 }
 
 /**
- * Interface for a logger implementation.
- * Allows consumers to inject their own logger (e.g., Pino, Winston).
+ * Logger interface for dependency injection.
+ *
+ * Implement this interface to redirect logs to your preferred logging backend
+ * (Pino, Winston, Sentry, Datadog, file, etc.).
+ *
+ * @example
+ * ```typescript
+ * import { setLogger, type Logger } from 'kindle-tools-ts';
+ * import winston from 'winston';
+ *
+ * const winstonLogger = winston.createLogger({ level: 'info' });
+ * setLogger({
+ *   error: (entry) => winstonLogger.error(entry.message, entry),
+ *   warn: (entry) => winstonLogger.warn(entry.message, entry),
+ * });
+ * ```
  */
 export interface Logger {
+  /** Log an error entry */
   error(entry: ErrorLogEntry): void;
+  /** Log a warning entry */
   warn(entry: ErrorLogEntry): void;
 }
 
@@ -98,9 +114,20 @@ export function setLogger(logger: Logger): void {
 
 /**
  * Reset the logger to the default implementation.
+ *
+ * Useful for tests or when you want to restore default behavior.
  */
 export function resetLogger(): void {
   currentLogger = defaultLogger;
+}
+
+/**
+ * Get the current logger instance.
+ *
+ * Useful for tests to verify logger configuration.
+ */
+export function getLogger(): Logger {
+  return currentLogger;
 }
 
 /**
