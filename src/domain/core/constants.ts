@@ -19,8 +19,8 @@ export {
   DRM_LIMIT_MESSAGES,
   SUSPICIOUS_HIGHLIGHT_THRESHOLDS,
   TITLE_NOISE_PATTERNS,
-} from "../../constants/analysis.js";
+} from "../rules.js";
 
 // Re-export specific value for backward compatibility with existing tests/code
-import { ANALYSIS_THRESHOLDS } from "../../constants/analysis.js";
+import { ANALYSIS_THRESHOLDS } from "../rules.js";
 export const DEFAULT_SIMILARITY_THRESHOLD = ANALYSIS_THRESHOLDS.DEFAULT_SIMILARITY_THRESHOLD;

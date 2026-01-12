@@ -22,7 +22,7 @@ import { formatPage, getEffectivePage } from "#domain/core/locations.js";
 import type { ExporterOptionsParsed } from "#schemas/exporter.schema.js";
 import { sha256Sync } from "#utils/security/hashing.js";
 import { formatDateHuman } from "#utils/system/dates.js";
-import { PROCESSING_THRESHOLDS } from "../../constants/processing.js";
+import { PROCESSING_THRESHOLDS } from "../../domain/rules.js";
 import type { ExportedFile, ExportResult } from "../core/types.js";
 import { BaseExporter } from "../shared/base-exporter.js";
 

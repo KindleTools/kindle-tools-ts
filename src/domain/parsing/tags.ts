@@ -12,7 +12,7 @@
  * @packageDocumentation
  */
 
-import { PROCESSING_THRESHOLDS } from "../../constants/processing.js";
+import { PROCESSING_THRESHOLDS } from "../rules.js";
 
 /**
  * Case transformation for extracted tags.

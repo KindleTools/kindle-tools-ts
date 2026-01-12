@@ -1,10 +1,10 @@
 /**
- * Constants related to file processing limits and thresholds.
+ * Constants defining system limits and technical thresholds.
  *
- * These values define boundaries for file operations, streaming behavior,
- * and data retention to ensure system stability and performance.
+ * These values represent hard limits of the processing engine,
+ * file system constraints, and memory safety boundaries.
  */
-export const FILE_THRESHOLDS = {
+export const SYSTEM_LIMITS = {
   /**
    * Files larger than this size (in MB) will trigger streaming mode
    * to prevent memory exhaustion (OutOfMemory errors).

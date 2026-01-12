@@ -6,7 +6,7 @@
 
 import type { ClippingType } from "#app-types/clipping.js";
 import { sha256Sync } from "#utils/security/hashing.js";
-import { PROCESSING_THRESHOLDS } from "../../constants/processing.js";
+import { PROCESSING_THRESHOLDS } from "../rules.js";
 
 /**
  * Generate a unique, deterministic ID for a clipping.
