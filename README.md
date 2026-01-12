@@ -408,6 +408,48 @@ const pageInfo = Utils.getPageInfo(150);
 // import { normalizeText } from 'kindle-tools-ts/dist/utils/normalizers'; // Requires checking specific paths
 ```
 
+### Error Handling
+
+The library uses a mix of `neverthrow` Results (for operations that might fail predictably) and explicit `AppException` (for structural/validation errors).
+
+```typescript
+import { 
+  parseFile, 
+  AppException, 
+  isImportError, 
+  isValidationError 
+} from 'kindle-tools-ts';
+
+try {
+  const result = await parseFile('invalid.txt');
+  
+  // neverthrow pattern (if used by the API):
+  if (result.isErr()) {
+    console.error('Operation failed:', result.error.message);
+  }
+} catch (error) {
+  if (error instanceof AppException) {
+     console.error(`Error Code: ${error.code}`);
+     
+     if (isImportError(error.appError)) {
+       console.error('Import specific error:', error.appError.detailedMessage);
+     } else if (isValidationError(error.appError)) {
+       console.error('Validation issues:', error.appError.issues);
+     }
+  } else {
+    console.error('Unexpected error:', error);
+  }
+}
+```
+
+The `AppError` type union covers:
+- `IMPORT_*`: specific parsing errors
+- `EXPORT_*`: export failures
+- `CONFIG_*`: loader issues
+- `VALIDATION_*`: schema or argument errors
+- `FS_*`: file system errors
+
+
 ---
 
 ## 📤 Export Formats

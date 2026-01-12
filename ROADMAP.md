@@ -138,7 +138,7 @@ Algunos lugares usan `throw new Error()` generico en lugar de los tipos de error
 
 ### 1.5 Tests para Archivos con Bajo/0% Coverage
 
-**Prioridad:** ALTA | **Esfuerzo:** Medio | **Estado:** En Progreso
+**Prioridad:** ALTA | **Esfuerzo:** Medio | **Estado:** DONE
 
 **Coverage actual:** 88.47% statements, 76.38% branches (umbral: 80%)
 
@@ -153,8 +153,8 @@ Archivos pendientes:
 
 | Archivo | Statements | Branches | Funcionalidad |
 |---------|------------|----------|---------------|
-| `src/errors/logger.ts` | 0% | 0% | Logging estructurado |
-| `src/plugins/discovery.ts` | 85.91% | 74.13% | Carga dinamica de plugins (falta branches) |
+| `src/errors/logger.ts` | 100% | 100% | Logging estructurado - DONE |
+| `src/plugins/discovery.ts` | 97.14% | 86.2% | Carga dinamica de plugins - DONE |
 
 ---
 
@@ -180,7 +180,7 @@ El archivo `dist/cli.js` existe pero solo contiene un shebang vacio. Esto puede 
 
 ### 1.7 Mejoras Post-AppException
 
-**Prioridad:** ALTA | **Esfuerzo:** Bajo | **Estado:** Pendiente
+**Prioridad:** ALTA | **Esfuerzo:** Bajo | **Estado:** DONE
 
 Tras la implementacion de `AppException`, hay mejoras de seguimiento:
 

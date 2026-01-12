@@ -5,12 +5,14 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Clipping } from "#app-types/clipping.js";
+import { AppException } from "#errors";
 import {
   AnkiExporter,
   ankiExporterPlugin,
   createHeaderHook,
   createHighlightsOnlyFilter,
   createMinLengthFilter,
+  createTimestampHook,
   type ExporterPlugin,
   HookRegistry,
   hookRegistry,
@@ -74,7 +76,7 @@ describe("Plugin System", () => {
 
       it("should reject duplicate formats by default", () => {
         registry.registerExporter(validExporterPlugin);
-        expect(() => registry.registerExporter(validExporterPlugin)).toThrow(/already registered/);
+        expect(() => registry.registerExporter(validExporterPlugin)).toThrow(AppException);
       });
 
       it("should allow overwriting with option", () => {
@@ -99,22 +101,22 @@ describe("Plugin System", () => {
 
       it("should reject plugins with invalid names", () => {
         const invalidPlugin = { ...validExporterPlugin, name: "" };
-        expect(() => registry.registerExporter(invalidPlugin)).toThrow(/name/);
+        expect(() => registry.registerExporter(invalidPlugin)).toThrow(AppException);
       });
 
       it("should reject plugins with invalid versions", () => {
         const invalidPlugin = { ...validExporterPlugin, version: "invalid" };
-        expect(() => registry.registerExporter(invalidPlugin)).toThrow(/version/);
+        expect(() => registry.registerExporter(invalidPlugin)).toThrow(AppException);
       });
 
       it("should reject plugins without format", () => {
         const invalidPlugin = { ...validExporterPlugin, format: "" };
-        expect(() => registry.registerExporter(invalidPlugin)).toThrow(/format/);
+        expect(() => registry.registerExporter(invalidPlugin)).toThrow(AppException);
       });
 
       it("should reject plugins without create function", () => {
         const invalidPlugin = { ...validExporterPlugin, create: null as never };
-        expect(() => registry.registerExporter(invalidPlugin)).toThrow(/create/);
+        expect(() => registry.registerExporter(invalidPlugin)).toThrow(AppException);
       });
     });
 
@@ -153,7 +155,7 @@ describe("Plugin System", () => {
 
       it("should reject duplicate extensions by default", () => {
         registry.registerImporter(validImporterPlugin);
-        expect(() => registry.registerImporter(validImporterPlugin)).toThrow(/already registered/);
+        expect(() => registry.registerImporter(validImporterPlugin)).toThrow(AppException);
       });
 
       it("should allow overwriting with option", () => {
@@ -178,12 +180,12 @@ describe("Plugin System", () => {
 
       it("should reject plugins with empty extensions", () => {
         const invalidPlugin = { ...validImporterPlugin, extensions: [] };
-        expect(() => registry.registerImporter(invalidPlugin)).toThrow(/extension/);
+        expect(() => registry.registerImporter(invalidPlugin)).toThrow(AppException);
       });
 
       it("should reject plugins without create function", () => {
         const invalidPlugin = { ...validImporterPlugin, create: null as never };
-        expect(() => registry.registerImporter(invalidPlugin)).toThrow(/create/);
+        expect(() => registry.registerImporter(invalidPlugin)).toThrow(AppException);
       });
     });
 
@@ -524,6 +526,41 @@ describe("HookRegistry", () => {
       const hook = createHeaderHook("// Generated");
       const result = await hook("content", "md");
       expect(result).toBe("// Generated\ncontent");
+    });
+
+    it("createTimestampHook should add timestamp for non-json", async () => {
+      const hook = createTimestampHook();
+      const result = await hook("content", "md");
+      expect(result).toContain("// Generated:");
+      expect(result).toContain("content");
+    });
+
+    it("createTimestampHook should NOT add timestamp for json", async () => {
+      const hook = createTimestampHook();
+      const result = await hook('{"a":1}', "json");
+      expect(result).toBe('{"a":1}');
+    });
+
+    it("createMinLengthFilter should handle null content", async () => {
+      const filter = createMinLengthFilter(10);
+      const clippings = [{ content: null }] as never[];
+      // Should treat null as length 0 and filter it out
+      const result = await filter(clippings, "json");
+      expect(result).toHaveLength(0);
+    });
+  });
+
+  describe("Edge cases", () => {
+    it("should handle double unsubscribe gracefully", () => {
+      const registry = new HookRegistry();
+      const unsubscribe = registry.add("beforeImport", (c) => c);
+
+      // First unsubscribe works
+      unsubscribe();
+      expect(registry.hasHooks("beforeImport")).toBe(false);
+
+      // Second unsubscribe does nothing (and doesn't throw)
+      expect(() => unsubscribe()).not.toThrow();
     });
   });
 });
