@@ -22,6 +22,7 @@ import { formatPage, getEffectivePage } from "#domain/core/locations.js";
 import type { ExporterOptionsParsed } from "#schemas/exporter.schema.js";
 import { sha256Sync } from "#utils/security/hashing.js";
 import { formatDateHuman } from "#utils/system/dates.js";
+import { PROCESSING_THRESHOLDS } from "../../constants/processing.js";
 import type { ExportedFile, ExportResult } from "../core/types.js";
 import { BaseExporter } from "../shared/base-exporter.js";
 
@@ -366,7 +367,9 @@ export class JoplinExporter extends BaseExporter {
    * Format: "[0042] snippet..." (Python-compatible, no emojis)
    */
   private generateNoteTitle(clipping: Clipping, estimate = true): string {
-    const preview = clipping.content.slice(0, 50).replace(/\n/g, " ");
+    const preview = clipping.content
+      .slice(0, PROCESSING_THRESHOLDS.PREVIEW_CONTENT_LENGTH)
+      .replace(/\n/g, " ");
 
     // Determine page number
     let pageNum = 0;

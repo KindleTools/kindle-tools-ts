@@ -5,8 +5,8 @@
  */
 
 import type { ClippingType } from "#app-types/clipping.js";
-
 import { sha256Sync } from "#utils/security/hashing.js";
+import { PROCESSING_THRESHOLDS } from "../../constants/processing.js";
 
 /**
  * Generate a unique, deterministic ID for a clipping.
@@ -40,14 +40,17 @@ export function generateClippingId(
 ): string {
   const normalizedTitle = title.toLowerCase().trim();
   const normalizedLocation = location.trim();
-  const prefix = contentPrefix.slice(0, 50).toLowerCase().trim();
+  const prefix = contentPrefix
+    .slice(0, PROCESSING_THRESHOLDS.IDENTITY_CONTENT_PREFIX_LENGTH)
+    .toLowerCase()
+    .trim();
 
   const input = `${normalizedTitle}|${normalizedLocation}|${type}|${prefix}`;
 
   const hash = sha256Sync(input);
 
   // Return first 12 characters for a shorter, URL-safe ID
-  return hash.slice(0, 12);
+  return hash.slice(0, PROCESSING_THRESHOLDS.IDENTITY_ID_LENGTH);
 }
 
 /**

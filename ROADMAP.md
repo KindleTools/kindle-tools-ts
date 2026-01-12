@@ -82,7 +82,7 @@ Actualmente la logica de fechas esta dividida entre:
 
 ### 1.5 Crear Constantes de Limites de Archivo
 
-**Prioridad:** ALTA | **Esfuerzo:** Bajo
+**Prioridad:** ALTA | **Esfuerzo:** Bajo | **Estado:** DONE
 
 Crear `src/constants/file-thresholds.ts`:
 

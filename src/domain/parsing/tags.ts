@@ -12,6 +12,8 @@
  * @packageDocumentation
  */
 
+import { PROCESSING_THRESHOLDS } from "../../constants/processing.js";
+
 /**
  * Case transformation for extracted tags.
  */
@@ -53,12 +55,12 @@ const TAG_SEPARATORS = /[,;.\n\r]+/;
 /**
  * Maximum length for a single tag.
  */
-const MAX_TAG_LENGTH = 50;
+const MAX_TAG_LENGTH = PROCESSING_THRESHOLDS.TAG_MAX_LENGTH;
 
 /**
  * Minimum length for a single tag.
  */
-const MIN_TAG_LENGTH = 2;
+const MIN_TAG_LENGTH = PROCESSING_THRESHOLDS.TAG_MIN_LENGTH;
 
 /**
  * Extract tags from a note's content.
@@ -220,12 +222,12 @@ export function looksLikeTagNote(noteContent: string): boolean {
   const trimmed = noteContent.trim();
 
   // Short notes with separators are likely tags
-  if (trimmed.length < 200 && TAG_SEPARATORS.test(trimmed)) {
+  if (trimmed.length < PROCESSING_THRESHOLDS.TAG_NOTE_MAX_LENGTH && TAG_SEPARATORS.test(trimmed)) {
     return true;
   }
 
   // Short notes without spaces are likely tags
-  if (trimmed.length < 50 && !trimmed.includes(" ")) {
+  if (trimmed.length < PROCESSING_THRESHOLDS.TAG_NOTE_SHORT_LENGTH && !trimmed.includes(" ")) {
     return true;
   }
 

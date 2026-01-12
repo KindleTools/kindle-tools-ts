@@ -9,6 +9,7 @@
 
 import type { Clipping } from "#app-types/clipping.js";
 import { type ExportedFile, type ExportResult, exportSuccess, exportUnknownError } from "#errors";
+import { FILE_THRESHOLDS } from "../../constants/file-thresholds.js";
 import { sanitizeCSVField } from "../../utils/security/csv-sanitizer.js";
 import type { AuthorCase, FolderStructure } from "../core/types.js";
 
@@ -83,7 +84,10 @@ export function createErrorResult(error: unknown): ExportResult {
  * @param maxLength - Maximum length (default: 100)
  * @returns Safe filename
  */
-export function sanitizeFilename(name: string, maxLength = 100): string {
+export function sanitizeFilename(
+  name: string,
+  maxLength = FILE_THRESHOLDS.MAX_FILENAME_LENGTH,
+): string {
   return name
     .replace(/[<>:"/\\|?*]/g, "-")
     .replace(/\s+/g, " ")
