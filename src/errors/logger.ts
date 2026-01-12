@@ -1,7 +1,23 @@
 /**
- * Structured error logging utilities.
+ * Structured error logging utilities with dependency injection support.
  *
  * Provides consistent error logging with context for debugging.
+ * Supports logger injection for custom logging backends (Pino, Winston, Sentry, Datadog, etc.).
+ *
+ * @example
+ * ```typescript
+ * import { setLogger, resetLogger, type Logger } from 'kindle-tools-ts';
+ * import pino from 'pino';
+ *
+ * const pinoLogger = pino();
+ * setLogger({
+ *   error: (entry) => pinoLogger.error(entry),
+ *   warn: (entry) => pinoLogger.warn(entry),
+ * });
+ *
+ * // Later, reset to default console logger
+ * resetLogger();
+ * ```
  *
  * @packageDocumentation
  */
@@ -23,7 +39,7 @@ export interface ErrorLogContext {
 /**
  * Structured log entry for errors.
  */
-interface ErrorLogEntry {
+export interface ErrorLogEntry {
   timestamp: string;
   level: "error" | "warn";
   code: string;
@@ -32,6 +48,59 @@ interface ErrorLogEntry {
   path?: string;
   data?: Record<string, unknown>;
   stack?: string;
+}
+
+/**
+ * Interface for a logger implementation.
+ * Allows consumers to inject their own logger (e.g., Pino, Winston).
+ */
+export interface Logger {
+  error(entry: ErrorLogEntry): void;
+  warn(entry: ErrorLogEntry): void;
+}
+
+/**
+ * Default logger implementation using console.
+ */
+const defaultLogger: Logger = {
+  error: (entry) => {
+    if (process.env["NODE_ENV"] === "development") {
+      // biome-ignore lint/suspicious/noConsole: Logger implementation
+      console.error("[ERROR]", JSON.stringify(entry, null, 2));
+    } else {
+      // biome-ignore lint/suspicious/noConsole: Logger implementation
+      console.error(JSON.stringify(entry));
+    }
+  },
+  warn: (entry) => {
+    if (process.env["NODE_ENV"] === "development") {
+      // biome-ignore lint/suspicious/noConsole: Logger implementation
+      console.warn("[WARN]", JSON.stringify(entry, null, 2));
+    } else {
+      // biome-ignore lint/suspicious/noConsole: Logger implementation
+      console.warn(JSON.stringify(entry));
+    }
+  },
+};
+
+/**
+ * The current logger instance.
+ */
+let currentLogger: Logger = defaultLogger;
+
+/**
+ * Configure the logger to use.
+ * @param logger - The logger implementation to use
+ */
+export function setLogger(logger: Logger): void {
+  currentLogger = logger;
+}
+
+/**
+ * Reset the logger to the default implementation.
+ */
+export function resetLogger(): void {
+  currentLogger = defaultLogger;
 }
 
 /**
@@ -61,14 +130,7 @@ export function logError(error: AppError, context?: ErrorLogContext): void {
     entry.stack = error.cause.stack;
   }
 
-  // In development, use pretty print; in production, use single-line JSON
-  if (process.env["NODE_ENV"] === "development") {
-    // biome-ignore lint/suspicious/noConsole: Logger implementation
-    console.error("[ERROR]", JSON.stringify(entry, null, 2));
-  } else {
-    // biome-ignore lint/suspicious/noConsole: Logger implementation
-    console.error(JSON.stringify(entry));
-  }
+  currentLogger.error(entry);
 }
 
 /**
@@ -98,11 +160,5 @@ export function logWarning(message: string, context?: ErrorLogContext): void {
     ...context,
   };
 
-  if (process.env["NODE_ENV"] === "development") {
-    // biome-ignore lint/suspicious/noConsole: Logger implementation
-    console.warn("[WARN]", JSON.stringify(entry, null, 2));
-  } else {
-    // biome-ignore lint/suspicious/noConsole: Logger implementation
-    console.warn(JSON.stringify(entry));
-  }
+  currentLogger.warn(entry);
 }

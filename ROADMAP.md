@@ -202,69 +202,7 @@ Tras la implementacion de `AppException`, hay mejoras de seguimiento:
 
 ## 2. Mejoras Media Prioridad
 
-### 2.1 Inyeccion de Logger (Arquitectura)
 
-**Prioridad:** MEDIA | **Esfuerzo:** Medio | **Estado:** Pendiente
-
-**Ubicacion:** `src/errors/logger.ts`
-
-**Problema:** El logging escribe directamente a `console.error`/`console.warn` (lineas 66, 68, 100, 103). Esto le quita control al consumidor de la libreria.
-
-Si un desarrollador usa la libreria en su aplicacion y quiere redirigir los logs a Sentry, Datadog, Winston, Pino, o un archivo, no puede hacerlo facilmente.
-
-**Solucion:** Implementar patron de "Logger Injection":
-
-```typescript
-// src/errors/logger.ts
-
-export interface LoggerInterface {
-  error: (entry: ErrorLogEntry) => void;
-  warn: (entry: ErrorLogEntry) => void;
-}
-
-// Logger por defecto (actual comportamiento)
-const defaultLogger: LoggerInterface = {
-  error: (entry) => {
-    if (process.env["NODE_ENV"] === "development") {
-      console.error("[ERROR]", JSON.stringify(entry, null, 2));
-    } else {
-      console.error(JSON.stringify(entry));
-    }
-  },
-  warn: (entry) => {
-    if (process.env["NODE_ENV"] === "development") {
-      console.warn("[WARN]", JSON.stringify(entry, null, 2));
-    } else {
-      console.warn(JSON.stringify(entry));
-    }
-  },
-};
-
-let currentLogger: LoggerInterface = defaultLogger;
-
-export function setLogger(logger: LoggerInterface): void {
-  currentLogger = logger;
-}
-
-export function resetLogger(): void {
-  currentLogger = defaultLogger;
-}
-```
-
-Esto permite a los usuarios configurar su propio logger al inicializar:
-
-```typescript
-import { setLogger } from 'kindle-tools-ts';
-import pino from 'pino';
-
-const logger = pino();
-setLogger({
-  error: (entry) => logger.error(entry),
-  warn: (entry) => logger.warn(entry),
-});
-```
-
----
 
 ### 2.2 Carga Dinamica de Locales date-fns
 
@@ -795,6 +733,17 @@ Configurado en `vitest.config.ts` para exigir mayor calidad en el núcleo:
 
 ---
 
+### 4.8 Inyeccion de Logger (Arquitectura)
+
+**Prioridad:** MEDIA | **Esfuerzo:** Medio | **Estado:** DONE
+
+Se implementó el patrón de Logger Injection en `src/errors/logger.ts`.
+- `Logger` interface exportada.
+- `setLogger()` permite inyectar loggers externos (Winston, Pino, etc).
+- `defaultLogger` mantiene el comportamiento original (console).
+
+---
+
 ## 5. Not Planned
 
 Las siguientes mejoras no estan planificadas en el corto/medio plazo:
@@ -866,7 +815,6 @@ Las siguientes mejoras no estan planificadas en el corto/medio plazo:
 | Eliminar bin package.json | Bajo | Trivial | DONE |
 | Mejoras Post-AppException | Medio | Bajo | Pendiente |
 | **MEDIA PRIORIDAD** |  |  |  |
-| Logger Injection | Medio | Medio | Backlog |
 | Carga Dinamica Locales | Bajo | Medio | Backlog |
 | Type Assertions Plugins | Medio | Medio | Backlog |
 | `any` en hashing.ts | Bajo | Bajo | Backlog |
@@ -888,6 +836,7 @@ Las siguientes mejoras no estan planificadas en el corto/medio plazo:
 | Real-World Stress Testing | Medio | Medio | DONE |
 | Property-Based Testing | Medio | Medio | DONE |
 | Coverage Thresholds | Medio | Bajo | DONE |
+| Logger Injection | Medio | Medio | DONE |
 
 ---
 
@@ -923,4 +872,4 @@ Las siguientes mejoras no estan planificadas en el corto/medio plazo:
 ---
 
 *Documento actualizado: 2026-01-12*
-*Mejoras pendientes: ~21 | En Progreso: 1 | Completado: 12 | Not Planned: 20+*
+*Mejoras pendientes: ~20 | En Progreso: 1 | Completado: 13 | Not Planned: 20+*
