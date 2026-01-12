@@ -8,7 +8,7 @@
  *
  * @packageDocumentation
  */
-
+import { LOCATION_CONSTANTS } from "../../constants/defaults.js";
 /**
  * Number of Kindle locations that approximately correspond to one page.
  * This is a generally accepted heuristic based on:
@@ -18,13 +18,13 @@
  *
  * Note: This is an approximation; actual ratios vary by book formatting.
  */
-export const LOCATIONS_PER_PAGE = 16;
+export const LOCATIONS_PER_PAGE = LOCATION_CONSTANTS.LOCATIONS_PER_PAGE;
 
 /**
  * Default number of digits for zero-padding page numbers.
  * Using 4 digits allows for books up to 9999 pages.
  */
-export const PAGE_PADDING_LENGTH = 4;
+export const PAGE_PADDING_LENGTH = LOCATION_CONSTANTS.PAGE_PADDING_LENGTH;
 
 /**
  * Format a page number with zero-padding for consistent sorting.

@@ -9,6 +9,7 @@
 
 import type { Clipping } from "#app-types/clipping.js";
 import { type ExportedFile, type ExportResult, exportSuccess, exportUnknownError } from "#errors";
+import { DEFAULTS } from "../../constants/defaults.js";
 import { FILE_THRESHOLDS } from "../../constants/file-thresholds.js";
 import { sanitizeCSVField } from "../../utils/security/csv-sanitizer.js";
 import type { AuthorCase, FolderStructure } from "../core/types.js";
@@ -16,12 +17,12 @@ import type { AuthorCase, FolderStructure } from "../core/types.js";
 /**
  * Default value for unknown authors.
  */
-export const DEFAULT_UNKNOWN_AUTHOR = "Unknown Author";
+export const DEFAULT_UNKNOWN_AUTHOR = DEFAULTS.UNKNOWN_AUTHOR;
 
 /**
  * Default title for export collections.
  */
-export const DEFAULT_EXPORT_TITLE = "Kindle Highlights";
+export const DEFAULT_EXPORT_TITLE = DEFAULTS.EXPORT_TITLE;
 
 /**
  * Collect all unique tags from clippings and default tags.
