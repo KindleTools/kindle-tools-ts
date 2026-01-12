@@ -34,6 +34,8 @@ export default defineConfig({
         "src/cli/**",
         "src/types/**",
         "src/gui/**",
+        "src/index.ts",
+        "src/**/index.ts",
       ],
 
       // Coverage thresholds (ROADMAP 1.4)

@@ -63,8 +63,10 @@ export function logError(error: AppError, context?: ErrorLogContext): void {
 
   // In development, use pretty print; in production, use single-line JSON
   if (process.env["NODE_ENV"] === "development") {
+    // biome-ignore lint/suspicious/noConsole: Logger implementation
     console.error("[ERROR]", JSON.stringify(entry, null, 2));
   } else {
+    // biome-ignore lint/suspicious/noConsole: Logger implementation
     console.error(JSON.stringify(entry));
   }
 }
@@ -97,8 +99,10 @@ export function logWarning(message: string, context?: ErrorLogContext): void {
   };
 
   if (process.env["NODE_ENV"] === "development") {
+    // biome-ignore lint/suspicious/noConsole: Logger implementation
     console.warn("[WARN]", JSON.stringify(entry, null, 2));
   } else {
+    // biome-ignore lint/suspicious/noConsole: Logger implementation
     console.warn(JSON.stringify(entry));
   }
 }

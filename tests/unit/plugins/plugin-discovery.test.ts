@@ -1,11 +1,6 @@
 import * as fs from "node:fs/promises";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  discoverAndLoadPlugins,
-  discoverPlugins,
-  loadPlugin,
-  PLUGIN_PREFIX,
-} from "#plugins/discovery.js";
+import { discoverAndLoadPlugins, discoverPlugins, loadPlugin } from "#plugins/discovery.js";
 import { pluginRegistry } from "#plugins/registry.js";
 
 // Mock fs.readFile
@@ -17,7 +12,7 @@ vi.mock("node:fs/promises", async (importOriginal) => {
 });
 
 // Mock console to avoid clutter
-const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+vi.spyOn(console, "warn").mockImplementation(() => {});
 
 // Mock the internal importer
 vi.mock("#plugins/importer.js", () => ({
@@ -75,6 +70,47 @@ vi.mock("#plugins/importer.js", () => ({
         somethingElse: 123,
       });
     }
+    if (packageName === "kindletools-plugin-default-array") {
+      return Promise.resolve({
+        default: [
+          {
+            name: "default-array-1",
+            version: "1.0.0",
+            format: "test-default-array-1",
+            create: () => ({ export: async () => ({ output: "" }) }),
+          },
+          {
+            name: "default-array-2",
+            version: "1.0.0",
+            format: "test-default-array-2",
+            create: () => ({ export: async () => ({ output: "" }) }),
+          },
+        ],
+      });
+    }
+    if (packageName === "kindletools-plugin-named-exports") {
+      return Promise.resolve({
+        exporter1: {
+          name: "named-exporter-1",
+          version: "1.0.0",
+          format: "test-named-1",
+          create: () => ({ export: async () => ({ output: "" }) }),
+        },
+        exporter2: {
+          name: "named-exporter-2",
+          version: "1.0.0",
+          format: "test-named-2",
+          create: () => ({ export: async () => ({ output: "" }) }),
+        },
+        // Duplicate name to test filtering
+        exporterDuplicate: {
+          name: "named-exporter-1", // Same name as exporter1
+          version: "1.0.0",
+          format: "test-named-1",
+          create: () => ({ export: async () => ({ output: "" }) }),
+        },
+      });
+    }
     return Promise.reject(new Error(`Module ${packageName} not found`));
   }),
 }));
@@ -86,7 +122,9 @@ describe("plugin-discovery", () => {
     vi.clearAllMocks();
     // Clear registry to avoid pollution between tests
     // Accessing private or internal map if possible, or just trusting the mocks
+    // biome-ignore lint/suspicious/noExplicitAny: Accessing private properties for testing
     (pluginRegistry as any).exporters = new Map();
+    // biome-ignore lint/suspicious/noExplicitAny: Accessing private properties for testing
     (pluginRegistry as any).importers = new Map();
   });
 
@@ -201,6 +239,40 @@ describe("plugin-discovery", () => {
       const result = await loadPlugin("non-existent-plugin");
       expect(result.success).toBe(false);
       expect(result.error).toBeDefined();
+    });
+    it("should load plugins with default export as array", async () => {
+      const result = await loadPlugin("kindletools-plugin-default-array");
+      expect(result.success).toBe(true);
+      expect(result.plugins).toHaveLength(2);
+      expect(result.plugins[0].name).toBe("default-array-1");
+      expect(result.plugins[1].name).toBe("default-array-2");
+    });
+
+    it("should load plugins from individual named exports and filter duplicates", async () => {
+      const result = await loadPlugin("kindletools-plugin-named-exports");
+      expect(result.success).toBe(true);
+      expect(result.plugins).toHaveLength(2);
+      expect(result.plugins.map((p) => p.name).sort()).toEqual([
+        "named-exporter-1",
+        "named-exporter-2",
+      ]);
+    });
+  });
+
+  describe("discoverPlugins auto-register", () => {
+    it("should auto-register discovered plugins when requested", async () => {
+      const mockPackageJson = {
+        dependencies: {
+          "kindletools-plugin-valid-exporter": "1.0.0",
+        },
+      };
+      vi.mocked(fs.readFile).mockResolvedValue(JSON.stringify(mockPackageJson));
+
+      const registerSpy = vi.spyOn(pluginRegistry, "registerExporter");
+
+      await discoverPlugins({ autoRegister: true });
+
+      expect(registerSpy).toHaveBeenCalledWith(expect.objectContaining({ name: "valid-exporter" }));
     });
   });
 

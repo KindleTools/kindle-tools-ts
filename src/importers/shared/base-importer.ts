@@ -9,7 +9,7 @@
  * @packageDocumentation
  */
 
-import { errAsync, ResultAsync } from "neverthrow";
+import { ResultAsync } from "neverthrow";
 import type { Clipping } from "#app-types/clipping.js";
 import {
   type ImportResult,
@@ -43,10 +43,7 @@ export abstract class BaseImporter implements Importer {
    */
   import(content: string): ImportResultAsync {
     if (!content || content.trim().length === 0) {
-      return errAsync({
-        code: "IMPORT_EMPTY_FILE",
-        message: "File content is empty",
-      });
+      return new ResultAsync(Promise.resolve(this.emptyFileError("File content is empty")));
     }
 
     // Wrap the doImport promise safely

@@ -147,5 +147,22 @@ describe("plugin-adapters", () => {
 
       cleanup();
     });
+
+    it("should automatically register new importer plugins when added to registry", () => {
+      const cleanup = enableAutoSync();
+
+      const mockPlugin: ImporterPlugin = {
+        name: "auto-importer",
+        version: "1.0.0",
+        extensions: ["auto-ext"],
+        create: () => ({ import: async () => ok({ clippings: [], warnings: [] }), name: "inst" }),
+      };
+
+      pluginRegistry.registerImporter(mockPlugin);
+
+      expect(ImporterFactory.register).toHaveBeenCalledWith(".auto-ext", expect.any(Function));
+
+      cleanup();
+    });
   });
 });

@@ -22,25 +22,26 @@ export function syncExporterPlugins(): void {
   const formats = pluginRegistry.getExporterFormats();
 
   for (const format of formats) {
-    const exporter = pluginRegistry.getExporter(format);
-    if (exporter) {
-      // Capture values to satisfy TypeScript's null checks in class scope
-      const exporterName = exporter.name;
-      const exporterExtension = exporter.extension;
-      const exporterExport = exporter.export.bind(exporter);
+    // We know it exists because we got the format from getExporterFormats()
+    // biome-ignore lint/style/noNonNullAssertion: valid in this context
+    const exporter = pluginRegistry.getExporter(format)!;
 
-      // Create a wrapper class compatible with ExporterFactory
-      const ExporterPluginClass = class {
-        name = exporterName;
-        extension = exporterExtension;
-        export = exporterExport;
-      };
+    // Capture values to satisfy TypeScript's null checks in class scope
+    const exporterName = exporter.name;
+    const exporterExtension = exporter.extension;
+    const exporterExport = exporter.export.bind(exporter);
 
-      ExporterFactory.register(
-        format,
-        ExporterPluginClass as unknown as new () => import("#exporters/core/types.js").Exporter,
-      );
-    }
+    // Create a wrapper class compatible with ExporterFactory
+    const ExporterPluginClass = class {
+      name = exporterName;
+      extension = exporterExtension;
+      export = exporterExport;
+    };
+
+    ExporterFactory.register(
+      format,
+      ExporterPluginClass as unknown as new () => import("#exporters/core/types.js").Exporter,
+    );
   }
 }
 
@@ -54,23 +55,24 @@ export function syncImporterPlugins(): void {
   const extensions = pluginRegistry.getImporterExtensions();
 
   for (const ext of extensions) {
-    const importer = pluginRegistry.getImporter(ext);
-    if (importer) {
-      // Capture values to satisfy TypeScript's null checks in class scope
-      const importerName = importer.name;
-      const importerImport = importer.import.bind(importer);
+    // We know it exists because we got the extension from getImporterExtensions()
+    // biome-ignore lint/style/noNonNullAssertion: valid in this context
+    const importer = pluginRegistry.getImporter(ext)!;
 
-      // Create a wrapper class compatible with ImporterFactory
-      const ImporterPluginClass = class {
-        name = importerName;
-        import = importerImport;
-      };
+    // Capture values to satisfy TypeScript's null checks in class scope
+    const importerName = importer.name;
+    const importerImport = importer.import.bind(importer);
 
-      ImporterFactory.register(
-        ext,
-        ImporterPluginClass as unknown as new () => import("#importers/core/types.js").Importer,
-      );
-    }
+    // Create a wrapper class compatible with ImporterFactory
+    const ImporterPluginClass = class {
+      name = importerName;
+      import = importerImport;
+    };
+
+    ImporterFactory.register(
+      ext,
+      ImporterPluginClass as unknown as new () => import("#importers/core/types.js").Importer,
+    );
   }
 }
 
@@ -115,8 +117,11 @@ export function enableAutoSync(): () => void {
       };
 
       for (const ext of plugin.extensions) {
+        const normalized = ext.toLowerCase().startsWith(".")
+          ? ext.toLowerCase()
+          : `.${ext.toLowerCase()}`;
         ImporterFactory.register(
-          ext,
+          normalized,
           ImporterPluginClass as unknown as new () => import("#importers/core/types.js").Importer,
         );
       }
