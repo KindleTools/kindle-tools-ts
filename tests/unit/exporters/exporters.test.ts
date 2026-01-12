@@ -14,8 +14,8 @@ import {
   EMPTY_CLIPPINGS,
   SAMPLE_CLIPPINGS,
   SINGLE_CLIPPING,
-} from "../fixtures/sample-clippings.js";
-import { getExportSuccess } from "../helpers/result-helpers.js";
+} from "../../fixtures/sample-clippings.js";
+import { getExportSuccess } from "../../helpers/result-helpers.js";
 
 // =============================================================================
 // JSON Exporter

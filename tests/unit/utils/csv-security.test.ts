@@ -5,12 +5,12 @@
  */
 
 import { describe, expect, it, vi } from "vitest";
-import { escapeCSV } from "../../src/exporters/shared/exporter-utils.js";
+import { escapeCSV } from "../../../src/exporters/shared/exporter-utils.js";
 import {
   getFormulaPrefixes,
   isFormulaSuspicious,
   sanitizeCSVField,
-} from "../../src/utils/security/csv-sanitizer.js";
+} from "../../../src/utils/security/csv-sanitizer.js";
 
 describe("CSV Security", () => {
   describe("sanitizeCSVField", () => {

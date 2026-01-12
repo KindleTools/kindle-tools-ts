@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Clipping } from "#app-types/clipping.js";
 import { MarkdownExporter } from "#exporters/formats/markdown.exporter.js";
-import { getExportSuccess, unwrapErr } from "../helpers/result-helpers.js";
+import { getExportSuccess, unwrapErr } from "../../helpers/result-helpers.js";
 
 // Helper to create a mock clipping
 function createMockClipping(overrides: Partial<Clipping> = {}): Clipping {

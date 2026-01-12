@@ -2,7 +2,7 @@ import * as fs from "node:fs/promises";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { parseFile } from "#importers/formats/txt/file-parser.js";
 import { TxtImporter } from "#importers/formats/txt.importer.js";
-import { SAMPLE_CLIPPINGS_EN } from "../fixtures/sample-clippings.js";
+import { SAMPLE_CLIPPINGS_EN } from "../../fixtures/sample-clippings.js";
 
 vi.mock("node:fs/promises");
 
