@@ -32,11 +32,16 @@
 
 import type { CosmiconfigResult } from "cosmiconfig";
 import { cosmiconfig, cosmiconfigSync } from "cosmiconfig";
+import { AppException } from "#errors";
 import { type ConfigFile, ConfigFileSchema } from "#schemas/config.schema.js";
 import { formatZodError } from "#utils/system/errors.js";
 
 // Module name used for config file search
 const MODULE_NAME = "kindletools";
+
+// Singleton instances for caching
+let asyncExplorer: ReturnType<typeof cosmiconfig> | null = null;
+let syncExplorer: ReturnType<typeof cosmiconfigSync> | null = null;
 
 /**
  * Result of loading a configuration file.
@@ -60,42 +65,37 @@ export interface LoadConfigOptions {
   configPath?: string;
 }
 
+/** Search places for config files */
+const SEARCH_PLACES = [
+  "package.json",
+  `.${MODULE_NAME}rc`,
+  `.${MODULE_NAME}rc.json`,
+  `.${MODULE_NAME}rc.yaml`,
+  `.${MODULE_NAME}rc.yml`,
+  `.${MODULE_NAME}rc.js`,
+  `.${MODULE_NAME}rc.cjs`,
+  `${MODULE_NAME}.config.js`,
+  `${MODULE_NAME}.config.cjs`,
+];
+
 /**
- * Create the cosmiconfig explorer instance.
+ * Get the async cosmiconfig explorer instance (singleton).
  */
-function createExplorer() {
-  return cosmiconfig(MODULE_NAME, {
-    searchPlaces: [
-      "package.json",
-      `.${MODULE_NAME}rc`,
-      `.${MODULE_NAME}rc.json`,
-      `.${MODULE_NAME}rc.yaml`,
-      `.${MODULE_NAME}rc.yml`,
-      `.${MODULE_NAME}rc.js`,
-      `.${MODULE_NAME}rc.cjs`,
-      `${MODULE_NAME}.config.js`,
-      `${MODULE_NAME}.config.cjs`,
-    ],
-  });
+function getAsyncExplorer() {
+  if (!asyncExplorer) {
+    asyncExplorer = cosmiconfig(MODULE_NAME, { searchPlaces: SEARCH_PLACES });
+  }
+  return asyncExplorer;
 }
 
 /**
- * Create the sync cosmiconfig explorer instance.
+ * Get the sync cosmiconfig explorer instance (singleton).
  */
-function createExplorerSync() {
-  return cosmiconfigSync(MODULE_NAME, {
-    searchPlaces: [
-      "package.json",
-      `.${MODULE_NAME}rc`,
-      `.${MODULE_NAME}rc.json`,
-      `.${MODULE_NAME}rc.yaml`,
-      `.${MODULE_NAME}rc.yml`,
-      `.${MODULE_NAME}rc.js`,
-      `.${MODULE_NAME}rc.cjs`,
-      `${MODULE_NAME}.config.js`,
-      `${MODULE_NAME}.config.cjs`,
-    ],
-  });
+function getSyncExplorer() {
+  if (!syncExplorer) {
+    syncExplorer = cosmiconfigSync(MODULE_NAME, { searchPlaces: SEARCH_PLACES });
+  }
+  return syncExplorer;
 }
 
 /**
@@ -144,7 +144,7 @@ function processResult(result: CosmiconfigResult): LoadedConfig | null {
  * ```
  */
 export async function loadConfig(options: LoadConfigOptions = {}): Promise<LoadedConfig | null> {
-  const explorer = createExplorer();
+  const explorer = getAsyncExplorer();
 
   let result: CosmiconfigResult;
 
@@ -177,7 +177,7 @@ export async function loadConfig(options: LoadConfigOptions = {}): Promise<Loade
  * ```
  */
 export function loadConfigSync(options: LoadConfigOptions = {}): LoadedConfig | null {
-  const explorer = createExplorerSync();
+  const explorer = getSyncExplorer();
 
   let result: CosmiconfigResult;
 
@@ -198,12 +198,12 @@ export function loadConfigSync(options: LoadConfigOptions = {}): LoadedConfig | 
  * Useful during development or when configuration files change.
  */
 export function clearConfigCache(): void {
-  createExplorer().clearCaches();
+  asyncExplorer?.clearCaches();
 }
 
 /**
  * Clear the sync configuration cache.
  */
 export function clearConfigCacheSync(): void {
-  createExplorerSync().clearCaches();
+  syncExplorer?.clearCaches();
 }

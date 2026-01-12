@@ -13,6 +13,7 @@ import type { SupportedLanguage } from "#app-types/language.js";
 import { process } from "#core/processor.js";
 import { calculateStats } from "#domain/analytics/stats.js";
 import { generateClippingId } from "#domain/core/identity.js";
+import { BLOCK_STRUCTURE } from "#domain/parsing/block-structure.js";
 import { parseKindleDate } from "#domain/parsing/dates.js";
 import { LANGUAGE_MAP } from "#domain/parsing/languages.js";
 import {
@@ -205,12 +206,12 @@ export function parseBlock(
   language: SupportedLanguage,
 ): Clipping | null {
   // Need at least 2 lines (title + metadata)
-  if (lines.length < 2) {
+  if (lines.length < BLOCK_STRUCTURE.MIN_BLOCK_LINES) {
     return null;
   }
 
-  const titleLine = lines[0];
-  const metadataLine = lines[1];
+  const titleLine = lines[BLOCK_STRUCTURE.TITLE_LINE_INDEX];
+  const metadataLine = lines[BLOCK_STRUCTURE.METADATA_LINE_INDEX];
 
   if (!titleLine || !metadataLine) {
     return null;
@@ -231,8 +232,8 @@ export function parseBlock(
     return null;
   }
 
-  // Extract content (everything after line 1, joined)
-  const contentLines = lines.slice(2);
+  // Extract content (everything after title and metadata lines)
+  const contentLines = lines.slice(BLOCK_STRUCTURE.CONTENT_START_INDEX);
   const rawContent = contentLines.join("\n");
   const { content: sanitizedContent, isEmpty, isLimitReached } = sanitizeContent(rawContent);
 

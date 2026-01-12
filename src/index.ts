@@ -125,8 +125,8 @@ export type { SupportedLanguage } from "./types/language.js";
 // Utilities Namespace (Optional usage)
 // =============================================================================
 
-import * as GeoUtils from "./domain/geography.js";
-import * as StatUtils from "./domain/stats.js";
+import * as StatUtils from "./domain/analytics/stats.js";
+import * as GeoUtils from "./utils/geo/index.js";
 import * as DateUtils from "./utils/system/dates.js";
 import * as TextUtils from "./utils/text/normalizers.js";
 

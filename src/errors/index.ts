@@ -112,4 +112,4 @@ export type {
   ValidationError,
   ValidationIssue,
 } from "./types.js";
-export { hasCause, hasIssues, hasWarnings } from "./types.js";
+export { AppException, hasCause, hasIssues, hasWarnings } from "./types.js";

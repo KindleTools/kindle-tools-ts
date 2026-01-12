@@ -276,6 +276,44 @@ export function hasWarnings(error: AppError): error is AppError & { warnings: st
 }
 
 // =============================================================================
+// Exception Class
+// =============================================================================
+
+/**
+ * Application exception wrapping an AppError.
+ *
+ * Use this when you need to throw an error but want to preserve
+ * the structured error information from the application error types.
+ *
+ * @example
+ * ```typescript
+ * throw new AppException({
+ *   code: "CONFIG_INVALID",
+ *   message: "Invalid configuration",
+ *   path: "/path/to/config"
+ * });
+ * ```
+ */
+export class AppException extends Error {
+  readonly appError: AppError;
+
+  constructor(error: AppError) {
+    super(error.message);
+    this.name = "AppException";
+    this.appError = error;
+    // Maintains proper stack trace for where error was thrown (V8 only)
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, AppException);
+    }
+  }
+
+  /** Get the error code */
+  get code(): AppError["code"] {
+    return this.appError.code;
+  }
+}
+
+// =============================================================================
 // Code Type Exports
 // =============================================================================
 
