@@ -474,7 +474,31 @@ Archivos que exceden ~400 lineas y podrian beneficiarse de refactoring:
 
 **Ubicacion:** `src/exporters/formats/markdown.exporter.ts`
 
-Se crean multiples instancias de `TemplateEngine` (cada una compila templates Handlebars). Podria optimizarse con caching o factory pattern.
+**Problema:** Se crean multiples instancias de `TemplateEngine` (cada una recompila templates Handlebars) en cada exportación. Ineficiente para procesos batch.
+
+**Solución Propuesta:** Implementar `TemplateEngineFactory` con cache y manejo de errores seguro:
+
+```typescript
+export class TemplateEngineFactory {
+  private static instances = new Map<string, TemplateEngine>();
+
+  static getEngine(options: CustomTemplates | TemplatePreset): TemplateEngine {
+    const key = JSON.stringify(options); // Simplificación de hash
+    if (!this.instances.has(key)) {
+      try {
+        this.instances.set(key, new TemplateEngine(options)); 
+      } catch (err) {
+        throw new AppException({
+          code: "EXPORT_TEMPLATE_ERROR",
+          message: "Failed to compile templates",
+          cause: err
+        });
+      }
+    }
+    return this.instances.get(key)!;
+  }
+}
+```
 
 
 
