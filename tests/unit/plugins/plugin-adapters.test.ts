@@ -165,4 +165,41 @@ describe("plugin-adapters", () => {
       cleanup();
     });
   });
+  describe("Error Handling", () => {
+    it("should handle initialization errors gracefully", async () => {
+      const mockPlugin: ExporterPlugin = {
+        name: "failing-exporter",
+        version: "1.0.0",
+        format: "fail",
+        create: () => {
+          throw new Error("Init failed");
+        },
+      };
+
+      pluginRegistry.registerExporter(mockPlugin);
+      syncExporterPlugins();
+
+      // Get the adapter (factory registers the class, but we need to instantiate it to test lazy init)
+      // Since ExporterFactory.register wraps it, we can't easily access the class directly here to instantiate.
+      // However, we mock ExporterFactory.register to capture the class!
+
+      const registerCall = vi
+        .mocked(ExporterFactory.register)
+        .mock.calls.find((call) => call[0] === "fail");
+      expect(registerCall).toBeDefined();
+
+      const AdapterClass = registerCall![1] as new () => any;
+      const adapter = new AdapterClass();
+
+      // Accessing extension should trigger init and throw
+      try {
+        const ext = adapter.extension;
+        expect.fail("Should have thrown");
+      } catch (e: any) {
+        expect(e.code).toBe("PLUGIN_INIT_ERROR");
+        expect(e.message).toContain("Failed to initialize exporter plugin 'failing-exporter'");
+        expect(e.appError.cause.message).toBe("Init failed");
+      }
+    });
+  });
 });

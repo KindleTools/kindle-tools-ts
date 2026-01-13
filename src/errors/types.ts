@@ -18,6 +18,7 @@ import type {
   ExportErrorCode,
   FileSystemErrorCode,
   ImportErrorCode,
+  PluginErrorCode,
   ValidationErrorCode,
 } from "./codes.js";
 
@@ -215,6 +216,17 @@ export type FileSystemError =
       cause?: unknown;
     };
 
+/**
+ * Plugin error.
+ *
+ * Returned when plugin operations fail.
+ */
+export type PluginError = {
+  code: "PLUGIN_INIT_ERROR";
+  message: string;
+  cause?: unknown;
+};
+
 // =============================================================================
 // Unified Application Error
 // =============================================================================
@@ -244,6 +256,7 @@ export type AppError =
   | ConfigError
   | ValidationError
   | FileSystemError
+  | PluginError
   | {
       code: "UNKNOWN";
       message: string;
@@ -322,5 +335,6 @@ export type {
   ExportErrorCode,
   FileSystemErrorCode,
   ImportErrorCode,
+  PluginErrorCode,
   ValidationErrorCode,
 };

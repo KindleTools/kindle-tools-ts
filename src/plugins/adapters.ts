@@ -8,6 +8,7 @@
  */
 
 import { ResultAsync } from "neverthrow";
+import { AppException } from "#errors/types.js";
 import { ExporterFactory } from "#exporters/core/factory.js";
 import type { Exporter } from "#exporters/core/types.js";
 import { ImporterFactory } from "#importers/core/factory.js";
@@ -42,19 +43,34 @@ export function syncExporterPlugins(): void {
     // Create a wrapper class that implements the Exporter interface
     const ExporterPluginClass = class implements Exporter {
       name = pluginName;
-      extension: string;
-      private instance: ExporterInstance;
 
-      constructor() {
-        this.instance = exporterPlugin.create();
-        this.extension = this.instance.extension;
+      private _instance: ExporterInstance | undefined;
+
+      // Lazy getter for extension - instantiates on first access if needed
+      get extension(): string {
+        return this.getInstance().extension;
+      }
+
+      private getInstance(): ExporterInstance {
+        if (!this._instance) {
+          try {
+            this._instance = exporterPlugin.create();
+          } catch (error) {
+            throw new AppException({
+              code: "PLUGIN_INIT_ERROR",
+              message: `Failed to initialize exporter plugin '${pluginName}'`,
+              cause: error,
+            });
+          }
+        }
+        return this._instance;
       }
 
       async export(
         clippings: import("#app-types/clipping.js").Clipping[],
         options?: import("#exporters/core/types.js").ExporterOptions,
       ) {
-        return this.instance.export(clippings, options as Record<string, unknown>);
+        return this.getInstance().export(clippings, options);
       }
     };
 
@@ -85,15 +101,26 @@ export function syncImporterPlugins(): void {
     const ImporterPluginClass = class implements Importer {
       name = pluginName;
       extensions = extensions;
-      private instance: ImporterInstance;
+      private _instance: ImporterInstance | undefined;
 
-      constructor() {
-        this.instance = importerPlugin.create();
+      private getInstance(): ImporterInstance {
+        if (!this._instance) {
+          try {
+            this._instance = importerPlugin.create();
+          } catch (error) {
+            throw new AppException({
+              code: "PLUGIN_INIT_ERROR",
+              message: `Failed to initialize importer plugin '${pluginName}'`,
+              cause: error,
+            });
+          }
+        }
+        return this._instance;
       }
 
       import(content: string) {
         // Convert Promise<ImportResult> to ImportResultAsync (ResultAsync)
-        return new ResultAsync(this.instance.import(content));
+        return new ResultAsync(this.getInstance().import(content));
       }
     };
 
@@ -116,19 +143,32 @@ export function enableAutoSync(): () => void {
 
       const ExporterPluginClass = class implements Exporter {
         name = plugin.name;
-        extension: string;
-        private instance: ExporterInstance;
+        private _instance: ExporterInstance | undefined;
 
-        constructor() {
-          this.instance = plugin.create();
-          this.extension = this.instance.extension;
+        get extension(): string {
+          return this.getInstance().extension;
+        }
+
+        private getInstance(): ExporterInstance {
+          if (!this._instance) {
+            try {
+              this._instance = plugin.create();
+            } catch (error) {
+              throw new AppException({
+                code: "PLUGIN_INIT_ERROR",
+                message: `Failed to initialize exporter plugin '${plugin.name}'`,
+                cause: error,
+              });
+            }
+          }
+          return this._instance;
         }
 
         async export(
           clippings: import("#app-types/clipping.js").Clipping[],
           options?: import("#exporters/core/types.js").ExporterOptions,
         ) {
-          return this.instance.export(clippings, options as Record<string, unknown>);
+          return this.getInstance().export(clippings, options);
         }
       };
 
@@ -146,14 +186,25 @@ export function enableAutoSync(): () => void {
       const ImporterPluginClass = class implements Importer {
         name = plugin.name;
         extensions = plugin.extensions;
-        private instance: ImporterInstance;
+        private _instance: ImporterInstance | undefined;
 
-        constructor() {
-          this.instance = plugin.create();
+        private getInstance(): ImporterInstance {
+          if (!this._instance) {
+            try {
+              this._instance = plugin.create();
+            } catch (error) {
+              throw new AppException({
+                code: "PLUGIN_INIT_ERROR",
+                message: `Failed to initialize importer plugin '${plugin.name}'`,
+                cause: error,
+              });
+            }
+          }
+          return this._instance; // Corrected: return _instance
         }
 
         import(content: string) {
-          return new ResultAsync(this.instance.import(content));
+          return new ResultAsync(this.getInstance().import(content));
         }
       };
 
