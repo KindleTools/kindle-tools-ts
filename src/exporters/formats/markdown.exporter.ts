@@ -11,14 +11,14 @@
 
 import type { Clipping } from "#app-types/clipping.js";
 import { groupByBook } from "#domain/analytics/stats.js";
-import type { ExporterOptionsParsed } from "#schemas/exporter.schema.js";
-import { getTemplatePreset, TemplateEngine, type TemplatePreset } from "#templates/index.js";
+import { TemplateEngine, type TemplatePreset } from "#templates/index.js";
 import type { ExportedFile, ExportResult } from "../core/types.js";
-import { BaseExporter } from "../shared/base-exporter.js";
+import { MultiFileExporter, type MultiFileExporterOptions } from "../shared/multi-file-exporter.js";
+
 /**
  * Extended options for Markdown export.
  */
-export interface MarkdownExporterOptions extends ExporterOptionsParsed {
+export interface MarkdownExporterOptions extends MultiFileExporterOptions {
   /**
    * Template preset to use.
    * Available: 'default', 'minimal', 'obsidian', 'notion', 'academic', 'compact', 'verbose'
@@ -61,7 +61,7 @@ export interface MarkdownExporterOptions extends ExporterOptionsParsed {
  * });
  * ```
  */
-export class MarkdownExporter extends BaseExporter {
+export class MarkdownExporter extends MultiFileExporter {
   readonly name = "markdown";
   readonly extension = ".md";
 
@@ -69,100 +69,67 @@ export class MarkdownExporter extends BaseExporter {
    * Export clippings to Markdown.
    *
    * If groupByBook is true, generates separate files per book.
-   *
-   * @param clippings - Clippings to export
-   * @param options - Export options
-   * @returns Export result with Markdown content
+   * If false, generates a single file.
    */
-  protected async doExport(
+  protected override async doExport(
     clippings: Clipping[],
     options: MarkdownExporterOptions,
   ): Promise<ExportResult> {
-    // Create template engine with appropriate templates
-    const engine = this.createTemplateEngine(options);
-
-    if (options.groupByBook) {
-      return this.exportGrouped(clippings, engine, options);
+    // Single file export
+    if (!options.groupByBook) {
+      const engine = this.createTemplateEngine(options);
+      const grouped = groupByBook(clippings);
+      const output = engine.renderExport(grouped, options.title);
+      return this.success(output);
     }
 
-    return this.exportSingle(clippings, engine, options.title);
+    // Multi-file export (handled by base class)
+    return super.doExport(clippings, options);
   }
 
   /**
-   * Create a template engine based on options.
+   * Process a single book for multi-file export.
    */
-  private createTemplateEngine(options: MarkdownExporterOptions): TemplateEngine {
-    // Custom templates take precedence
-    if (options.customTemplates) {
-      return new TemplateEngine(options.customTemplates);
-    }
-
-    // Use preset if specified
-    if (options.templatePreset) {
-      const preset = getTemplatePreset(options.templatePreset);
-      return new TemplateEngine(preset);
-    }
-
-    // Default template engine
-    return new TemplateEngine();
-  }
-
-  /**
-   * Export all clippings to a single Markdown file.
-   */
-  private exportSingle(
+  protected override async processBook(
     clippings: Clipping[],
-    engine: TemplateEngine,
-    title?: string,
-  ): ExportResult {
-    const grouped = groupByBook(clippings);
-    const output = engine.renderExport(grouped, title);
-
-    return this.success(output);
-  }
-
-  /**
-   * Export clippings grouped by book into separate files.
-   */
-  private exportGrouped(
-    clippings: Clipping[],
-    engine: TemplateEngine,
     options: MarkdownExporterOptions,
-  ): ExportResult {
-    const grouped = groupByBook(clippings);
-    const files: ExportedFile[] = [];
+    engine: TemplateEngine,
+  ): Promise<ExportedFile[]> {
+    const first = clippings[0];
+    if (!first) return [];
 
-    // Default options for file structure
+    const content = engine.renderBook(clippings);
+
+    // Create safe filename
     const folderStructure = options.folderStructure;
     const authorCase = options.authorCase;
-    const baseFolder = ""; // Markdown files usually exported to root unless specified otherwise
+    const baseFolder = options.baseFolder ?? "";
 
-    for (const [_, bookClippings] of grouped) {
-      const first = bookClippings[0];
-      if (!first) continue;
+    const safeTitle = this.sanitizeFilename(first.title);
+    const safeAuthor = this.sanitizeFilename(
+      this.applyCase(first.author || this.DEFAULT_UNKNOWN_AUTHOR, authorCase),
+    );
 
-      const content = engine.renderBook(bookClippings);
+    const filePath = this.generateFilePath(baseFolder, safeAuthor, safeTitle, folderStructure);
 
-      // Create safe filename using inherited utility
-      const safeTitle = this.sanitizeFilename(first.title);
-      const safeAuthor = this.sanitizeFilename(
-        this.applyCase(first.author || this.DEFAULT_UNKNOWN_AUTHOR, authorCase),
-      );
-
-      const filePath = this.generateFilePath(baseFolder, safeAuthor, safeTitle, folderStructure);
-
-      files.push({
+    return [
+      {
         path: filePath,
         content,
-      });
-    }
+      },
+    ];
+  }
 
-    return this.success(files.map((f) => f.content).join("\n\n---\n\n"), files);
+  /**
+   * Override summary content to provide concatenated files for Markdown.
+   * This preserves backward compatibility where the result.output contains all content.
+   */
+  protected override generateSummaryContent(files: ExportedFile[]): string {
+    return files.map((f) => f.content).join("\n\n---\n\n");
   }
 
   /**
    * Validate a custom template.
-   * Returns null if valid, error message if invalid.
    */
   validateTemplate(template: string): string | null {
     const engine = new TemplateEngine();
@@ -184,7 +151,7 @@ export class MarkdownExporter extends BaseExporter {
   }
 
   /**
-   * Get available template variables for each context type.
+   * Get available template variables.
    */
   static getAvailableVariables(): Record<string, string[]> {
     return TemplateEngine.getAvailableVariables();

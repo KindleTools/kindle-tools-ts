@@ -138,9 +138,13 @@ tags:
 
 # {{title}}
 
+{{#if (opt "wikilinks")}}
 **Author:** [[{{author}}]]
+{{else}}
+**Author:** {{author}}
+{{/if}}
 
-## Statistics
+## 📊 Summary
 | Metric | Count |
 |--------|-------|
 | Highlights | {{highlightCount}} |
@@ -152,12 +156,21 @@ tags:
 ## Highlights
 
 {{#each highlights}}
+{{#if (opt "useCallouts")}}
 > [!quote] Page {{page}}, Location {{location}}
 > {{content}}
 {{#if hasNote}}
 
 > [!note] My Note
 > {{note}}
+{{/if}}
+{{else}}
+> {{content}}
+> — Page {{page}}, Location {{location}}
+
+{{#if hasNote}}
+**Note:** {{note}}
+{{/if}}
 {{/if}}
 
 {{/each}}
@@ -166,8 +179,12 @@ tags:
 ## Standalone Notes
 
 {{#each notes}}
+{{#if (opt "useCallouts")}}
 > [!info] Location {{location}}
 > {{content}}
+{{else}}
+- {{content}} (Location {{location}})
+{{/if}}
 
 {{/each}}
 {{/if}}

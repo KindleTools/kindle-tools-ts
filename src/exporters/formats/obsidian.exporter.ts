@@ -11,18 +11,15 @@
  */
 
 import type { Clipping } from "#app-types/clipping.js";
-import { groupByBook } from "#domain/analytics/stats.js";
-import { getPageInfo } from "#domain/core/locations.js";
-import type { ExporterOptionsParsed } from "#schemas/exporter.schema.js";
-import { formatDateISO } from "#utils/system/dates.js";
-import type { ExportedFile, ExportResult } from "../core/types.js";
-import { BaseExporter } from "../shared/base-exporter.js";
+import type { TemplateEngine, TemplatePreset } from "#templates/index.js";
+import type { ExportedFile } from "../core/types.js";
+import { MultiFileExporter, type MultiFileExporterOptions } from "../shared/multi-file-exporter.js";
 
 /**
  * Extended options for Obsidian export.
  * Extends ExporterOptionsParsed with Obsidian-specific options.
  */
-export interface ObsidianExporterOptions extends ExporterOptionsParsed {
+export interface ObsidianExporterOptions extends MultiFileExporterOptions {
   /** Add wikilinks to author pages (default: true) */
   wikilinks?: boolean;
   /** Use callouts for highlights (default: true) */
@@ -42,227 +39,91 @@ export interface ObsidianExporterOptions extends ExporterOptionsParsed {
 /**
  * Export clippings to Obsidian-compatible Markdown format.
  */
-export class ObsidianExporter extends BaseExporter {
+export class ObsidianExporter extends MultiFileExporter {
   readonly name = "obsidian";
   readonly extension = ".md";
 
+  // Override createTemplateEngine to capture options
+  protected override createTemplateEngine(options: ObsidianExporterOptions): TemplateEngine {
+    const engine = super.createTemplateEngine(options);
+
+    // Default values
+    const defaults = {
+      wikilinks: true,
+      useCallouts: true,
+      estimatePages: true,
+    };
+
+    engine.registerHelper("opt", (key: string) => {
+      const val = options[key as keyof ObsidianExporterOptions];
+      return val !== undefined ? val : defaults[key as keyof typeof defaults];
+    });
+
+    return engine;
+  }
+
+  protected override getDefaultPreset(): TemplatePreset {
+    return "obsidian";
+  }
+
+  protected override generateSummaryContent(files: ExportedFile[]): string {
+    return files.map((f) => `# ${f.path}\n${f.content}`).join("\n\n---\n\n");
+  }
+
   /**
-   * Export clippings to Obsidian format.
-   *
-   * Always generates separate files per book (Obsidian best practice).
-   *
-   * @param clippings - Clippings to export
-   * @param options - Export options
-   * @returns Export result with Markdown files
+   * Process a single book for multi-file export.
    */
-  protected async doExport(
+  protected override async processBook(
     clippings: Clipping[],
     options: ObsidianExporterOptions,
-  ): Promise<ExportResult> {
-    const grouped = groupByBook(clippings);
-    const files: ExportedFile[] = [];
-    const folder = options.folder ?? "books";
+    engine: TemplateEngine,
+  ): Promise<ExportedFile[]> {
+    const first = clippings[0];
+    if (!first) return [];
+
+    // Generate context first so we can manipulate tags
+    const context = engine.toBookContext(clippings);
+
+    // Apply tag logic
+    // 1. Start with tags from options
+    // 2. Add clipping tags if filtering is enabled (default: true)
+    const optionsTags = options.tags ?? [];
+    const includeClippingTags = options.includeClippingTags !== false;
+
+    let finalTags: string[];
+
+    if (includeClippingTags) {
+      // Merge option tags with clipping tags (already in context.tags)
+      finalTags = Array.from(new Set([...optionsTags, ...context.tags])).sort();
+    } else {
+      // Only use option tags
+      finalTags = [...optionsTags].sort();
+    }
+
+    // Update context
+    context.tags = finalTags;
+    context.hasTags = finalTags.length > 0;
+
+    const content = engine.renderBookContext(context);
+
+    // Create safe filename
     const folderStructure = options.folderStructure;
     const authorCase = options.authorCase;
+    // Obsidian keeps books in a specific folder ("books" by default)
+    const baseFolder = options.folder ?? options.baseFolder ?? "books";
 
-    for (const [title, bookClippings] of grouped) {
-      const first = bookClippings[0];
-      if (!first) continue;
+    const safeTitle = this.sanitizeFilename(first.title);
+    const safeAuthor = this.sanitizeFilename(
+      this.applyCase(first.author || this.DEFAULT_UNKNOWN_AUTHOR, authorCase),
+    );
 
-      const content = this.generateBookNote(bookClippings, options);
-      const safeTitle = this.sanitizeFilename(title);
-      const safeAuthor = this.sanitizeFilename(
-        this.applyCase(first.author || this.DEFAULT_UNKNOWN_AUTHOR, authorCase),
-      );
+    const filePath = this.generateFilePath(baseFolder, safeAuthor, safeTitle, folderStructure);
 
-      // Determine file path based on folder structure
-      const filePath = this.generateFilePath(folder, safeAuthor, safeTitle, folderStructure);
-
-      files.push({
+    return [
+      {
         path: filePath,
         content,
-      });
-    }
-
-    return this.success(files.map((f) => f.content).join("\n\n---\n\n"), files);
-  }
-
-  /**
-   * Generate a complete Obsidian note for a book.
-   */
-  private generateBookNote(clippings: Clipping[], options: ObsidianExporterOptions): string {
-    const first = clippings[0];
-    if (!first) return "";
-
-    const useCallouts = options.useCallouts ?? true;
-    const useWikilinks = options.wikilinks ?? true;
-    const defaultTags = options.tags ?? [];
-    const includeClippingTags = options.includeClippingTags;
-    const estimatePages = options.estimatePages ?? true;
-
-    // Collect all unique tags from clippings
-    const allTags = this.collectAllTags(clippings, defaultTags, includeClippingTags);
-
-    const lines: string[] = [];
-
-    // YAML Frontmatter
-    lines.push("---");
-    lines.push(`title: "${this.escapeYaml(first.title)}"`);
-    lines.push(`author: "${this.escapeYaml(first.author)}"`);
-    lines.push(`source: kindle`);
-    lines.push(`type: book`);
-    lines.push(`total_highlights: ${clippings.filter((c) => c.type === "highlight").length}`);
-    lines.push(`total_notes: ${clippings.filter((c) => c.type === "note").length}`);
-
-    // Add creation date from the first clipping (book start) or current date
-    const createdDate = first.date ? formatDateISO(first.date) : formatDateISO(new Date());
-    lines.push(`created: ${createdDate}`);
-    lines.push(`date_imported: ${formatDateISO(new Date())}`);
-
-    lines.push(`tags:`);
-    for (const tag of allTags) {
-      lines.push(`  - ${tag}`);
-    }
-    lines.push("---");
-    lines.push("");
-
-    // Title
-    lines.push(`# ${first.title}`);
-    lines.push("");
-
-    // Author with optional wikilink
-    if (useWikilinks) {
-      lines.push(`**Author:** [[${first.author}]]`);
-    } else {
-      lines.push(`**Author:** ${first.author}`);
-    }
-    lines.push("");
-
-    // Stats summary
-    const highlights = clippings.filter((c) => c.type === "highlight");
-    const notes = clippings.filter((c) => c.type === "note");
-    const bookmarks = clippings.filter((c) => c.type === "bookmark");
-
-    lines.push("## 📊 Summary");
-    lines.push("");
-    lines.push(`- **Highlights:** ${highlights.length}`);
-    lines.push(`- **Notes:** ${notes.length}`);
-    lines.push(`- **Bookmarks:** ${bookmarks.length}`);
-    lines.push("");
-
-    // Highlights section
-    if (highlights.length > 0) {
-      lines.push("## 📝 Highlights");
-      lines.push("");
-
-      for (const clipping of highlights) {
-        this.appendHighlight(lines, clipping, useCallouts, estimatePages);
-      }
-    }
-
-    // Standalone notes section (notes not linked to highlights)
-    const standaloneNotes = notes.filter((n) => !n.linkedHighlightId);
-    if (standaloneNotes.length > 0) {
-      lines.push("## 💭 Notes");
-      lines.push("");
-
-      for (const clipping of standaloneNotes) {
-        this.appendNote(lines, clipping, useCallouts, estimatePages);
-      }
-    }
-
-    // Bookmarks section
-    if (bookmarks.length > 0) {
-      lines.push("## 🔖 Bookmarks");
-      lines.push("");
-
-      for (const clipping of bookmarks) {
-        const pageInfo = this.getPageDisplay(clipping, estimatePages);
-        lines.push(`- Location ${clipping.location.raw} (${pageInfo})`);
-      }
-      lines.push("");
-    }
-
-    return lines.join("\n");
-  }
-
-  /**
-   * Helper to get display string for page number
-   */
-  private getPageDisplay(clipping: Clipping, estimate: boolean): string {
-    if (clipping.page !== null) {
-      return `Page ${clipping.page}`;
-    }
-    if (estimate && clipping.location.start > 0) {
-      const info = getPageInfo(null, clipping.location);
-      return `Page ~${info.page}`;
-    }
-    return "Page ?";
-  }
-
-  /**
-   * Append a highlight to the content lines.
-   */
-  private appendHighlight(
-    lines: string[],
-    clipping: Clipping,
-    useCallouts: boolean,
-    estimate: boolean,
-  ): void {
-    const pageInfo = this.getPageDisplay(clipping, estimate);
-    const locationInfo = `${pageInfo}, Location ${clipping.location.raw}`;
-
-    if (useCallouts) {
-      lines.push(`> [!quote] ${locationInfo}`);
-      // Split content by lines for proper callout formatting
-      const contentLines = clipping.content.split("\n");
-      for (const line of contentLines) {
-        lines.push(`> ${line}`);
-      }
-
-      // Add linked note if present (only if not consumed as tags)
-      const noteWasConsumedAsTags = clipping.tags && clipping.tags.length > 0;
-      if (clipping.note && !noteWasConsumedAsTags) {
-        lines.push(">");
-        lines.push(`> [!note] My Note`);
-        lines.push(`> ${clipping.note}`);
-      }
-    } else {
-      lines.push(`> ${clipping.content}`);
-      lines.push(`> — ${locationInfo}`);
-
-      // Add linked note if present (only if not consumed as tags)
-      const noteWasConsumedAsTags = clipping.tags && clipping.tags.length > 0;
-      if (clipping.note && !noteWasConsumedAsTags) {
-        lines.push("");
-        lines.push(`**Note:** ${clipping.note}`);
-      }
-    }
-
-    lines.push("");
-  }
-
-  /**
-   * Append a standalone note to the content lines.
-   */
-  private appendNote(
-    lines: string[],
-    clipping: Clipping,
-    useCallouts: boolean,
-    estimate: boolean,
-  ): void {
-    const pageInfo = this.getPageDisplay(clipping, estimate);
-    // For standalone notes, location is more relevant, but page is nice too
-    const locationInfo = `Location ${clipping.location.raw} (${pageInfo})`;
-
-    if (useCallouts) {
-      lines.push(`> [!note] ${locationInfo}`);
-      lines.push(`> ${clipping.content}`);
-    } else {
-      lines.push(`📝 **${locationInfo}:**`);
-      lines.push(clipping.content);
-    }
-
-    lines.push("");
+      },
+    ];
   }
 }

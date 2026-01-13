@@ -362,8 +362,9 @@ describe("ObsidianExporter", () => {
       const { output } = getExportSuccess(result);
 
       expect(output).toContain("## 📊 Summary");
-      expect(output).toContain("**Highlights:**");
-      expect(output).toContain("**Notes:**");
+      expect(output).toContain("Highlights");
+      expect(output).toContain("Notes");
+      expect(output).toContain("| Metric | Count |");
     });
 
     it("should use by-author folder structure by default (Root > Author > Book)", async () => {

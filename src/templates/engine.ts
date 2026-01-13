@@ -86,6 +86,13 @@ export class TemplateEngine {
   }
 
   /**
+   * Register a custom helper.
+   */
+  registerHelper(name: string, helper: Handlebars.HelperDelegate): void {
+    this.hbs.registerHelper(name, helper);
+  }
+
+  /**
    * Convert a Clipping to a ClippingContext for template rendering.
    */
   toClippingContext(clipping: Clipping): ClippingContext {
@@ -217,6 +224,14 @@ export class TemplateEngine {
   renderBook(clippings: Clipping[]): string {
     if (clippings.length === 0) return "";
     const context = this.toBookContext(clippings);
+    return this.bookTemplate(context).trim();
+  }
+
+  /**
+   * Render a book directly from a context object.
+   * Useful when context needs to be modified before rendering.
+   */
+  renderBookContext(context: BookContext): string {
     return this.bookTemplate(context).trim();
   }
 

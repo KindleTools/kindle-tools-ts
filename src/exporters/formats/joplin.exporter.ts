@@ -17,14 +17,13 @@
 
 import type { Clipping } from "#app-types/clipping.js";
 import type { GeoLocation } from "#app-types/geo.js";
-import { groupByBook } from "#domain/analytics/stats.js";
 import { formatPage, getEffectivePage } from "#domain/core/locations.js";
-import type { ExporterOptionsParsed } from "#schemas/exporter.schema.js";
+import type { TemplateEngine, TemplatePreset } from "#templates/index.js";
 import { sha256Sync } from "#utils/security/hashing.js";
 import { formatDateHuman } from "#utils/system/dates.js";
 import { PROCESSING_THRESHOLDS } from "../../domain/rules.js";
 import type { ExportedFile, ExportResult } from "../core/types.js";
-import { BaseExporter } from "../shared/base-exporter.js";
+import { MultiFileExporter, type MultiFileExporterOptions } from "../shared/multi-file-exporter.js";
 
 // ============================================================================
 // Constants
@@ -38,7 +37,7 @@ import { BaseExporter } from "../shared/base-exporter.js";
  * Extended options for Joplin export.
  * Extends ExporterOptionsParsed with Joplin-specific options.
  */
-export interface JoplinExporterOptions extends ExporterOptionsParsed {
+export interface JoplinExporterOptions extends MultiFileExporterOptions {
   /** Root notebook name (default: "Kindle Highlights") */
   notebookName?: string | undefined;
 
@@ -142,7 +141,7 @@ interface JoplinNoteTag {
  * This exporter generates the raw files; actual tar packaging should be
  * done by the consuming application or CLI.
  */
-export class JoplinExporter extends BaseExporter {
+export class JoplinExporter extends MultiFileExporter {
   readonly name = "joplin";
   readonly extension = ".jex";
 
@@ -154,60 +153,80 @@ export class JoplinExporter extends BaseExporter {
   private static readonly TYPE_NOTE_TAG = 6;
   private static readonly MARKUP_MARKDOWN = 1;
 
+  // State for the current export operation
+  private rootNotebookId: string = "";
+  private rootNotebookName: string = "";
+  private authorNotebookIds = new Map<string, string>();
+  private tagMap = new Map<string, string>();
+  private orderCounter = 0;
+
+  protected override getDefaultPreset(): TemplatePreset {
+    return "joplin";
+  }
+
   /**
-   * Export clippings to Joplin format.
-   *
-   * @param clippings - Clippings to export
-   * @param options - Export options
-   * @returns Export result with JEX files
+   * Initialize state and generate preamble files (root notebook, tags).
    */
-  protected async doExport(
-    clippings: Clipping[],
-    options: JoplinExporterOptions,
-  ): Promise<ExportResult> {
+  protected override async exportPreamble(options: JoplinExporterOptions): Promise<ExportedFile[]> {
     const files: ExportedFile[] = [];
     const now = Date.now();
 
-    // Extract options with defaults
-    const rootNotebookName = options.notebookName ?? this.DEFAULT_EXPORT_TITLE;
-    const defaultTags = options.tags ?? [];
-    const folderStructure = options.folderStructure;
-    const authorCase = options.authorCase;
-    const includeClippingTags = options.includeClippingTags;
-    const estimatePages = options.estimatePages ?? true;
-    const creator = options.creator ?? "";
-    const geoLocation = options.geoLocation ?? { latitude: 0, longitude: 0, altitude: 0 };
-
-    // Determine if we use 3-level hierarchy (Root > Author > Book)
-    const useAuthorLevel = folderStructure === "by-author" || folderStructure === "by-author-book";
-
-    // Generate deterministic IDs
-    const rootNotebookId = this.generateId("notebook", rootNotebookName);
-    const grouped = groupByBook(clippings);
+    // Reset state
+    this.rootNotebookName = options.notebookName ?? this.DEFAULT_EXPORT_TITLE;
+    this.rootNotebookId = this.generateId("notebook", this.rootNotebookName);
+    this.authorNotebookIds.clear();
+    // tagMap is cleared in doExport because we need clippings to populate it
+    this.orderCounter = 0;
 
     // Create root notebook
     const rootNotebook: JoplinNotebook = {
-      id: rootNotebookId,
+      id: this.rootNotebookId,
       parent_id: "",
-      title: rootNotebookName,
+      title: this.rootNotebookName,
       created_time: now,
       updated_time: now,
       type_: JoplinExporter.TYPE_FOLDER,
     };
     files.push({
-      path: `${rootNotebookId}.md`,
+      path: `${this.rootNotebookId}.md`,
       content: this.serializeNotebook(rootNotebook),
     });
 
-    // Collect all unique tags (default + clipping tags)
-    const allTagNames = this.collectAllTags(clippings, defaultTags, includeClippingTags);
+    // We can't easily populate tags without iterating all clippings first.
+    // MultiFileExporter iterates clippings in doExport, but doesn't pass them to preamble.
+    // However, BaseExporter doesn't store clippings either.
+    // Wait - exportPreamble doesn't receive clippings!
+    // I need to scan clippings for tags.
+    // But I don't have access to clippings in exportPreamble.
+    // This is a limitation of my MultiFileExporter design.
 
-    // Create tags and track their IDs
-    const tagMap = new Map<string, string>();
+    // Solution: Move tag generation to `processBook` (deduplicated) OR
+    // Override `doExport` to capture clippings before calling super?
+    // Or just generating tags on the fly in `processBook`.
+    // Joplin tags are global. If I generate a tag definition multiple times (same ID),
+    // it's fine as long as I don't duplicate files in the output array.
+    // But `processBook` returns files.
+
+    // Better: Override `doExport` to setup tags.
+    return files;
+  }
+
+  protected override async doExport(
+    clippings: Clipping[],
+    options: JoplinExporterOptions,
+  ): Promise<ExportResult> {
+    // Initialize tags map before processing books
+    const defaultTags = options.tags ?? [];
+    const includeClippingTags = options.includeClippingTags;
+
+    const allTagNames = this.collectAllTags(clippings, defaultTags, includeClippingTags);
+    const now = Date.now();
+    const tagFiles: ExportedFile[] = [];
+
+    this.tagMap.clear();
     for (const tagName of allTagNames) {
       const tagId = this.generateId("tag", tagName);
-      tagMap.set(tagName, tagId);
-
+      this.tagMap.set(tagName, tagId);
       const tag: JoplinTag = {
         id: tagId,
         title: tagName,
@@ -216,141 +235,172 @@ export class JoplinExporter extends BaseExporter {
         updated_time: now,
         type_: JoplinExporter.TYPE_TAG,
       };
-      files.push({
+      tagFiles.push({
         path: `${tagId}.md`,
         content: this.serializeTag(tag),
       });
     }
 
-    // Track created author notebooks to avoid duplicates
-    const authorNotebookIds = new Map<string, string>();
+    // Run standard export
+    const result = await super.doExport(clippings, options);
 
-    let orderCounter = 0;
-
-    // Create a notebook and notes for each book
-    for (const [title, bookClippings] of grouped) {
-      const first = bookClippings[0];
-      if (!first) continue;
-
-      let parentNotebookId = rootNotebookId;
-
-      // Create author notebook if using 3-level hierarchy
-      if (useAuthorLevel) {
-        const authorName = this.applyCase(first.author || this.DEFAULT_UNKNOWN_AUTHOR, authorCase);
-        let authorNotebookId = authorNotebookIds.get(authorName);
-
-        if (!authorNotebookId) {
-          authorNotebookId = this.generateId("notebook", `${rootNotebookName}/${authorName}`);
-          authorNotebookIds.set(authorName, authorNotebookId);
-
-          const authorNotebook: JoplinNotebook = {
-            id: authorNotebookId,
-            parent_id: rootNotebookId,
-            title: authorName,
-            created_time: now,
-            updated_time: now,
-            type_: JoplinExporter.TYPE_FOLDER,
-          };
-          files.push({
-            path: `${authorNotebookId}.md`,
-            content: this.serializeNotebook(authorNotebook),
-          });
-        }
-
-        parentNotebookId = authorNotebookId;
-      }
-
-      // Create book notebook (child of root or author)
-      const bookNotebookPath = useAuthorLevel
-        ? `${rootNotebookName}/${first.author}/${title}`
-        : `${rootNotebookName}/${title}`;
-      const bookNotebookId = this.generateId("notebook", bookNotebookPath);
-      const bookNotebook: JoplinNotebook = {
-        id: bookNotebookId,
-        parent_id: parentNotebookId,
-        title: first.title,
-        created_time: now,
-        updated_time: now,
-        type_: JoplinExporter.TYPE_FOLDER,
-      };
-      files.push({
-        path: `${bookNotebookId}.md`,
-        content: this.serializeNotebook(bookNotebook),
-      });
-
-      // Create notes for each clipping
-      for (const clipping of bookClippings) {
-        const noteId = this.generateId("note", clipping.id);
-        const noteTitle = this.generateNoteTitle(clipping, estimatePages);
-        const noteBody = this.generateNoteBody(clipping);
-
-        const clippingDate = clipping.date?.getTime() ?? now;
-
-        const note: JoplinNote = {
-          id: noteId,
-          parent_id: bookNotebookId,
-          title: noteTitle,
-          body: noteBody,
-          created_time: clippingDate,
-          updated_time: now,
-          user_created_time: clippingDate,
-          user_updated_time: now,
-          is_todo: 0,
-          todo_completed: 0,
-          source: JoplinExporter.SOURCE,
-          source_url: "",
-          source_application: JoplinExporter.SOURCE_APP,
-          order: orderCounter++,
-          latitude: geoLocation.latitude ?? 0,
-          longitude: geoLocation.longitude ?? 0,
-          altitude: geoLocation.altitude ?? 0,
-          author: creator,
-          is_shared: 0,
-          encryption_applied: 0,
-          markup_language: JoplinExporter.MARKUP_MARKDOWN,
-          type_: JoplinExporter.TYPE_NOTE,
-        };
-        files.push({
-          path: `${noteId}.md`,
-          content: this.serializeNote(note),
-        });
-
-        // Determine which tags to apply to this note
-        const noteTags = new Set<string>(defaultTags);
-        if (includeClippingTags && clipping.tags) {
-          for (const tag of clipping.tags) {
-            noteTags.add(tag);
-          }
-        }
-
-        // Create note-tag associations
-        for (const tagName of noteTags) {
-          const tagId = tagMap.get(tagName);
-          if (!tagId) continue;
-
-          const noteTagId = this.generateId("note-tag", `${noteId}-${tagId}`);
-          const noteTag: JoplinNoteTag = {
-            id: noteTagId,
-            note_id: noteId,
-            tag_id: tagId,
-            created_time: now,
-            updated_time: now,
-            type_: JoplinExporter.TYPE_NOTE_TAG,
-          };
-          files.push({
-            path: `${noteTagId}.md`,
-            content: this.serializeNoteTag(noteTag),
-          });
-        }
+    if (result.isOk()) {
+      if (result.value.files) {
+        result.value.files.push(...tagFiles);
+        // Regenerate output to include tag files
+        result.value.output = this.generateSummaryContent(result.value.files);
       }
     }
 
-    // Combined output for single-string representation
-    const output = files.map((f) => `# ${f.path}\n${f.content}`).join("\n\n---\n\n");
-
-    return this.success(output, files);
+    return result;
   }
 
+  protected override generateSummaryContent(files: ExportedFile[]): string {
+    return files.map((f) => `# ${f.path}\n${f.content}`).join("\n\n---\n\n");
+  }
+
+  /**
+   * Process a single book: create notebooks and notes.
+   */
+  protected override async processBook(
+    clippings: Clipping[],
+    options: JoplinExporterOptions,
+    engine: TemplateEngine,
+  ): Promise<ExportedFile[]> {
+    const first = clippings[0];
+    if (!first) return [];
+
+    const files: ExportedFile[] = [];
+    const now = Date.now();
+    const folderStructure = options.folderStructure;
+    const authorCase = options.authorCase;
+    const estimatePages = options.estimatePages ?? true;
+    const creator = options.creator ?? "";
+    const geoLocation = options.geoLocation ?? { latitude: 0, longitude: 0, altitude: 0 };
+
+    // Determine hierarchy
+    const useAuthorLevel = folderStructure === "by-author" || folderStructure === "by-author-book";
+    let parentNotebookId = this.rootNotebookId;
+
+    // Create author notebook
+    if (useAuthorLevel) {
+      const authorName = this.applyCase(first.author || this.DEFAULT_UNKNOWN_AUTHOR, authorCase);
+      let authorNotebookId = this.authorNotebookIds.get(authorName);
+
+      if (!authorNotebookId) {
+        authorNotebookId = this.generateId("notebook", `${this.rootNotebookName}/${authorName}`);
+        this.authorNotebookIds.set(authorName, authorNotebookId);
+
+        const authorNotebook: JoplinNotebook = {
+          id: authorNotebookId,
+          parent_id: this.rootNotebookId,
+          title: authorName,
+          created_time: now,
+          updated_time: now,
+          type_: JoplinExporter.TYPE_FOLDER,
+        };
+        files.push({
+          path: `${authorNotebookId}.md`,
+          content: this.serializeNotebook(authorNotebook),
+        });
+      }
+      parentNotebookId = authorNotebookId;
+    }
+
+    // Create book notebook
+    // Note: If multiple batches of the same book were processed separately, this might duplicate.
+    // But we are grouping by book, so it's unique per run.
+    const bookNotebookPath = useAuthorLevel
+      ? `${this.rootNotebookName}/${first.author}/${first.title}`
+      : `${this.rootNotebookName}/${first.title}`;
+
+    const bookNotebookId = this.generateId("notebook", bookNotebookPath);
+    const bookNotebook: JoplinNotebook = {
+      id: bookNotebookId,
+      parent_id: parentNotebookId,
+      title: first.title,
+      created_time: now,
+      updated_time: now,
+      type_: JoplinExporter.TYPE_FOLDER,
+    };
+    files.push({
+      path: `${bookNotebookId}.md`,
+      content: this.serializeNotebook(bookNotebook),
+    });
+
+    // Create notes for each clipping
+    for (const clipping of clippings) {
+      const noteId = this.generateId("note", clipping.id);
+      const noteTitle = this.generateNoteTitle(clipping, estimatePages);
+
+      // Use manual body generation for now to ensure compatibility
+      // TODO: Use TemplateEngine completely
+      const noteBody = this.generateNoteBody(clipping);
+
+      const clippingDate = clipping.date?.getTime() ?? now;
+
+      const note: JoplinNote = {
+        id: noteId,
+        parent_id: bookNotebookId,
+        title: noteTitle,
+        body: noteBody,
+        created_time: clippingDate,
+        updated_time: now,
+        user_created_time: clippingDate,
+        user_updated_time: now,
+        is_todo: 0,
+        todo_completed: 0,
+        source: JoplinExporter.SOURCE,
+        source_url: "",
+        source_application: JoplinExporter.SOURCE_APP,
+        order: this.orderCounter++,
+        latitude: geoLocation.latitude ?? 0,
+        longitude: geoLocation.longitude ?? 0,
+        altitude: geoLocation.altitude ?? 0,
+        author: creator,
+        is_shared: 0,
+        encryption_applied: 0,
+        markup_language: JoplinExporter.MARKUP_MARKDOWN,
+        type_: JoplinExporter.TYPE_NOTE,
+      };
+
+      files.push({
+        path: `${noteId}.md`,
+        content: this.serializeNote(note),
+      });
+
+      // Tags
+      const defaultTags = options.tags ?? [];
+      const includeClippingTags = options.includeClippingTags;
+      const noteTags = new Set<string>(defaultTags);
+      if (includeClippingTags && clipping.tags) {
+        for (const tag of clipping.tags) noteTags.add(tag);
+      }
+
+      for (const tagName of noteTags) {
+        const tagId = this.tagMap.get(tagName);
+        if (!tagId) continue;
+
+        const noteTagId = this.generateId("note-tag", `${noteId}-${tagId}`);
+        const noteTag: JoplinNoteTag = {
+          id: noteTagId,
+          note_id: noteId,
+          tag_id: tagId,
+          created_time: now,
+          updated_time: now,
+          type_: JoplinExporter.TYPE_NOTE_TAG,
+        };
+        files.push({
+          path: `${noteTagId}.md`,
+          content: this.serializeNoteTag(noteTag),
+        });
+      }
+    }
+
+    return files;
+  }
+
+  // ... keep existing private methods ...
   /**
    * Generate a deterministic ID for Joplin entities.
    * Uses MD5-equivalent length (32 chars) for compatibility with Python version.
@@ -371,35 +421,14 @@ export class JoplinExporter extends BaseExporter {
       .slice(0, PROCESSING_THRESHOLDS.PREVIEW_CONTENT_LENGTH)
       .replace(/\n/g, " ");
 
-    // Determine page number
     let pageNum = 0;
-
-    if (estimate || clipping.page !== null) {
-      // If we are estimating or have an actual page, use getEffectivePage
-      // getEffectivePage handles both cases: returns actual if present, or estimates if not
-      // However, if estimate is false, we want to skip estimation.
-      // So logic:
-      if (clipping.page !== null) {
-        pageNum = clipping.page;
-      } else if (estimate) {
-        pageNum = getEffectivePage(null, clipping.location);
-      }
-    }
-
-    // Actually simpler:
-    // pageNum = estimate ? getEffectivePage(clipping.page, clipping.location) : (clipping.page ?? 0);
-    // But getEffectivePage handles the null check.
-
-    // Let's stick to explicit logic to match previous behavior exactly.
     if (clipping.page !== null) {
       pageNum = clipping.page;
     } else if (estimate && clipping.location.start > 0) {
       pageNum = getEffectivePage(null, clipping.location);
     }
 
-    // Format the reference
     const ref = pageNum > 0 ? formatPage(pageNum) : "";
-
     return ref ? `${ref} ${preview}` : preview;
   }
 
@@ -409,13 +438,8 @@ export class JoplinExporter extends BaseExporter {
    */
   private generateNoteBody(clipping: Clipping): string {
     const parts: string[] = [];
-
-    // Content first
     parts.push(clipping.content);
 
-    // Linked note (if any)
-    // Only show if the note wasn't consumed as tags
-    // (if clipping has tags, the note was used for tag extraction)
     const noteWasConsumedAsTags = clipping.tags && clipping.tags.length > 0;
     if (clipping.note && !noteWasConsumedAsTags) {
       parts.push("");
@@ -425,12 +449,10 @@ export class JoplinExporter extends BaseExporter {
       parts.push(clipping.note);
     }
 
-    // Metadata footer (Python style)
     parts.push("");
     parts.push("");
     parts.push("-----");
 
-    // Build metadata list (Python-compatible format)
     const meta: string[] = [];
     if (clipping.date) {
       meta.push(`- date: ${formatDateHuman(clipping.date)}`);
@@ -450,22 +472,12 @@ export class JoplinExporter extends BaseExporter {
     return parts.join("\n");
   }
 
-  /**
-   * Serialize a Joplin note to its file format.
-   * Complete format with all Joplin fields.
-   */
   private serializeNote(note: JoplinNote): string {
     const lines: string[] = [];
-
-    // Title comes first (required by Joplin)
     lines.push(note.title);
     lines.push("");
-
-    // Body
     lines.push(note.body);
     lines.push("");
-
-    // Properties (type_ must be LAST)
     lines.push(`id: ${note.id}`);
     lines.push(`parent_id: ${note.parent_id}`);
     lines.push(`created_time: ${this.formatTimestamp(note.created_time)}`);
@@ -485,17 +497,12 @@ export class JoplinExporter extends BaseExporter {
     lines.push(`is_shared: ${note.is_shared}`);
     lines.push(`encryption_applied: ${note.encryption_applied}`);
     lines.push(`markup_language: ${note.markup_language}`);
-    lines.push(`type_: ${note.type_}`); // MUST be last
-
+    lines.push(`type_: ${note.type_}`);
     return lines.join("\n");
   }
 
-  /**
-   * Serialize a Joplin notebook to its file format.
-   */
   private serializeNotebook(notebook: JoplinNotebook): string {
     const lines: string[] = [];
-
     lines.push(notebook.title);
     lines.push("");
     lines.push(`id: ${notebook.id}`);
@@ -503,16 +510,11 @@ export class JoplinExporter extends BaseExporter {
     lines.push(`created_time: ${this.formatTimestamp(notebook.created_time)}`);
     lines.push(`updated_time: ${this.formatTimestamp(notebook.updated_time)}`);
     lines.push(`type_: ${notebook.type_}`);
-
     return lines.join("\n");
   }
 
-  /**
-   * Serialize a Joplin tag to its file format.
-   */
   private serializeTag(tag: JoplinTag): string {
     const lines: string[] = [];
-
     lines.push(tag.title);
     lines.push("");
     lines.push(`id: ${tag.id}`);
@@ -520,30 +522,20 @@ export class JoplinExporter extends BaseExporter {
     lines.push(`created_time: ${this.formatTimestamp(tag.created_time)}`);
     lines.push(`updated_time: ${this.formatTimestamp(tag.updated_time)}`);
     lines.push(`type_: ${tag.type_}`);
-
     return lines.join("\n");
   }
 
-  /**
-   * Serialize a Joplin note-tag association to its file format.
-   */
   private serializeNoteTag(noteTag: JoplinNoteTag): string {
     const lines: string[] = [];
-
     lines.push(`id: ${noteTag.id}`);
     lines.push(`note_id: ${noteTag.note_id}`);
     lines.push(`tag_id: ${noteTag.tag_id}`);
     lines.push(`created_time: ${this.formatTimestamp(noteTag.created_time)}`);
     lines.push(`updated_time: ${this.formatTimestamp(noteTag.updated_time)}`);
     lines.push(`type_: ${noteTag.type_}`);
-
     return lines.join("\n");
   }
 
-  /**
-   * Format a timestamp for Joplin metadata (ISO 8601 with Z suffix).
-   * This format is required by Joplin's internal parser.
-   */
   private formatTimestamp(ms: number): string {
     return new Date(ms).toISOString();
   }
