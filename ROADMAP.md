@@ -663,6 +663,22 @@ tests/fixtures/
 
 ---
 
+### 3.18 Plugin Instance Reset Logic (Thread-Safety/Testability)
+
+**Prioridad:** BAJA | **Esfuerzo:** Bajo | **Estado:** Backlog
+
+Permitir reiniciar la instancia lazy de un plugin (`this._instance = undefined`) sin tener que recargar el registro entero. Útil para entornos de larga duración o tests que necesitan aislar estado.
+
+---
+
+### 3.19 Plugin Runtime Instance Validation (Fail Fast)
+
+**Prioridad:** BAJA | **Esfuerzo:** Bajo | **Estado:** Backlog
+
+Validar explícitamente que el objeto devuelto por `plugin.create()` cumple con la interfaz esperada (`export()` method, etc.) antes de usarlo. Esto previene errores tipo "undefined is not a function" más adelante si un plugin está mal implementado.
+
+---
+
 ## 4. Completado
 
 ### 4.1 ESLint Plugin para Neverthrow
@@ -926,4 +942,4 @@ Las siguientes mejoras no estan planificadas en el corto/medio plazo:
 ---
 
 *Documento actualizado: 2026-01-13*
-*Mejoras pendientes: ~19 | En Progreso: 0 | Completado: 16 | Not Planned: 21+*
+*Mejoras pendientes: ~21 | En Progreso: 0 | Completado: 16 | Not Planned: 21+*
