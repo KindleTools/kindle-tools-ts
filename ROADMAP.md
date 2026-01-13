@@ -751,8 +751,30 @@ Se implementó el patrón de Logger Injection en `src/errors/logger.ts`.
 - Tests completos en `tests/unit/errors/logger.test.ts` (11 tests).
 
 ---
+### 4.9 Type Testing (expectTypeOf)
+
+**Prioridad:** MEDIA | **Esfuerzo:** Bajo | **Estado:** DONE
+
+Implementado en `tests/types/api.test-d.ts`.
+- Valida que `parser.parse` retorne exactamente `ParseResult`.
+- Asegura que no haya fugas de `any` o `unknown` en la API pública.
+- Verifica la integridad de estructuras anidadas como `Clipping` y `BookStats`.
+
+---
+
+### 4.10 Snapshot Testing para Parsers
+
+**Prioridad:** MEDIA | **Esfuerzo:** Medio | **Estado:** DONE
+
+Implementado en `tests/snapshots/parser.snapshot.test.ts`.
+- Usa `toMatchFileSnapshot` para validar salidas complejas JSON.
+- Asegura que cualquier cambio en la lógica de parsing sea intencional y visible en el diff.
+- Utiliza fixtures realistas (`tests/snapshots/fixtures/standard.txt`).
+
+---
 
 ## 5. Not Planned
+
 
 Las siguientes mejoras no estan planificadas en el corto/medio plazo:
 
@@ -801,6 +823,9 @@ Las siguientes mejoras no estan planificadas en el corto/medio plazo:
 
 - **E2E Testing con Playwright (GUI)**: Tests end-to-end para la GUI
 - **Mutation Testing (Stryker)**: Demasiado costoso en tiempo de CPU/CI para el beneficio actual.
+- **Round-Trip Property Testing**: Complejidad alta al requerir un Exporter robusto 1:1. Pospuesto hasta tener Exporters estables.
+- **Architecture Testing (Dependency Cruiser)**: Baja prioridad por tamaño manejable del proyecto.
+- **Formal Benchmarking (Vitest Bench)**: Los tests de estrés actuales son suficientes.
 
 ### Permanentemente Descartados
 
@@ -838,18 +863,7 @@ Las siguientes mejoras no estan planificadas en el corto/medio plazo:
 | Monorepo Structure | Bajo | Alto | Backlog |
 | Browser Entry Point | Bajo | Medio | Backlog |
 | 
-### 4.10 Snapshot Testing para Parsers
-
-**Prioridad:** MEDIA | **Esfuerzo:** Medio | **Estado:** DONE
-
-Implementado en `tests/snapshots/parser.snapshot.test.ts`.
-- Usa `toMatchFileSnapshot` para validar salidas complejas JSON.
-- Asegura que cualquier cambio en la lógica de parsing sea intencional y visible en el diff.
-- Utiliza fixtures realistas (`tests/snapshots/fixtures/standard.txt`).
-
----
-
-**COMPLETADO** |  |  |  |
+| **COMPLETADO** |  |  |  |
 | ESLint Neverthrow | Alto | Bajo | DONE |
 | Consolidar Fechas | Alto | Bajo | DONE |
 | Constantes Limites Archivo | Alto | Bajo | DONE |
