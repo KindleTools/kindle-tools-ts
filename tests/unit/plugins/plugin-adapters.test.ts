@@ -52,14 +52,14 @@ describe("plugin-adapters", () => {
       const mockPlugin: ImporterPlugin = {
         name: "test-importer",
         version: "1.0.0",
-        extensions: ["test-ext"],
+        extensions: [".test-ext"],
         create: () => ({ import: async () => ok({ clippings: [], warnings: [] }), name: "inst" }),
       };
       pluginRegistry.registerImporter(mockPlugin);
 
       syncImporterPlugins();
 
-      expect(ImporterFactory.register).toHaveBeenCalledWith(".test-ext", expect.any(Function));
+      expect(ImporterFactory.register).toHaveBeenCalledWith([".test-ext"], expect.any(Function));
     });
   });
 
@@ -84,14 +84,14 @@ describe("plugin-adapters", () => {
       const mockPlugin: ImporterPlugin = {
         name: "test-importer",
         version: "1.0.0",
-        extensions: ["test-ext"],
+        extensions: [".test-ext"],
         create: () => ({ import: async () => ok({ clippings: [], warnings: [] }), name: "inst" }),
       };
 
       registerImporterPlugin(mockPlugin);
 
-      expect(pluginRegistry.getImporter("test-ext")).toBeDefined();
-      expect(ImporterFactory.register).toHaveBeenCalledWith(".test-ext", expect.any(Function));
+      expect(pluginRegistry.getImporter(".test-ext")).toBeDefined();
+      expect(ImporterFactory.register).toHaveBeenCalledWith([".test-ext"], expect.any(Function));
     });
   });
 
@@ -154,13 +154,13 @@ describe("plugin-adapters", () => {
       const mockPlugin: ImporterPlugin = {
         name: "auto-importer",
         version: "1.0.0",
-        extensions: ["auto-ext"],
+        extensions: [".auto-ext"],
         create: () => ({ import: async () => ok({ clippings: [], warnings: [] }), name: "inst" }),
       };
 
       pluginRegistry.registerImporter(mockPlugin);
 
-      expect(ImporterFactory.register).toHaveBeenCalledWith(".auto-ext", expect.any(Function));
+      expect(ImporterFactory.register).toHaveBeenCalledWith([".auto-ext"], expect.any(Function));
 
       cleanup();
     });

@@ -240,7 +240,7 @@ async function getLocale(lang: SupportedLanguage): Promise<Locale> {
 
 ### 2.3 Type Assertions con `unknown` en Plugins
 
-**Prioridad:** MEDIA | **Esfuerzo:** Medio | **Estado:** Pendiente
+**Prioridad:** MEDIA | **Esfuerzo:** Medio | **Estado:** DONE
 
 **Ubicacion:** `src/plugins/adapters.ts` (lineas 41, 71, 100, 120)
 

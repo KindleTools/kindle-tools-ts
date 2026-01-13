@@ -7,10 +7,20 @@
  * @packageDocumentation
  */
 
+import { ResultAsync } from "neverthrow";
 import { ExporterFactory } from "#exporters/core/factory.js";
+import type { Exporter } from "#exporters/core/types.js";
 import { ImporterFactory } from "#importers/core/factory.js";
+import type { Importer } from "#importers/core/types.js";
 import { pluginRegistry } from "./registry.js";
-import type { ExporterPlugin, ImporterPlugin } from "./types.js";
+import {
+  type ExporterInstance,
+  type ExporterPlugin,
+  type ImporterInstance,
+  type ImporterPlugin,
+  isExporterPlugin,
+  isImporterPlugin,
+} from "./types.js";
 
 /**
  * Sync plugin registry with ExporterFactory.
@@ -19,29 +29,38 @@ import type { ExporterPlugin, ImporterPlugin } from "./types.js";
  * allowing them to be discovered via the standard factory methods.
  */
 export function syncExporterPlugins(): void {
-  const formats = pluginRegistry.getExporterFormats();
+  const plugins = pluginRegistry.getAllPlugins();
 
-  for (const format of formats) {
-    // We know it exists because we got the format from getExporterFormats()
-    // biome-ignore lint/style/noNonNullAssertion: valid in this context
-    const exporter = pluginRegistry.getExporter(format)!;
+  for (const plugin of plugins) {
+    if (!isExporterPlugin(plugin)) continue;
 
-    // Capture values to satisfy TypeScript's null checks in class scope
-    const exporterName = exporter.name;
-    const exporterExtension = exporter.extension;
-    const exporterExport = exporter.export.bind(exporter);
+    // Capture explicit type for closure usage
+    const exporterPlugin = plugin;
+    const formats = [exporterPlugin.format, ...(exporterPlugin.aliases ?? [])];
+    const pluginName = exporterPlugin.name;
 
-    // Create a wrapper class compatible with ExporterFactory
-    const ExporterPluginClass = class {
-      name = exporterName;
-      extension = exporterExtension;
-      export = exporterExport;
+    // Create a wrapper class that implements the Exporter interface
+    const ExporterPluginClass = class implements Exporter {
+      name = pluginName;
+      extension: string;
+      private instance: ExporterInstance;
+
+      constructor() {
+        this.instance = exporterPlugin.create();
+        this.extension = this.instance.extension;
+      }
+
+      async export(
+        clippings: import("#app-types/clipping.js").Clipping[],
+        options?: import("#exporters/core/types.js").ExporterOptions,
+      ) {
+        return this.instance.export(clippings, options as Record<string, unknown>);
+      }
     };
 
-    ExporterFactory.register(
-      format,
-      ExporterPluginClass as unknown as new () => import("#exporters/core/types.js").Exporter,
-    );
+    for (const format of formats) {
+      ExporterFactory.register(format, ExporterPluginClass);
+    }
   }
 }
 
@@ -52,27 +71,33 @@ export function syncExporterPlugins(): void {
  * allowing them to be discovered via the standard factory methods.
  */
 export function syncImporterPlugins(): void {
-  const extensions = pluginRegistry.getImporterExtensions();
+  const plugins = pluginRegistry.getAllPlugins();
 
-  for (const ext of extensions) {
-    // We know it exists because we got the extension from getImporterExtensions()
-    // biome-ignore lint/style/noNonNullAssertion: valid in this context
-    const importer = pluginRegistry.getImporter(ext)!;
+  for (const plugin of plugins) {
+    if (!isImporterPlugin(plugin)) continue;
 
-    // Capture values to satisfy TypeScript's null checks in class scope
-    const importerName = importer.name;
-    const importerImport = importer.import.bind(importer);
+    // Capture explicit type for closure usage
+    const importerPlugin = plugin;
+    const extensions = importerPlugin.extensions;
+    const pluginName = importerPlugin.name;
 
-    // Create a wrapper class compatible with ImporterFactory
-    const ImporterPluginClass = class {
-      name = importerName;
-      import = importerImport;
+    // Create a wrapper class that implements the Importer interface
+    const ImporterPluginClass = class implements Importer {
+      name = pluginName;
+      extensions = extensions;
+      private instance: ImporterInstance;
+
+      constructor() {
+        this.instance = importerPlugin.create();
+      }
+
+      import(content: string) {
+        // Convert Promise<ImportResult> to ImportResultAsync (ResultAsync)
+        return new ResultAsync(this.instance.import(content));
+      }
     };
 
-    ImporterFactory.register(
-      ext,
-      ImporterPluginClass as unknown as new () => import("#importers/core/types.js").Importer,
-    );
+    ImporterFactory.register(extensions, ImporterPluginClass);
   }
 }
 
@@ -87,20 +112,28 @@ export function enableAutoSync(): () => void {
   unsubscribers.push(
     pluginRegistry.on("exporter:registered", (event) => {
       const plugin = event.plugin as ExporterPlugin;
-      const exporter = plugin.create();
+      const formats = [plugin.format, ...(plugin.aliases ?? [])];
 
-      const ExporterPluginClass = class {
-        name = exporter.name;
-        extension = exporter.extension;
-        export = exporter.export.bind(exporter);
+      const ExporterPluginClass = class implements Exporter {
+        name = plugin.name;
+        extension: string;
+        private instance: ExporterInstance;
+
+        constructor() {
+          this.instance = plugin.create();
+          this.extension = this.instance.extension;
+        }
+
+        async export(
+          clippings: import("#app-types/clipping.js").Clipping[],
+          options?: import("#exporters/core/types.js").ExporterOptions,
+        ) {
+          return this.instance.export(clippings, options as Record<string, unknown>);
+        }
       };
 
-      const formats = [plugin.format, ...(plugin.aliases ?? [])];
       for (const format of formats) {
-        ExporterFactory.register(
-          format,
-          ExporterPluginClass as unknown as new () => import("#exporters/core/types.js").Exporter,
-        );
+        ExporterFactory.register(format, ExporterPluginClass);
       }
     }),
   );
@@ -109,22 +142,22 @@ export function enableAutoSync(): () => void {
   unsubscribers.push(
     pluginRegistry.on("importer:registered", (event) => {
       const plugin = event.plugin as ImporterPlugin;
-      const importer = plugin.create();
 
-      const ImporterPluginClass = class {
-        name = importer.name;
-        import = importer.import.bind(importer);
+      const ImporterPluginClass = class implements Importer {
+        name = plugin.name;
+        extensions = plugin.extensions;
+        private instance: ImporterInstance;
+
+        constructor() {
+          this.instance = plugin.create();
+        }
+
+        import(content: string) {
+          return new ResultAsync(this.instance.import(content));
+        }
       };
 
-      for (const ext of plugin.extensions) {
-        const normalized = ext.toLowerCase().startsWith(".")
-          ? ext.toLowerCase()
-          : `.${ext.toLowerCase()}`;
-        ImporterFactory.register(
-          normalized,
-          ImporterPluginClass as unknown as new () => import("#importers/core/types.js").Importer,
-        );
-      }
+      ImporterFactory.register(plugin.extensions, ImporterPluginClass);
     }),
   );
 
