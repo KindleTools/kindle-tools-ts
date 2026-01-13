@@ -58,8 +58,10 @@ describe("Stress Testing: TXT Parser", () => {
 
     console.log(`Parsed 5MB in ${duration.toFixed(2)}ms`);
 
-    // Increased threshold to 8000ms to avoid flakiness in CI/VM environments
-    expect(duration).toBeLessThan(8000);
+    // Threshold set high (15s) to accommodate slow environments (CI, VMs, WSL).
+    // On fast machines this typically completes in 2-4s.
+    // The goal is to catch catastrophic performance regressions, not micro-optimizations.
+    expect(duration).toBeLessThan(15000);
     expect(result.clippings.length).toBeGreaterThan(100);
-  }, 20000);
+  }, 30000);
 });

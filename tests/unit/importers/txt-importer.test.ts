@@ -1,10 +1,8 @@
-import * as fs from "node:fs/promises";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { parseFile } from "#importers/formats/txt/file-parser.js";
 import { TxtImporter } from "#importers/formats/txt.importer.js";
+import { MemoryFileSystem, resetFileSystem, setFileSystem } from "#ports";
 import { SAMPLE_CLIPPINGS_EN } from "../../fixtures/sample-clippings.js";
-
-vi.mock("node:fs/promises");
 
 describe("TxtImporter", () => {
   const importer = new TxtImporter();
@@ -44,24 +42,29 @@ describe("TxtImporter", () => {
 });
 
 describe("file-parser", () => {
+  let memFs: MemoryFileSystem;
+
   beforeEach(() => {
-    vi.resetAllMocks();
+    memFs = new MemoryFileSystem();
+    setFileSystem(memFs);
+  });
+
+  afterEach(() => {
+    resetFileSystem();
   });
 
   it("should read file and parse content", async () => {
-    vi.spyOn(fs, "readFile").mockResolvedValue(Buffer.from(SAMPLE_CLIPPINGS_EN));
+    memFs.addFile("/path/to/My Clippings.txt", SAMPLE_CLIPPINGS_EN);
 
     const result = await parseFile("/path/to/My Clippings.txt");
 
-    expect(fs.readFile).toHaveBeenCalledWith("/path/to/My Clippings.txt");
     expect(result.clippings.length).toBe(5);
-    expect(result.meta.fileSize).toBe(Buffer.from(SAMPLE_CLIPPINGS_EN).length);
+    expect(result.meta.fileSize).toBe(new TextEncoder().encode(SAMPLE_CLIPPINGS_EN).length);
     expect(result.meta.parseTime).toBeGreaterThanOrEqual(0);
   });
 
   it("should handle file read errors", async () => {
-    vi.spyOn(fs, "readFile").mockRejectedValue(new Error("File not found"));
-
-    await expect(parseFile("missing.txt")).rejects.toThrow("File not found");
+    // File doesn't exist in memFs, so it should throw ENOENT
+    await expect(parseFile("missing.txt")).rejects.toThrow("ENOENT");
   });
 });

@@ -24,6 +24,8 @@ describe("Parser Snapshot Tests", () => {
     // Ideally, we start with a JSON snapshot.
     const snapshotPath = path.resolve(__dirname, "fixtures/standard.output.json");
 
-    await expect(JSON.stringify(normalizedResult, null, 2)).toMatchFileSnapshot(snapshotPath);
+    await expect(`${JSON.stringify(normalizedResult, null, 2)}\n`).toMatchFileSnapshot(
+      snapshotPath,
+    );
   });
 });

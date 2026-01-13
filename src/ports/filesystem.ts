@@ -27,6 +27,24 @@
  *
  * Implement this interface to provide custom file system access
  * (in-memory for testing, browser File API, etc.).
+ *
+ * ## Future Extensions
+ *
+ * The interface can be extended with optional methods when needed:
+ *
+ * ```typescript
+ * export interface FileSystem {
+ *   // Current (required)
+ *   readFile(path: string): Promise<Uint8Array>;
+ *   readTextFile(path: string, encoding?: string): Promise<string>;
+ *
+ *   // Future (optional) - add when export-to-disk is implemented
+ *   writeFile?(path: string, content: Uint8Array): Promise<void>;
+ *   writeTextFile?(path: string, content: string, encoding?: string): Promise<void>;
+ *   exists?(path: string): Promise<boolean>;
+ *   mkdir?(path: string, options?: { recursive?: boolean }): Promise<void>;
+ * }
+ * ```
  */
 export interface FileSystem {
   /**

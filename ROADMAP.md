@@ -277,23 +277,39 @@ const crypto = (globalThis as any).process?.versions?.node
 
 ### 2.5 FileSystem Abstraction (Ports & Adapters)
 
-**Prioridad:** MEDIA | **Esfuerzo:** Alto | **Estado:** Backlog
+**Prioridad:** MEDIA | **Esfuerzo:** Alto | **Estado:** DONE
+
+Implementado siguiendo el patrón de Logger Injection:
 
 ```typescript
-// src/ports/filesystem.port.ts
-export interface FileSystemPort {
-  readFile(path: string): Promise<Buffer>;
-  writeFile(path: string, content: string | Buffer): Promise<void>;
-  exists(path: string): Promise<boolean>;
-  mkdir(path: string, options?: { recursive?: boolean }): Promise<void>;
+// src/ports/filesystem.ts - Interface + DI
+export interface FileSystem {
+  readFile(path: string): Promise<Uint8Array>;
+  readTextFile(path: string, encoding?: string): Promise<string>;
 }
 
-// src/adapters/node-filesystem.adapter.ts
-export class NodeFileSystemAdapter implements FileSystemPort { /* ... */ }
+export function setFileSystem(fs: FileSystem): void;
+export function resetFileSystem(): void;
+export async function getFileSystem(): Promise<FileSystem>;
+export const nullFileSystem: FileSystem;
 
-// src/adapters/memory-filesystem.adapter.ts (para tests)
-export class MemoryFileSystemAdapter implements FileSystemPort { /* ... */ }
+// src/ports/adapters/node-filesystem.ts - Default para Node.js
+export const nodeFileSystem: FileSystem;
+
+// src/ports/adapters/memory-filesystem.ts - Para tests
+export class MemoryFileSystem implements FileSystem {
+  addFile(path: string, content: string): void;
+  addBinaryFile(path: string, content: Uint8Array): void;
+  // ...
+}
 ```
+
+**Beneficios:**
+- Tests instantáneos sin I/O de disco
+- Browser-ready (core sin dependencia de node:fs)
+- Sandboxing para seguridad
+
+**API Pública:** `setFileSystem`, `getFileSystem`, `resetFileSystem`, `nullFileSystem`, `MemoryFileSystem`, `FileSystem` type.
 
 ---
 
@@ -852,7 +868,7 @@ Las siguientes mejoras no estan planificadas en el corto/medio plazo:
 | Carga Dinamica Locales | Bajo | Medio | Backlog |
 | Type Assertions Plugins | Medio | Medio | Backlog |
 | `any` en hashing.ts | Bajo | Bajo | Backlog |
-| FileSystem Abstraction | Medio | Alto | Backlog |
+| FileSystem Abstraction | Medio | Alto | DONE |
 | Config File Improvements | Medio | Medio | Backlog |
 | Multi-File Exporter Base | Medio | Medio | Backlog |
 | TypeDoc | Medio | Bajo | Backlog |
@@ -874,6 +890,7 @@ Las siguientes mejoras no estan planificadas en el corto/medio plazo:
 | Logger Injection | Medio | Medio | DONE |
 | Type Testing | Medio | Bajo | DONE |
 | Snapshot Testing | Medio | Medio | DONE |
+| FileSystem Abstraction | Medio | Alto | DONE |
 
 ---
 
@@ -908,5 +925,5 @@ Las siguientes mejoras no estan planificadas en el corto/medio plazo:
 
 ---
 
-*Documento actualizado: 2026-01-12*
-*Mejoras pendientes: ~20 | En Progreso: 1 | Completado: 15 | Not Planned: 21+*
+*Documento actualizado: 2026-01-13*
+*Mejoras pendientes: ~19 | En Progreso: 0 | Completado: 16 | Not Planned: 21+*
