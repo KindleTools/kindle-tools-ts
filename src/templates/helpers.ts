@@ -208,6 +208,23 @@ export function createHandlebarsInstance(): typeof Handlebars {
     return `\n${tags.map((t) => `  - ${t}`).join("\n")}`;
   });
 
+  // ========== Options Helper ==========
+
+  /**
+   * Check if a template option is enabled: {{#if (opt "wikilinks")}}
+   * Reads from the `options` object in the root context.
+   *
+   * @example
+   * {{#if (opt "wikilinks")}}[[{{author}}]]{{else}}{{author}}{{/if}}
+   */
+  hbs.registerHelper("opt", (key: string, options: Handlebars.HelperOptions) => {
+    // Access the root context to get the options object
+    const root = options.data?.root;
+    const templateOptions = root?.options;
+    if (!templateOptions) return false;
+    return Boolean(templateOptions[key]);
+  });
+
   // ========== Conditional Block Helpers ==========
 
   /**

@@ -370,22 +370,25 @@ export function generatePath(template: string, data: PathData): string {
 
 ---
 
-### 2.10 OS-Safe Filename Sanitization
+### 2.10 Dynamic Template Options (TemplateEngine)
+**Prioridad:** MEDIA | **Esfuerzo:** Medio | **Estado:** DONE ✓
 
-**Prioridad:** MEDIA | **Esfuerzo:** Bajo | **Estado:** Backlog
+Implementado el sistema de opciones dinámicas para templates:
 
-Mejorar el sanitizador actual para manejar nombres reservados de Windows:
+1.  ✅ **TemplateOptions interface** en `src/templates/types.ts` con opciones predefinidas (`wikilinks`, `useCallouts`, etc.)
+2.  ✅ **opt helper** en `src/templates/helpers.ts` que lee `options` del contexto raíz
+3.  ✅ **Propagación de opciones** en `renderBook()` y `renderExport()` de `TemplateEngine`
+4.  ✅ **Contextos actualizados** con `options?: TemplateOptions` en `BookContext` y `ExportContext`
 
+Uso:
 ```typescript
-const WINDOWS_RESERVED = ['CON', 'PRN', 'AUX', 'NUL', 'COM1', 'LPT1'];
+const engine = new TemplateEngine(obsidianPreset);
+engine.renderBook(clippings, { wikilinks: true, useCallouts: true });
+```
 
-export function sanitizeFilename(name: string): string {
-  let safe = name.replace(/[<>:"/\\|?*]/g, '_');
-  if (WINDOWS_RESERVED.includes(safe.toUpperCase())) {
-    safe = `_${safe}`;
-  }
-  return safe.slice(0, 200);
-}
+En templates:
+```handlebars
+{{#if (opt "wikilinks")}}[[{{author}}]]{{else}}{{author}}{{/if}}
 ```
 
 ---

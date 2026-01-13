@@ -96,6 +96,25 @@ export interface ClippingContext {
 }
 
 /**
+ * Template rendering options.
+ * Used by the `opt` helper: {{#if (opt "wikilinks")}}
+ */
+export interface TemplateOptions {
+  /** Use Obsidian-style wiki links for authors: [[Author Name]] */
+  wikilinks?: boolean;
+  /** Use Obsidian callout syntax for quotes */
+  useCallouts?: boolean;
+  /** Include page numbers in output */
+  includePageNumbers?: boolean;
+  /** Include location in output */
+  includeLocation?: boolean;
+  /** Include date in output */
+  includeDate?: boolean;
+  /** Custom options for user templates */
+  [key: string]: boolean | string | number | undefined;
+}
+
+/**
  * Context for rendering a book (group of clippings).
  */
 export interface BookContext {
@@ -127,6 +146,8 @@ export interface BookContext {
   tags: string[];
   /** True if book has any tags */
   hasTags: boolean;
+  /** Template rendering options (for opt helper) */
+  options?: TemplateOptions;
 }
 
 /**
@@ -151,4 +172,6 @@ export interface ExportContext {
   exportDateIso: string;
   /** Custom title provided by user */
   title?: string;
+  /** Template rendering options (for opt helper) */
+  options?: TemplateOptions;
 }

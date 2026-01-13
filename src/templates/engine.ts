@@ -16,11 +16,12 @@ import type {
   ClippingContext,
   CustomTemplates,
   ExportContext,
+  TemplateOptions,
   TemplateType,
 } from "./types.js";
 
 // Re-export types for convenience
-export type { CustomTemplates, TemplateType } from "./types.js";
+export type { CustomTemplates, TemplateOptions, TemplateType } from "./types.js";
 
 // ============================================================================
 // Template Engine Class
@@ -133,8 +134,10 @@ export class TemplateEngine {
 
   /**
    * Create a BookContext from an array of clippings.
+   * @param clippings - Array of clippings from the same book
+   * @param options - Template options for the opt helper
    */
-  toBookContext(clippings: Clipping[]): BookContext {
+  toBookContext(clippings: Clipping[], options?: TemplateOptions): BookContext {
     const first = clippings[0];
     const contexts = clippings.map((c) => this.toClippingContext(c));
     const now = new Date();
@@ -169,13 +172,21 @@ export class TemplateEngine {
       exportDateIso: now.toISOString(),
       tags,
       hasTags: tags.length > 0,
+      ...(options !== undefined && { options }),
     };
   }
 
   /**
    * Create an ExportContext from a grouped map of clippings.
+   * @param grouped - Map of book title to clippings
+   * @param title - Custom export title
+   * @param options - Template options for the opt helper
    */
-  toExportContext(grouped: Map<string, Clipping[]>, title?: string): ExportContext {
+  toExportContext(
+    grouped: Map<string, Clipping[]>,
+    title?: string,
+    options?: TemplateOptions,
+  ): ExportContext {
     const books: BookContext[] = [];
     let totalClippings = 0;
     let totalHighlights = 0;
@@ -183,7 +194,7 @@ export class TemplateEngine {
     let totalBookmarks = 0;
 
     for (const [, clippings] of grouped) {
-      const bookCtx = this.toBookContext(clippings);
+      const bookCtx = this.toBookContext(clippings, options);
       books.push(bookCtx);
       totalClippings += bookCtx.totalClippings;
       totalHighlights += bookCtx.highlightCount;
@@ -207,6 +218,7 @@ export class TemplateEngine {
       }),
       exportDateIso: now.toISOString(),
       ...(title !== undefined && { title }),
+      ...(options !== undefined && { options }),
     };
   }
 
@@ -220,10 +232,12 @@ export class TemplateEngine {
 
   /**
    * Render a book (collection of clippings from the same book).
+   * @param clippings - Clippings from the same book
+   * @param options - Template options for the opt helper
    */
-  renderBook(clippings: Clipping[]): string {
+  renderBook(clippings: Clipping[], options?: TemplateOptions): string {
     if (clippings.length === 0) return "";
-    const context = this.toBookContext(clippings);
+    const context = this.toBookContext(clippings, options);
     return this.bookTemplate(context).trim();
   }
 
@@ -237,9 +251,16 @@ export class TemplateEngine {
 
   /**
    * Render a full export (all books).
+   * @param grouped - Map of book title to clippings
+   * @param title - Custom export title
+   * @param options - Template options for the opt helper
    */
-  renderExport(grouped: Map<string, Clipping[]>, title?: string): string {
-    const context = this.toExportContext(grouped, title);
+  renderExport(
+    grouped: Map<string, Clipping[]>,
+    title?: string,
+    options?: TemplateOptions,
+  ): string {
+    const context = this.toExportContext(grouped, title, options);
     return this.exportTemplate(context).trim();
   }
 
@@ -297,6 +318,8 @@ export class TemplateEngine {
       "isHighlight",
       "isNote",
       "isBookmark",
+      // Options
+      "opt",
     ];
   }
 
