@@ -6,6 +6,7 @@
  * - .kindletoolsrc.json
  * - .kindletoolsrc.yaml
  * - .kindletoolsrc.yml
+ * - .kindletoolsrc.toml
  * - .kindletoolsrc.js
  * - .kindletoolsrc.cjs
  * - kindletools.config.js
@@ -30,10 +31,13 @@
  * @packageDocumentation
  */
 
+import { parse as parseToml } from "@iarna/toml";
 import type { CosmiconfigResult } from "cosmiconfig";
 import { cosmiconfig, cosmiconfigSync } from "cosmiconfig";
+import { closest } from "fastest-levenshtein";
 import { AppException } from "#errors";
 import { type ConfigFile, ConfigFileSchema } from "#schemas/config.schema.js";
+import { expandEnvVars } from "#utils/system/env-expander.js";
 import { formatZodError } from "#utils/system/errors.js";
 
 // Module name used for config file search
@@ -72,6 +76,7 @@ const SEARCH_PLACES = [
   `.${MODULE_NAME}rc.json`,
   `.${MODULE_NAME}rc.yaml`,
   `.${MODULE_NAME}rc.yml`,
+  `.${MODULE_NAME}rc.toml`,
   `.${MODULE_NAME}rc.js`,
   `.${MODULE_NAME}rc.cjs`,
   `${MODULE_NAME}.config.js`,
@@ -83,7 +88,12 @@ const SEARCH_PLACES = [
  */
 function getAsyncExplorer() {
   if (!asyncExplorer) {
-    asyncExplorer = cosmiconfig(MODULE_NAME, { searchPlaces: SEARCH_PLACES });
+    asyncExplorer = cosmiconfig(MODULE_NAME, {
+      searchPlaces: SEARCH_PLACES,
+      loaders: {
+        ".toml": (filepath, content) => parseToml(content),
+      },
+    });
   }
   return asyncExplorer;
 }
@@ -93,9 +103,24 @@ function getAsyncExplorer() {
  */
 function getSyncExplorer() {
   if (!syncExplorer) {
-    syncExplorer = cosmiconfigSync(MODULE_NAME, { searchPlaces: SEARCH_PLACES });
+    syncExplorer = cosmiconfigSync(MODULE_NAME, {
+      searchPlaces: SEARCH_PLACES,
+      loaders: {
+        ".toml": (filepath, content) => parseToml(content),
+      },
+    });
   }
   return syncExplorer;
+}
+
+/**
+ * Get closest matching key for suggestions
+ */
+function getSuggestion(invalidKey: string): string | null {
+  const validKeys = Object.keys(ConfigFileSchema.shape);
+  const suggestion = closest(invalidKey, validKeys);
+  // Only suggest if it's somewhat similar (basic heuristic could be improved)
+  return suggestion || null;
 }
 
 /**
@@ -106,15 +131,45 @@ function processResult(result: CosmiconfigResult): LoadedConfig | null {
     return null;
   }
 
-  // Validate the configuration with Zod
-  const parseResult = ConfigFileSchema.safeParse(result.config);
+  // 1. Expand environment variables
+  const expandedConfig = expandEnvVars(result.config);
+
+  // 2. Validate the configuration with Zod
+  const parseResult = ConfigFileSchema.safeParse(expandedConfig);
 
   if (!parseResult.success) {
-    const errorMessage = formatZodError(parseResult.error);
+    const error = parseResult.error;
+
+    // Enhance error message with "Did you mean?" suggestions
+    let customErrorMessage = "";
+
+    // Check for unrecognized keys
+    const unrecognizedIssues = error.issues.filter((issue) => issue.code === "unrecognized_keys");
+
+    if (unrecognizedIssues.length > 0) {
+      const suggestions: string[] = [];
+      for (const issue of unrecognizedIssues) {
+        if (issue.code === "unrecognized_keys") {
+          for (const key of issue.keys) {
+            const suggestion = getSuggestion(key);
+            if (suggestion) {
+              suggestions.push(`Unknown key '${key}'. Did you mean '${suggestion}'?`);
+            }
+          }
+        }
+      }
+
+      if (suggestions.length > 0) {
+        customErrorMessage = `\nSuggestions:\n${suggestions.map((s) => `- ${s}`).join("\n")}`;
+      }
+    }
+
+    const baseErrorMessage = formatZodError(error);
     throw new AppException({
       code: "CONFIG_INVALID",
-      message: `Invalid configuration in ${result.filepath}:\n${errorMessage}`,
+      message: `Invalid configuration in ${result.filepath}:\n${baseErrorMessage}${customErrorMessage}`,
       path: result.filepath,
+      cause: error,
     });
   }
 

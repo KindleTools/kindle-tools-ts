@@ -74,7 +74,8 @@
     "dist",
     "README.md",
     "LICENSE",
-    "CHANGELOG.md"
+    "CHANGELOG.md",
+    "schema.json"
   ],
   "scripts": {
     "build": "tsup",
@@ -99,7 +100,8 @@
     "release": "pnpm build && changeset publish",
     "clean": "rimraf dist coverage .turbo",
     "ci": "turbo run build test lint check check:exports",
-    "prepublishOnly": "pnpm build"
+    "generate:schema": "tsx scripts/generate-schema.ts",
+    "prepublishOnly": "pnpm build && pnpm run generate:schema"
   },
   "keywords": [
     "kindle",
@@ -163,11 +165,14 @@
     "typescript": "^5.9.3",
     "vite": "^6.0.7",
     "vite-tsconfig-paths": "^6.0.3",
-    "vitest": "^4.0.16"
+    "vitest": "^4.0.16",
+    "zod-to-json-schema": "^3.25.1"
   },
   "dependencies": {
+    "@iarna/toml": "^2.2.5",
     "cosmiconfig": "^9.0.0",
     "date-fns": "^4.1.0",
+    "fastest-levenshtein": "^1.0.16",
     "handlebars": "^4.7.8",
     "jszip": "^3.10.1",
     "neverthrow": "^8.2.0",

@@ -208,4 +208,91 @@ describe("Config Loader", () => {
       expect(config.tagCase).toBe("lowercase");
     });
   });
+
+  describe("New Features: TOML, Env Vars, Suggestions", () => {
+    it("should load .kindletoolsrc.toml file", async () => {
+      const configPath = path.join(testDir, ".kindletoolsrc.toml");
+      const tomlContent = `
+format = "csv"
+output = "./exports_toml"
+folderStructure = "by-book"
+extractTags = true
+`;
+      await fs.writeFile(configPath, tomlContent);
+
+      const result = await loadConfig({ searchFrom: testDir });
+
+      expect(result).not.toBeNull();
+      expect(result?.config.format).toBe("csv");
+      expect(result?.config.output).toBe("./exports_toml");
+      expect(result?.config.folderStructure).toBe("by-book");
+      expect(result?.config.extractTags).toBe(true);
+      expect(result?.filepath).toContain(".kindletoolsrc.toml");
+    });
+
+    it("should expand environment variables in config", async () => {
+      process.env.TEST_KINDLE_EXPORT_PATH = "/tmp/kindle-exports";
+      process.env.TEST_AUTHOR_CASE = "uppercase";
+
+      const configPath = path.join(testDir, ".kindletoolsrc.json");
+      await fs.writeFile(
+        configPath,
+        JSON.stringify({
+          output: "${TEST_KINDLE_EXPORT_PATH}",
+          authorCase: "${TEST_AUTHOR_CASE}",
+        }),
+      );
+
+      const result = loadConfigSync({ searchFrom: testDir });
+
+      expect(result).not.toBeNull();
+      expect(result?.config.output).toBe("/tmp/kindle-exports");
+      expect(result?.config.authorCase).toBe("uppercase");
+
+      // Cleanup
+      delete process.env.TEST_KINDLE_EXPORT_PATH;
+      delete process.env.TEST_AUTHOR_CASE;
+    });
+
+    it("should expand environment variables with default values", async () => {
+      // NON_EXISTENT_VAR is undefined
+      const configPath = path.join(testDir, ".kindletoolsrc.json");
+      await fs.writeFile(
+        configPath,
+        JSON.stringify({
+          output: "${NON_EXISTENT_VAR:-./default/path}",
+          title: "${ALSO_MISSING:-My Default Title}",
+        }),
+      );
+
+      const result = loadConfigSync({ searchFrom: testDir });
+
+      expect(result).not.toBeNull();
+      expect(result?.config.output).toBe("./default/path");
+      expect(result?.config.title).toBe("My Default Title");
+    });
+
+    it("should suggest corrections for unknown keys", async () => {
+      const configPath = path.join(testDir, ".kindletoolsrc.json");
+      await fs.writeFile(
+        configPath,
+        JSON.stringify({
+          folderStruture: "flat", // Typo: missing 'c'
+          outpt: "./out", // Typo: missing 'u'
+        }),
+      );
+
+      try {
+        loadConfigSync({ searchFrom: testDir });
+        expect.fail("Should have thrown error");
+      } catch (err: any) {
+        expect(err.message).toContain("folderStruture");
+        expect(err.message).toContain("Did you mean 'folderStructure'?");
+
+        // 'outpt' might match 'output'
+        expect(err.message).toContain("outpt");
+        expect(err.message).toContain("Did you mean 'output'?");
+      }
+    });
+  });
 });

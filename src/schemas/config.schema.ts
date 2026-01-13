@@ -79,15 +79,15 @@ export type ClippingTypeFilter = z.infer<typeof ClippingTypeFilterSchema>;
  * ```
  */
 export const GeoLocationSchema = z.object({
-  latitude: z
+  latitude: z.coerce
     .number({ message: "Latitude must be a number" })
     .min(-90, { message: "Latitude must be between -90 and 90" })
     .max(90, { message: "Latitude must be between -90 and 90" }),
-  longitude: z
+  longitude: z.coerce
     .number({ message: "Longitude must be a number" })
     .min(-180, { message: "Longitude must be between -180 and 180" })
     .max(180, { message: "Longitude must be between -180 and 180" }),
-  altitude: z.number().optional(),
+  altitude: z.coerce.number().optional(),
   placeName: z.string().optional(),
 });
 
@@ -136,17 +136,29 @@ export const ParseOptionsSchema = z.object({
     .describe("Language for parsing. Use 'auto' for automatic detection."),
 
   // Processing
-  removeDuplicates: z.boolean().default(true).describe("Remove exact duplicate clippings"),
-  mergeNotes: z.boolean().default(true).describe("Link notes to their associated highlights"),
-  extractTags: z.boolean().default(false).describe("Extract tags from notes"),
+  removeDuplicates: z.coerce.boolean().default(true).describe("Remove exact duplicate clippings"),
+  mergeNotes: z.coerce
+    .boolean()
+    .default(true)
+    .describe("Link notes to their associated highlights"),
+  extractTags: z.coerce.boolean().default(false).describe("Extract tags from notes"),
   tagCase: TagCaseSchema.default("uppercase").describe("Case transformation for extracted tags"),
-  mergeOverlapping: z.boolean().default(true).describe("Merge overlapping/extended highlights"),
-  highlightsOnly: z.boolean().default(false).describe("Return only highlights with embedded notes"),
+  mergeOverlapping: z.coerce
+    .boolean()
+    .default(true)
+    .describe("Merge overlapping/extended highlights"),
+  highlightsOnly: z.coerce
+    .boolean()
+    .default(false)
+    .describe("Return only highlights with embedded notes"),
 
   // Normalization
-  normalizeUnicode: z.boolean().default(true).describe("Apply Unicode NFC normalization"),
-  cleanContent: z.boolean().default(true).describe("Clean content (trim, collapse spaces)"),
-  cleanTitles: z.boolean().default(true).describe("Clean titles (remove extensions, suffixes)"),
+  normalizeUnicode: z.coerce.boolean().default(true).describe("Apply Unicode NFC normalization"),
+  cleanContent: z.coerce.boolean().default(true).describe("Clean content (trim, collapse spaces)"),
+  cleanTitles: z.coerce
+    .boolean()
+    .default(true)
+    .describe("Clean titles (remove extensions, suffixes)"),
 
   // Filtering
   excludeTypes: z
@@ -158,7 +170,7 @@ export const ParseOptionsSchema = z.object({
     .optional()
     .describe("Books to exclude by title (case-insensitive)"),
   onlyBooks: z.array(z.string()).optional().describe("Only include these books (case-insensitive)"),
-  minContentLength: z
+  minContentLength: z.coerce
     .number()
     .min(0, { message: "Minimum content length must be non-negative" })
     .optional()
@@ -171,7 +183,7 @@ export const ParseOptionsSchema = z.object({
   geoLocation: GeoLocationSchema.optional().describe("Geographic location for metadata"),
 
   // Mode
-  strict: z
+  strict: z.coerce
     .boolean()
     .default(false)
     .describe("Throw on parsing errors instead of collecting warnings"),
@@ -203,6 +215,7 @@ export const ConfigFolderStructureSchema = z.enum(
 
 /**
  * Config file schema for .kindletoolsrc files.
+ * Config file schema for .kindletoolsrc files.
  * Combines parsing options with export-specific settings.
  *
  * @example
@@ -223,65 +236,67 @@ export const ConfigFolderStructureSchema = z.enum(
  * }
  * ```
  */
-export const ConfigFileSchema = z.object({
-  // Export format
-  format: z
-    .string()
-    .optional()
-    .describe("Default export format: json, csv, md, obsidian, joplin, html"),
+export const ConfigFileSchema = z
+  .object({
+    // Export format
+    format: z
+      .string()
+      .optional()
+      .describe("Default export format: json, csv, md, obsidian, joplin, html"),
 
-  // Output path
-  output: z.string().optional().describe("Default output file or directory path"),
+    // Output path
+    output: z.string().optional().describe("Default output file or directory path"),
 
-  // Folder structure for multi-file exports
-  folderStructure: ConfigFolderStructureSchema.optional().describe(
-    "Folder structure for multi-file exports",
-  ),
+    // Folder structure for multi-file exports
+    folderStructure: ConfigFolderStructureSchema.optional().describe(
+      "Folder structure for multi-file exports",
+    ),
 
-  // Case transformations
-  authorCase: TagCaseSchema.optional().describe(
-    "Case transformation for author folder names: original, uppercase, lowercase",
-  ),
+    // Case transformations
+    authorCase: TagCaseSchema.optional().describe(
+      "Case transformation for author folder names: original, uppercase, lowercase",
+    ),
 
-  // Grouping
-  groupByBook: z.boolean().optional().describe("Group clippings by book in output"),
+    // Grouping
+    groupByBook: z.coerce.boolean().optional().describe("Group clippings by book in output"),
 
-  // Tags
-  includeTags: z.boolean().optional().describe("Include tags in export"),
+    // Tags
+    includeTags: z.coerce.boolean().optional().describe("Include tags in export"),
 
-  // Pretty printing
-  pretty: z.boolean().optional().describe("Pretty-print JSON output"),
+    // Pretty printing
+    pretty: z.coerce.boolean().optional().describe("Pretty-print JSON output"),
 
-  // Metadata
-  title: z.string().optional().describe("Custom title for exports"),
-  creator: z.string().optional().describe("Creator name for metadata"),
+    // Metadata
+    title: z.string().optional().describe("Custom title for exports"),
+    creator: z.string().optional().describe("Creator name for metadata"),
 
-  // Nested parse options (allows grouping parse-specific settings)
-  parse: z
-    .object({
-      removeDuplicates: z.boolean().optional(),
-      mergeNotes: z.boolean().optional(),
-      mergeOverlapping: z.boolean().optional(),
-      extractTags: z.boolean().optional(),
-      tagCase: TagCaseSchema.optional(),
-      highlightsOnly: z.boolean().optional(),
-      normalizeUnicode: z.boolean().optional(),
-      cleanContent: z.boolean().optional(),
-      cleanTitles: z.boolean().optional(),
-      excludeTypes: z.array(ClippingTypeFilterSchema).optional(),
-      excludeBooks: z.array(z.string()).optional(),
-      onlyBooks: z.array(z.string()).optional(),
-      minContentLength: z.number().min(0).optional(),
-      dateLocale: z.string().optional(),
-      geoLocation: GeoLocationSchema.optional(),
-      strict: z.boolean().optional(),
-    })
-    .optional()
-    .describe("Parsing options override"),
+    // Nested parse options (allows grouping parse-specific settings)
+    parse: z
+      .object({
+        removeDuplicates: z.coerce.boolean().optional(),
+        mergeNotes: z.coerce.boolean().optional(),
+        mergeOverlapping: z.coerce.boolean().optional(),
+        extractTags: z.coerce.boolean().optional(),
+        tagCase: TagCaseSchema.optional(),
+        highlightsOnly: z.coerce.boolean().optional(),
+        normalizeUnicode: z.coerce.boolean().optional(),
+        cleanContent: z.coerce.boolean().optional(),
+        cleanTitles: z.coerce.boolean().optional(),
+        excludeTypes: z.array(ClippingTypeFilterSchema).optional(),
+        excludeBooks: z.array(z.string()).optional(),
+        onlyBooks: z.array(z.string()).optional(),
+        minContentLength: z.coerce.number().min(0).optional(),
+        dateLocale: z.string().optional(),
+        geoLocation: GeoLocationSchema.optional(),
+        strict: z.coerce.boolean().optional(),
+      })
+      .optional()
+      .describe("Parsing options override"),
 
-  // Include all ParseOptions fields at root level for backwards compatibility
-  ...ParseOptionsSchema.shape,
-});
+    // Include all ParseOptions fields at root level for backwards compatibility
+    ...ParseOptionsSchema.shape,
+  })
+  .strict();
 
 /**
  * Inferred input type for config file.

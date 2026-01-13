@@ -1,20 +1,12 @@
-import * as fs from "node:fs/promises";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { discoverAndLoadPlugins, discoverPlugins, loadPlugin } from "#plugins/discovery.js";
 import { pluginRegistry } from "#plugins/registry.js";
-
-// Mock fs.readFile
-vi.mock("node:fs/promises", async (importOriginal) => {
-  return {
-    ...(await importOriginal<typeof import("node:fs/promises")>()),
-    readFile: vi.fn(),
-  };
-});
+import { MemoryFileSystem, resetFileSystem, setFileSystem } from "#ports";
 
 // Mock console to avoid clutter
 vi.spyOn(console, "warn").mockImplementation(() => {});
 
-// Mock the internal importer
+// Mock the internal importer (still needed for dynamic imports of plugin packages)
 vi.mock("#plugins/importer.js", () => ({
   dynamicImport: vi.fn((packageName) => {
     if (packageName === "kindletools-plugin-valid-exporter") {
@@ -115,13 +107,15 @@ vi.mock("#plugins/importer.js", () => ({
   }),
 }));
 
-// We do NOT mock the plugins themselves anymore, but the loader.
-
 describe("plugin-discovery", () => {
+  let memFs: MemoryFileSystem;
+
   beforeEach(() => {
     vi.clearAllMocks();
+    // Setup MemoryFileSystem for package.json reading
+    memFs = new MemoryFileSystem();
+    setFileSystem(memFs);
     // Clear registry to avoid pollution between tests
-    // Accessing private or internal map if possible, or just trusting the mocks
     // biome-ignore lint/suspicious/noExplicitAny: Accessing private properties for testing
     (pluginRegistry as any).exporters = new Map();
     // biome-ignore lint/suspicious/noExplicitAny: Accessing private properties for testing
@@ -129,6 +123,7 @@ describe("plugin-discovery", () => {
   });
 
   afterEach(() => {
+    resetFileSystem();
     vi.resetModules();
   });
 
@@ -145,7 +140,7 @@ describe("plugin-discovery", () => {
         },
       };
 
-      vi.mocked(fs.readFile).mockResolvedValue(JSON.stringify(mockPackageJson));
+      memFs.addFile(`${process.cwd()}/package.json`, JSON.stringify(mockPackageJson));
 
       const plugins = await discoverPlugins();
 
@@ -162,7 +157,7 @@ describe("plugin-discovery", () => {
           "kindletools-plugin-ignored": "1.0.0",
         },
       };
-      vi.mocked(fs.readFile).mockResolvedValue(JSON.stringify(mockPackageJson));
+      memFs.addFile(`${process.cwd()}/package.json`, JSON.stringify(mockPackageJson));
 
       const plugins = await discoverPlugins({ prefix: "custom-prefix-" });
       expect(plugins).toContain("custom-prefix-one");
@@ -176,14 +171,14 @@ describe("plugin-discovery", () => {
           "@other/ignored": "1.0.0",
         },
       };
-      vi.mocked(fs.readFile).mockResolvedValue(JSON.stringify(mockPackageJson));
+      memFs.addFile(`${process.cwd()}/package.json`, JSON.stringify(mockPackageJson));
 
       const plugins = await discoverPlugins();
       expect(plugins).toContain("@myorg/kindletools-plugin-custom");
     });
 
     it("should return empty array on file read failure (silent catch)", async () => {
-      vi.mocked(fs.readFile).mockRejectedValue(new Error("File not found"));
+      // Don't add any package.json - MemoryFileSystem will throw ENOENT
       const plugins = await discoverPlugins();
       expect(plugins).toEqual([]);
     });
@@ -266,7 +261,7 @@ describe("plugin-discovery", () => {
           "kindletools-plugin-valid-exporter": "1.0.0",
         },
       };
-      vi.mocked(fs.readFile).mockResolvedValue(JSON.stringify(mockPackageJson));
+      memFs.addFile(`${process.cwd()}/package.json`, JSON.stringify(mockPackageJson));
 
       const registerSpy = vi.spyOn(pluginRegistry, "registerExporter");
 
@@ -283,7 +278,7 @@ describe("plugin-discovery", () => {
           "kindletools-plugin-valid-exporter": "1.0.0",
         },
       };
-      vi.mocked(fs.readFile).mockResolvedValue(JSON.stringify(mockPackageJson));
+      memFs.addFile(`${process.cwd()}/package.json`, JSON.stringify(mockPackageJson));
 
       const results = await discoverAndLoadPlugins();
 

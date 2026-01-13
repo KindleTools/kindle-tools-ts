@@ -315,12 +315,13 @@ export class MemoryFileSystem implements FileSystem {
 
 ### 2.6 Config File Improvements (.kindletoolsrc)
 
-**Prioridad:** MEDIA | **Esfuerzo:** Medio | **Estado:** Backlog
+**Prioridad:** MEDIA | **Esfuerzo:** Medio | **Estado:** DONE
 
-Ya esta parcialmente implementado con cosmiconfig. Mejoras adicionales:
-- Soporte para `.kindletoolsrc.toml` (formato moderno)
-- Validacion de errores con sugerencias ("Did you mean 'folderStructure'?")
-- Expansion de variables de entorno en config
+Implementado en `src/config/loader.ts` con soporte completo:
+- Soporte para `.kindletoolsrc.toml` (vía `@iarna/toml`)
+- Validacion de errores con sugerencias fuzzy (vía `fastest-levenshtein` y Zod `.strict()`)
+- Expansion de variables de entorno `${VAR}` en valores de configuración
+- Tests de integración detallados para estas features
 
 ---
 
@@ -909,7 +910,7 @@ Las siguientes mejoras no estan planificadas en el corto/medio plazo:
 | Type Assertions Plugins | Medio | Medio | Backlog |
 | `any` en hashing.ts | Bajo | Bajo | Backlog |
 | FileSystem Abstraction | Medio | Alto | DONE |
-| Config File Improvements | Medio | Medio | Backlog |
+| Config File Improvements | Medio | Medio | DONE |
 | Multi-File Exporter Base | Medio | Medio | Backlog |
 | TypeDoc | Medio | Bajo | Backlog |
 | **BAJA PRIORIDAD** |  |  |  |
