@@ -325,14 +325,20 @@ Implementado en `src/config/loader.ts` con soporte completo:
 
 ---
 
-### 2.7 Consolidar Exportadores Multi-Archivo
-
+### 2.7 Mejoras en MultiFileExporter
 **Prioridad:** MEDIA | **Esfuerzo:** Medio | **Estado:** Backlog
 
-Crear una clase base `MultiFileExporter` para Obsidian, Markdown y Joplin que:
-- Unifique la logica de estructura de carpetas
-- Reduzca codigo duplicado en generacion de paths
-- Centralice el manejo de templates
+Se ha implementado `MultiFileExporter` como base, pero quedan mejoras:
+
+1.  **Optimización de `exportPreamble`**:
+    *   Pasar `clippings` a `exportPreamble(clippings, options)` para permitir cálculos globales (ej. indexación de tags) antes de procesar libros.
+2.  **Stateless Refactoring (JoplinExporter)**:
+    *   Eliminar estado mutable (`this.rootNotebookId`, `this.tagMap`) de la clase exportadora.
+    *   Usar un objeto `ExportContext` efímero que se pase a través de `doExport` -> `processBook`.
+3.  **Migración Total a Templates (Joplin)**:
+    *   Mover la generación del cuerpo de la nota (actualmente concatenación manual) a una plantilla Handlebars `CLIPPING_JOPLIN` en `presets.ts`.
+4.  **Optimización de Memoria**:
+    *   Hacer que `generateSummaryContent` devuelva un resumen ligero por defecto en lugar de concatenar el contenido de todos los archivos (lo cual es costoso para librerías grandes).
 
 ---
 
@@ -658,18 +664,14 @@ docs/adr/
 
 ---
 
-### 3.16 Organizacion de Test Fixtures
+### 3.16 Organizacion de Test Fixtures y Suites
 
 **Prioridad:** BAJA | **Esfuerzo:** Bajo | **Estado:** Backlog
 
-Los archivos de test fixtures estan dispersos. Consolidar en:
-
-```
-tests/fixtures/
-  ├── clippings/
-  ├── config/
-  └── expected-output/
-```
+1.  **Consolidar Fixtures**:
+    *   Centralizar en `tests/fixtures/{clippings,config,expected-output}`.
+2.  **Dividir Test Suites Grandes**:
+    *   Refactorizar `tests/unit/exporters/exporters.test.ts` (actualmente ~800 líneas) en archivos específicos por formato: `markdown.test.ts`, `obsidian.test.ts`, `joplin.test.ts`.
 
 ---
 
