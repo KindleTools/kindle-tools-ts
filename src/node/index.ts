@@ -9,4 +9,5 @@
 
 export { parseFile } from "#importers/formats/txt/file-parser.js";
 
-// Potentially export other Node.js utilities in the future
+// Node.js FileSystem adapter (for explicit usage)
+export { nodeFileSystem } from "#ports/adapters/node-filesystem.js";

@@ -5,7 +5,12 @@
  */
 
 /**
- * Detect encoding from a Buffer by checking BOM (Byte Order Mark).
+ * Type alias for buffer-like data (supports both Node.js Buffer and browser Uint8Array).
+ */
+type BufferLike = Uint8Array | Buffer;
+
+/**
+ * Detect encoding from a buffer by checking BOM (Byte Order Mark).
  *
  * Supports:
  * - UTF-8 with BOM (EF BB BF)
@@ -13,10 +18,10 @@
  * - UTF-16 BE (FE FF)
  * - Falls back to UTF-8 (most common for Kindle files)
  *
- * @param buffer - File buffer to analyze
+ * @param buffer - File buffer to analyze (Uint8Array or Buffer)
  * @returns Detected encoding
  */
-export function detectEncoding(buffer: Buffer): BufferEncoding {
+export function detectEncoding(buffer: BufferLike): BufferEncoding {
   // UTF-8 BOM
   if (buffer[0] === 0xef && buffer[1] === 0xbb && buffer[2] === 0xbf) {
     return "utf-8";
@@ -39,13 +44,16 @@ export function detectEncoding(buffer: Buffer): BufferEncoding {
  *
  * Order: detected encoding -> utf-8 -> latin1 (always succeeds)
  *
- * @param buffer - File buffer
+ * @param buffer - File buffer (Uint8Array or Buffer)
  * @param primaryEncoding - Primary encoding to try
  * @returns Decoded string
  */
-export function decodeWithFallback(buffer: Buffer, primaryEncoding: BufferEncoding): string {
+export function decodeWithFallback(buffer: BufferLike, primaryEncoding: BufferEncoding): string {
+  // Convert Uint8Array to Buffer if needed (for .toString() method)
+  const buf = Buffer.isBuffer(buffer) ? buffer : Buffer.from(buffer);
+
   try {
-    const content = buffer.toString(primaryEncoding);
+    const content = buf.toString(primaryEncoding);
     // Check for replacement character (indicates decoding issues)
     if (!content.includes("\ufffd")) {
       return content;
@@ -56,5 +64,5 @@ export function decodeWithFallback(buffer: Buffer, primaryEncoding: BufferEncodi
 
   // Fallback to latin1 (ISO-8859-1) which always succeeds
   // This handles Windows cp1252 files reasonably well
-  return buffer.toString("latin1");
+  return buf.toString("latin1");
 }

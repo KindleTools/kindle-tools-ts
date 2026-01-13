@@ -163,3 +163,16 @@ export {
   resetLogger,
   setLogger,
 } from "./errors/logger.js";
+
+// =============================================================================
+// FileSystem API (Dependency Injection)
+// =============================================================================
+
+export { MemoryFileSystem } from "./ports/adapters/memory-filesystem.js";
+export type { FileSystem } from "./ports/filesystem.js";
+export {
+  getFileSystem,
+  nullFileSystem,
+  resetFileSystem,
+  setFileSystem,
+} from "./ports/filesystem.js";

@@ -1,5 +1,5 @@
-import * as fs from "node:fs/promises";
 import type { ParseOptions, ParseResult } from "#app-types/config.js";
+import { getFileSystem } from "#ports";
 import { decodeWithFallback, detectEncoding } from "#utils/text/encoding.js";
 import { parseString } from "./parser.js";
 
@@ -22,6 +22,9 @@ import { parseString } from "./parser.js";
  * ```
  */
 export async function parseFile(filePath: string, options?: ParseOptions): Promise<ParseResult> {
+  // Get the filesystem (injected or default Node.js)
+  const fs = await getFileSystem();
+
   // Read as buffer first to detect encoding
   const buffer = await fs.readFile(filePath);
   const detectedEncoding = detectEncoding(buffer);

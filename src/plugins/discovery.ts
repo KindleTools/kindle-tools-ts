@@ -42,6 +42,7 @@
  * @packageDocumentation
  */
 
+import { getFileSystem } from "#ports";
 import { dynamicImport } from "./importer.js";
 import { pluginRegistry } from "./registry.js";
 import {
@@ -146,9 +147,9 @@ export async function discoverPlugins(options?: DiscoveryOptions): Promise<strin
   try {
     // Read package.json from process.cwd()
     const packageJsonPath = `${process.cwd()}/package.json`;
-    const { readFile } = await import("node:fs/promises");
+    const fs = await getFileSystem();
 
-    const packageJson = JSON.parse(await readFile(packageJsonPath, "utf-8")) as {
+    const packageJson = JSON.parse(await fs.readTextFile(packageJsonPath)) as {
       dependencies?: Record<string, string>;
       devDependencies?: Record<string, string>;
     };

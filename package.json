@@ -65,7 +65,10 @@
     "#errors": "./src/errors/index.ts",
     "#errors/*.js": "./src/errors/*.ts",
     "#plugins": "./src/plugins/index.ts",
-    "#plugins/*.js": "./src/plugins/*.ts"
+    "#plugins/*.js": "./src/plugins/*.ts",
+    "#ports": "./src/ports/index.ts",
+    "#ports/*.js": "./src/ports/*.ts",
+    "#ports/adapters/*.js": "./src/ports/adapters/*.ts"
   },
   "files": [
     "dist",
