@@ -62,20 +62,30 @@ export function generateNaughtyFile(): string {
 
 /**
  * Generates a file with broken structure (missing separators, missing lines).
+ * Each case is properly separated by ========== to form individual blocks that the
+ * parser must handle.
  */
 export function generateBrokenStructureFile(): string {
   const cases = [
-    // Missing separator
-    "Title (Author)\n- Meta info\n\nContent",
-    // Missing meta
-    "Title (Author)\n\nContent\n==========",
-    // Missing blank line
-    "Title (Author)\n- Meta info\nContent\n==========",
-    // Only separator
-    "==========",
-    // Double separator
-    "==========\n==========",
+    // Completely empty block
+    "",
+    // Only whitespace
+    "   \n\n   ",
+    // Just a random line (no title/author pattern)
+    "Just some random text without any structure",
+    // Title without parentheses (invalid author format)
+    "Title Without Author\n- Your Highlight on page 1 | Location 10-20 | Added on Monday, January 1, 2024 12:00:00 AM\n\nContent",
+    // Only has title line (missing everything else)
+    "Lonely Title (Some Author)",
+    // Meta line doesn't match any known language pattern
+    "Valid Title (Author)\n- Unknown gibberish 無效的元數據\n\nContent here",
+    // Valid looking but corrupted date
+    "Book Title (Writer Name)\n- Your Highlight on page 5 | Location 50-60 | Added on INVALID DATE FORMAT\n\nHighlight content",
+    // Reversed structure (content before title)
+    "This is the content\n- Your Highlight on page 1 | Location 1-2 | Added on Monday, January 1, 2024 12:00:00 AM\nBook (Author)",
+    // Valid clipping to ensure at least some parsing works
+    "Valid Book (Valid Author)\n- Your Highlight on page 10 | Location 100-110 | Added on Monday, January 1, 2024 12:00:00 AM\n\nThis is a valid highlight that should parse correctly.",
   ];
 
-  return cases.join("\n");
+  return cases.join("\n==========\n");
 }

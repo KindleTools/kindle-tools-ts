@@ -33,18 +33,23 @@ describe("Stress Testing: TXT Parser", () => {
     const result = parse(brokenContent);
     expect(result).toBeDefined();
 
-    // Debugging output if needed
-    if (result.warnings.length === 0) {
-      console.warn(
-        "Expected warnings for broken file but got none. Parsed clippings:",
-        result.clippings.length,
-      );
-    }
+    // The broken structure file contains various malformed blocks.
+    // The parser is designed to be lenient:
+    // - Empty/short blocks are silently filtered during tokenization
+    // - Blocks with 2+ lines and a "-" metadata line are parsed with fallback values
+    // - Only completely corrupted blocks (non-"- " metadata) generate warnings
+    //
+    // This lenient behavior is intentional to handle real-world clippings files
+    // that may have minor formatting issues.
 
-    // It should either parse something or warn.
-    // If it parsed nothing AND warned nothing, that's suspicious (unless file was empty, which it isn't).
-    const handled = result.clippings.length > 0 || result.warnings.length > 0;
-    expect(handled).toBe(true);
+    // Should not crash and should extract something
+    expect(result.clippings.length).toBeGreaterThan(0);
+
+    // The valid clipping at the end should be parsed correctly
+    const validClipping = result.clippings.find((c) => c.title === "Valid Book");
+    expect(validClipping).toBeDefined();
+    expect(validClipping?.author).toBe("Valid Author");
+    expect(validClipping?.type).toBe("highlight");
   });
 
   it("should parse a massive file (5MB) within reasonable time", async () => {

@@ -4,7 +4,7 @@
  * Tests the full flow: Parse → Process → Export
  */
 
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { process } from "#core/processor.js";
 import { CsvExporter } from "#exporters/formats/csv.exporter.js";
 import { HtmlExporter } from "#exporters/formats/html.exporter.js";
@@ -13,7 +13,9 @@ import { JsonExporter } from "#exporters/formats/json.exporter.js";
 import { MarkdownExporter } from "#exporters/formats/markdown.exporter.js";
 import { ObsidianExporter } from "#exporters/formats/obsidian.exporter.js";
 import type { ExportedFile } from "#exporters/index.js";
+import { parseFile } from "#importers/formats/txt/file-parser.js";
 import { parse } from "#importers/formats/txt/parser.js";
+import { MemoryFileSystem, resetFileSystem, setFileSystem } from "#ports";
 import { SAMPLE_CLIPPINGS_EN } from "../fixtures/sample-clippings.js";
 import { getExportSuccess } from "../helpers/result-helpers.js";
 
@@ -255,5 +257,91 @@ Habe nun, ach! Philosophie, Juristerei und Medizin
     expect(exportResult.isOk()).toBe(true);
     expect(output).toContain("Faust");
     expect(output).toContain("Johann Wolfgang von Goethe");
+  });
+});
+
+describe("Integration: MemoryFileSystem Pipeline", () => {
+  let memFs: MemoryFileSystem;
+
+  beforeEach(() => {
+    memFs = new MemoryFileSystem();
+    setFileSystem(memFs);
+  });
+
+  afterEach(() => {
+    resetFileSystem();
+  });
+
+  it("should complete full pipeline using MemoryFileSystem: parseFile → process → export", async () => {
+    // Setup: Add clippings file to memory filesystem
+    memFs.addFile("/kindle/My Clippings.txt", SAMPLE_CLIPPINGS_EN);
+
+    // Step 1: Parse from memory filesystem
+    const parseResult = await parseFile("/kindle/My Clippings.txt");
+    expect(parseResult.clippings.length).toBe(5);
+    expect(parseResult.meta.fileSize).toBeGreaterThan(0);
+
+    // Step 2: Process clippings
+    const processResult = process(parseResult.clippings, {
+      removeDuplicates: true,
+      mergeNotes: true,
+      detectedLanguage: "en",
+    });
+    expect(processResult.clippings.length).toBeGreaterThan(0);
+
+    // Step 3: Export to JSON
+    const exporter = new JsonExporter();
+    const exportResult = await exporter.export(processResult.clippings, {
+      groupByBook: true,
+      includeStats: true,
+    });
+    const { output } = getExportSuccess(exportResult);
+
+    expect(exportResult.isOk()).toBe(true);
+    const data = JSON.parse(output as string);
+    expect(data.books).toBeDefined();
+    expect(data.meta.totalBooks).toBeGreaterThan(0);
+  });
+
+  it("should handle UTF-8 BOM content in MemoryFileSystem", async () => {
+    // UTF-8 BOM prefix
+    const bom = "\uFEFF";
+    const contentWithBom = bom + SAMPLE_CLIPPINGS_EN;
+    memFs.addFile("/kindle/bom-clippings.txt", contentWithBom);
+
+    const parseResult = await parseFile("/kindle/bom-clippings.txt");
+    expect(parseResult.clippings.length).toBe(5);
+    // Title should not contain BOM character
+    expect(parseResult.clippings[0]?.title).not.toContain("\uFEFF");
+  });
+
+  it("should export to multiple formats from MemoryFileSystem source", async () => {
+    memFs.addFile("/test/clippings.txt", SAMPLE_CLIPPINGS_EN);
+
+    const parseResult = await parseFile("/test/clippings.txt");
+
+    // Export to multiple formats
+    const jsonExporter = new JsonExporter();
+    const csvExporter = new CsvExporter();
+    const mdExporter = new MarkdownExporter();
+
+    const [jsonResult, csvResult, mdResult] = await Promise.all([
+      jsonExporter.export(parseResult.clippings),
+      csvExporter.export(parseResult.clippings),
+      mdExporter.export(parseResult.clippings),
+    ]);
+
+    expect(jsonResult.isOk()).toBe(true);
+    expect(csvResult.isOk()).toBe(true);
+    expect(mdResult.isOk()).toBe(true);
+
+    // Verify each format has content
+    const jsonOutput = getExportSuccess(jsonResult).output as string;
+    const csvOutput = getExportSuccess(csvResult).output as string;
+    const mdOutput = getExportSuccess(mdResult).output as string;
+
+    expect(JSON.parse(jsonOutput).clippings.length).toBe(5);
+    expect(csvOutput.split("\n").filter((l) => l.trim()).length).toBe(6); // header + 5 rows
+    expect(mdOutput).toContain("# Kindle Highlights");
   });
 });

@@ -20,6 +20,18 @@ import { parseString } from "./parser.js";
  * const result = await parseFile("My Clippings.txt");
  * console.log(`Parsed ${result.clippings.length} clippings`);
  * ```
+ *
+ * @example Testing with MemoryFileSystem
+ * ```typescript
+ * import { MemoryFileSystem, setFileSystem, resetFileSystem } from "#ports";
+ *
+ * const memFs = new MemoryFileSystem();
+ * memFs.addFile("/test/clippings.txt", "Your highlight content...");
+ * setFileSystem(memFs);
+ *
+ * const result = await parseFile("/test/clippings.txt");
+ * resetFileSystem(); // Restore default Node.js filesystem
+ * ```
  */
 export async function parseFile(filePath: string, options?: ParseOptions): Promise<ParseResult> {
   // Get the filesystem (injected or default Node.js)
