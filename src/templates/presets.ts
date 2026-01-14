@@ -63,6 +63,33 @@ export const CLIPPING_COMPACT = `- {{content}}{{#if hasNote}} *({{note}})*{{/if}
 `;
 
 /**
+ * Joplin-optimized clipping template for individual notes.
+ * Python-compatible format: content first, metadata footer at bottom.
+ */
+export const CLIPPING_JOPLIN = `{{content}}
+{{#if hasNote}}
+
+---
+
+**My Note:**
+{{note}}
+{{/if}}
+
+
+-----
+- date: {{date}}
+- author: {{author}}
+- book: {{title}}
+{{#if (neq page "?")}}
+- page: {{page}}
+{{/if}}
+{{#if hasTags}}
+- tags: {{tagsString}}
+{{/if}}
+-----
+`;
+
+/**
  * Verbose template with all metadata.
  */
 export const CLIPPING_VERBOSE = `### {{type}} at Location {{location}}
@@ -445,7 +472,7 @@ export function getTemplatePreset(preset: PresetType): TemplateCollection {
       };
     case "joplin":
       return {
-        clipping: CLIPPING_DEFAULT,
+        clipping: CLIPPING_JOPLIN,
         book: BOOK_JOPLIN,
         export: EXPORT_DEFAULT,
       };

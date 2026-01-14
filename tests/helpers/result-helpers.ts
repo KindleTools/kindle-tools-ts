@@ -36,3 +36,13 @@ export function getExportSuccess<T, E>(result: Result<T, E>) {
     files?: Array<{ path: string; content: string | Uint8Array }>;
   };
 }
+
+/**
+ * Helper to get combined content from all files in an export result.
+ * Useful for testing exporters that generate multiple files (e.g., Joplin).
+ */
+export function getFilesContent<T, E>(result: Result<T, E>): string {
+  const { files } = getExportSuccess(result);
+  if (!files) return "";
+  return files.map((f) => `# ${f.path}\n${f.content}`).join("\n\n---\n\n");
+}

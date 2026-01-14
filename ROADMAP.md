@@ -86,30 +86,29 @@ function tryLoadNodeCrypto(): NodeCryptoModule | null {
 
 ---
 
-### 1.3 Mejoras en MultiFileExporter
+### 1.3 ~~Mejoras en MultiFileExporter~~ ✅ COMPLETADO
 
-**Ubicacion:** `src/exporters/shared/multi-file-exporter.ts`
+**Ubicacion:** `src/exporters/shared/multi-file-exporter.ts`, `src/exporters/formats/joplin.exporter.ts`
 
-**Mejoras pendientes:**
+**Mejoras implementadas:**
 
 1. **Pasar clippings a exportPreamble:**
-   ```typescript
-   // Actual
-   protected exportPreamble(options: ExporterOptions): Promise<void>;
-
-   // Propuesto
-   protected exportPreamble(clippings: Clipping[], options: ExporterOptions): Promise<void>;
-   ```
+   - Firma actualizada a `exportPreamble(clippings, options)`
+   - Permite generar tags globales y otros recursos que dependen de todos los clippings
 
 2. **Stateless Refactoring (JoplinExporter):**
-   - Eliminar `this.rootNotebookId`, `this.tagMap`
-   - Usar objeto `ExportContext` efimero
+   - Reemplazados campos de estado (`rootNotebookId`, `tagMap`, etc.) por `JoplinExportContext` efímero
+   - El contexto se crea en `exportPreamble` y se usa en `processBook`
+   - Cada export es independiente sin estado residual
 
-3. **Migracion a Templates (Joplin):**
-   - Mover generacion del cuerpo de nota a plantilla `CLIPPING_JOPLIN`
+3. **Migración a Templates (Joplin):**
+   - Creada plantilla `CLIPPING_JOPLIN` en `presets.ts`
+   - `processBook` ahora usa `engine.renderClipping(clipping)` en lugar de `generateNoteBody()`
+   - Eliminado método `generateNoteBody` obsoleto
 
-4. **Optimizacion de Memoria:**
-   - `generateSummaryContent()` deberia devolver resumen ligero, no concatenar todo
+4. **Optimización de Memoria:**
+   - `generateSummaryContent()` ahora devuelve resumen ligero con conteos
+   - Evita concatenar todo el contenido de archivos (mejora significativa para exports grandes)
 
 ---
 
@@ -517,7 +516,33 @@ if (!validateExporterInstance(instance)) {
 
 ---
 
-### 2.15 Web Crypto API para Browsers
+---
+
+## 3. Not Planned
+
+### Descartado Permanentemente
+
+- **PDF Export:** Requiere libreria de renderizado pesada
+- **Readwise Sync:** API propietaria
+- **Highlight Colors:** Kindle no exporta esta info
+- **Streaming Architecture:** Caso de uso muy raro (50MB+)
+- **CLI:** Eliminada. Usuarios pueden crear wrappers.
+
+### Baja Prioridad (sin plan concreto)
+
+- **Anki Export:** Ya existe como plugin de ejemplo
+- **Notion Integration:** API propietaria
+- **Kobo/Apple Books:** Requiere parsers especificos
+- **AI Enrichment:** Claude API para tags (fuera de scope)
+- **WASM Web App:** Demasiado complejo para el beneficio
+- **Mutation Testing (Stryker):** Costoso en CI
+- **E2E Testing (Playwright):** Solo para workbench
+
+---
+
+## 4. Para estudio
+
+### Web Crypto API para Browsers
 
 **Ubicacion:** `src/utils/security/hashing.ts`
 
@@ -553,29 +578,44 @@ export async function sha256Async(input: string): Promise<string> {
 
 **Nota:** Requiere cambiar la firma a `async`, lo que puede requerir cambios en llamadas existentes.
 
+
+### Mejoras Adicionales en Contexto de Errores (Post-1.6)
+
+**Ubicacion:** `src/importers/`
+
+**Propuestas:**
+
+1.  **Estandarización en `JsonImporter`:**
+    - Migrar de validación global "Fail Fast" a validación item por item.
+    - Usar `importValidationError` para reporte granular en arrays de clippings.
+
+2.  **Sugerencias Inteligentes (`fastest-levenshtein`):**
+    - Usar la librería ya instalada para sugerencias dinámicas en enums (`type`, `language`).
+    - Reemplazar checks estáticos (`if val === 'hightlight'`) por distancia de Levenshtein.
+
+3.  **Límites de Seguridad de Memoria:**
+    - Implementar `MAX_VALIDATION_ERRORS = 100` en importers.
+    - Evitar OOM en archivos masivos con muchas filas corruptas.
+
+4.  **Recuperación Flexible de Fechas:**
+    - Intentar parsear formatos comunes (`DD/MM/YYYY`) antes de fallar.
+
 ---
 
-## 3. Not Planned
+### Bug Fix: CSV Importer Type Validation
 
-### Descartado Permanentemente
+**Ubicacion:** `src/importers/formats/csv.importer.ts`
 
-- **PDF Export:** Requiere libreria de renderizado pesada
-- **Readwise Sync:** API propietaria
-- **Highlight Colors:** Kindle no exporta esta info
-- **Streaming Architecture:** Caso de uso muy raro (50MB+)
-- **CLI:** Eliminada. Usuarios pueden crear wrappers.
+**Problema:**
+El `z.string().optional()` permite cualquier string. El cast a `ClippingType` es inseguro y las sugerencias de typos no se activan.
 
-### Baja Prioridad (sin plan concreto)
-
-- **Anki Export:** Ya existe como plugin de ejemplo
-- **Notion Integration:** API propietaria
-- **Kobo/Apple Books:** Requiere parsers especificos
-- **AI Enrichment:** Claude API para tags (fuera de scope)
-- **WASM Web App:** Demasiado complejo para el beneficio
-- **Mutation Testing (Stryker):** Costoso en CI
-- **E2E Testing (Playwright):** Solo para workbench
+**Solucion:**
+1. Crear array runtime de tipos válidos: `['highlight', 'note', 'bookmark', 'clip', 'article']`.
+2. Validar manualmente el campo `type` antes de crear el objeto `Clipping`.
+3. Reportar error y sugerencia si el valor no está en la lista.
 
 ---
+
 
 ## Referencias
 
@@ -596,7 +636,16 @@ export async function sha256Async(input: string): Promise<string> {
 ### Tooling
 - [Biome Configuration](https://biomejs.dev/guides/configure-biome/)
 
+### Tests: Mejorar Cobertura en Importers
+
+**Ubicacion:** `tests/unit/importers/importers.test.ts`
+
+**Mejoras:**
+1. Agregar casos de prueba para el nuevo flujo de `IMPORT_VALIDATION_ERROR`.
+2. Verificar que las sugerencias de typos funcionan correctamente.
+3. Testear la acumulación de múltiples errores en una misma fila y en múltiples filas.
+
 ---
 
 *Documento actualizado: 2026-01-14*
-*Mejoras pendientes: 23 | Media prioridad: 8 (1 completado) | Baja prioridad: 15*
+*Mejoras pendientes: 22 | Media prioridad: 8 (2 completados) | Baja prioridad: 15*

@@ -15,7 +15,7 @@ import {
   SAMPLE_CLIPPINGS,
   SINGLE_CLIPPING,
 } from "../../fixtures/sample-clippings.js";
-import { getExportSuccess } from "../../helpers/result-helpers.js";
+import { getExportSuccess, getFilesContent } from "../../helpers/result-helpers.js";
 
 // =============================================================================
 // JSON Exporter
@@ -494,17 +494,17 @@ describe("JoplinExporter", () => {
 
     it("should create root notebook", async () => {
       const result = await exporter.export(SAMPLE_CLIPPINGS);
-      const { output } = getExportSuccess(result);
+      const content = getFilesContent(result);
 
-      expect(output).toContain("type_: 2"); // TYPE_FOLDER
-      expect(output).toContain("Kindle Highlights");
+      expect(content).toContain("type_: 2"); // TYPE_FOLDER
+      expect(content).toContain("Kindle Highlights");
     });
 
     it("should use custom notebook name when specified", async () => {
       const result = await exporter.export(SAMPLE_CLIPPINGS, { notebookName: "My Notes" });
-      const { output } = getExportSuccess(result);
+      const content = getFilesContent(result);
 
-      expect(output).toContain("My Notes");
+      expect(content).toContain("My Notes");
     });
 
     it("should create deterministic IDs", async () => {
@@ -520,65 +520,65 @@ describe("JoplinExporter", () => {
 
     it("should include note metadata", async () => {
       const result = await exporter.export(SAMPLE_CLIPPINGS);
-      const { output } = getExportSuccess(result);
+      const content = getFilesContent(result);
 
-      expect(output).toContain("type_: 1"); // TYPE_NOTE
-      expect(output).toContain("created_time:");
-      expect(output).toContain("updated_time:");
-      expect(output).toContain("source_application: kindle-tools-ts");
+      expect(content).toContain("type_: 1"); // TYPE_NOTE
+      expect(content).toContain("created_time:");
+      expect(content).toContain("updated_time:");
+      expect(content).toContain("source_application: kindle-tools-ts");
     });
 
     it("should create tags", async () => {
       const result = await exporter.export(SAMPLE_CLIPPINGS, { tags: ["kindle", "reading"] });
-      const { output } = getExportSuccess(result);
+      const content = getFilesContent(result);
 
-      expect(output).toContain("type_: 5"); // TYPE_TAG
+      expect(content).toContain("type_: 5"); // TYPE_TAG
     });
 
     it("should create note-tag associations", async () => {
       const result = await exporter.export(SAMPLE_CLIPPINGS, { tags: ["kindle"] });
-      const { output } = getExportSuccess(result);
+      const content = getFilesContent(result);
 
-      expect(output).toContain("type_: 6"); // TYPE_NOTE_TAG
-      expect(output).toContain("note_id:");
-      expect(output).toContain("tag_id:");
+      expect(content).toContain("type_: 6"); // TYPE_NOTE_TAG
+      expect(content).toContain("note_id:");
+      expect(content).toContain("tag_id:");
     });
 
     it("should include creator when specified", async () => {
       const result = await exporter.export(SAMPLE_CLIPPINGS, { creator: "John Doe" });
-      const { output } = getExportSuccess(result);
+      const content = getFilesContent(result);
 
       // Creator appears as author field in Joplin note metadata (not in body footer)
       // Body footer contains book author (e.g., "- author: F. Scott Fitzgerald")
-      expect(output).toContain("author: John Doe"); // Joplin metadata field
-      expect(output).toContain("- author: F. Scott Fitzgerald"); // Body footer
+      expect(content).toContain("author: John Doe"); // Joplin metadata field
+      expect(content).toContain("- author: F. Scott Fitzgerald"); // Body footer
     });
 
     it("should format note titles with page number", async () => {
       const result = await exporter.export([SAMPLE_CLIPPINGS[0] as Clipping]);
-      const { output } = getExportSuccess(result);
+      const content = getFilesContent(result);
 
       // Python-compatible format: [0005] without emojis
-      expect(output).toContain("[0005]"); // Page 5 padded
+      expect(content).toContain("[0005]"); // Page 5 padded
     });
 
     it("should use 3-level hierarchy by default (Root > Author > Book)", async () => {
       const result = await exporter.export(SAMPLE_CLIPPINGS);
-      const { output } = getExportSuccess(result);
+      const content = getFilesContent(result);
 
       // Count type_: 2 (folders) - should be 1 root + 3 authors + 3 books = 7
       // (may be less if authors are shared)
-      const folderMatches = (output as string).match(/type_: 2/g);
+      const folderMatches = content.match(/type_: 2/g);
       expect(folderMatches?.length).toBeGreaterThan(4);
     });
 
     it("should use 3-level hierarchy when folderStructure is by-author", async () => {
       const result = await exporter.export(SAMPLE_CLIPPINGS, { folderStructure: "by-author" });
-      const { output } = getExportSuccess(result);
+      const content = getFilesContent(result);
 
       // Count type_: 2 (folders) - should be 1 root + 3 authors + 3 books = 7
       // (may be less if authors are shared)
-      const folderMatches = (output as string).match(/type_: 2/g);
+      const folderMatches = content.match(/type_: 2/g);
       expect(folderMatches?.length).toBeGreaterThan(4);
     });
 
@@ -587,10 +587,10 @@ describe("JoplinExporter", () => {
         folderStructure: "by-author",
         authorCase: "uppercase",
       });
-      const { output } = getExportSuccess(result);
+      const content = getFilesContent(result);
 
       // Should have uppercase author names
-      expect(output).toContain("F. SCOTT FITZGERALD");
+      expect(content).toContain("F. SCOTT FITZGERALD");
     });
 
     it("should apply lowercase to author notebook names", async () => {
@@ -598,10 +598,10 @@ describe("JoplinExporter", () => {
         folderStructure: "by-author",
         authorCase: "lowercase",
       });
-      const { output } = getExportSuccess(result);
+      const content = getFilesContent(result);
 
       // Should have lowercase author names
-      expect(output).toContain("f. scott fitzgerald");
+      expect(content).toContain("f. scott fitzgerald");
     });
 
     it("should include clipping tags as Joplin tags by default", async () => {
@@ -609,12 +609,12 @@ describe("JoplinExporter", () => {
         i === 0 ? { ...c, tags: ["important", "review"] } : c,
       );
       const result = await exporter.export(clippingsWithTags);
-      const { output } = getExportSuccess(result);
+      const content = getFilesContent(result);
 
       // Should create tag entries (Joplin format: title on first line, then metadata)
       // The tag title appears as a standalone line followed by id:
-      expect(output).toMatch(/\nimportant\n\nid:/);
-      expect(output).toMatch(/\nreview\n\nid:/);
+      expect(content).toMatch(/\nimportant\n\nid:/);
+      expect(content).toMatch(/\nreview\n\nid:/);
     });
 
     it("should not create tag entries when includeClippingTags is false", async () => {
@@ -622,10 +622,10 @@ describe("JoplinExporter", () => {
         i === 0 ? { ...c, tags: ["secret-tag"] } : c,
       );
       const result = await exporter.export(clippingsWithTags, { includeClippingTags: false });
-      const { output } = getExportSuccess(result);
+      const content = getFilesContent(result);
 
       // Should not contain the clipping tag as a tag entry
-      expect(output).not.toMatch(/\nsecret-tag\n\nid:/);
+      expect(content).not.toMatch(/\nsecret-tag\n\nid:/);
     });
   });
 });

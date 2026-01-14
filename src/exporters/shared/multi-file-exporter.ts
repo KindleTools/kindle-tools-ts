@@ -58,8 +58,8 @@ export abstract class MultiFileExporter extends BaseExporter {
     const grouped = groupByBook(clippings);
     const files: ExportedFile[] = [];
 
-    // Pre-hook for any global setup (e.g. root notebooks)
-    const preambleFiles = await this.exportPreamble(options);
+    // Pre-hook for any global setup (e.g. root notebooks, global tags)
+    const preambleFiles = await this.exportPreamble(clippings, options);
     files.push(...preambleFiles);
 
     for (const [_, bookClippings] of grouped) {
@@ -85,9 +85,15 @@ export abstract class MultiFileExporter extends BaseExporter {
 
   /**
    * Optional hook to generate files before processing books.
-   * Useful for index files, root folders/notebooks, etc.
+   * Useful for index files, root folders/notebooks, global tags, etc.
+   *
+   * @param clippings - All clippings being exported (for analysis/tag collection)
+   * @param options - Export options
    */
-  protected async exportPreamble(options: MultiFileExporterOptions): Promise<ExportedFile[]> {
+  protected async exportPreamble(
+    _clippings: Clipping[],
+    _options: MultiFileExporterOptions,
+  ): Promise<ExportedFile[]> {
     return [];
   }
 
