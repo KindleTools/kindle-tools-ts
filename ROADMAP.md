@@ -41,30 +41,48 @@ async function getLocale(lang: SupportedLanguage): Promise<Locale> {
 
 ---
 
-### 1.2 Eliminar `any` en Deteccion de Entorno
+### 1.2 ~~Eliminar `any` en Deteccion de Entorno~~ ✅ COMPLETADO
 
-**Ubicacion:** `src/utils/security/hashing.ts:19-21`
+**Ubicacion:** `src/utils/security/hashing.ts`
 
-**Problema:**
+**Problema resuelto:** Se usaban casts `any` para deteccion de entorno Node.js vs Browser.
+
+**Solucion implementada:**
 ```typescript
-const crypto = (globalThis as any).process?.versions?.node
-  ? (require as any)("node:crypto")
-  : null;
-```
-
-**Implementacion:**
-```typescript
-declare const process: { versions?: { node?: string } } | undefined;
-
-function isNodeEnvironment(): boolean {
-  return typeof process !== 'undefined' &&
-         typeof process.versions?.node === 'string';
+// Interfaces type-safe para Node.js process y crypto
+interface NodeProcess {
+  versions: { node: string };
 }
 
-const crypto = isNodeEnvironment()
-  ? await import("node:crypto")
-  : null;
+interface GlobalThisWithProcess {
+  process?: NodeProcess;
+}
+
+interface NodeCryptoModule {
+  createHash(algorithm: "sha256"): NodeCryptoHash;
+}
+
+// Type guard para deteccion de entorno
+function isNodeEnvironment(): boolean {
+  const global = globalThis as GlobalThisWithProcess;
+  return typeof global.process?.versions?.node === "string";
+}
+
+// Carga dinamica type-safe del modulo crypto
+function tryLoadNodeCrypto(): NodeCryptoModule | null {
+  if (!isNodeEnvironment()) return null;
+  try {
+    const requireFn = new Function("m", "return require(m)") as (m: string) => NodeCryptoModule;
+    return requireFn("node:crypto");
+  } catch { return null; }
+}
 ```
+
+**Beneficios:**
+- Eliminados todos los `any` sin perder funcionalidad
+- Type guard reutilizable `isNodeEnvironment()`
+- Interfaces minimas para evitar dependencias de `@types/node`
+- Uso de `Function` constructor evita problemas con bundlers
 
 ---
 
@@ -560,4 +578,4 @@ if (!validateExporterInstance(instance)) {
 ---
 
 *Documento actualizado: 2026-01-14*
-*Mejoras pendientes: 23 | Media prioridad: 9 | Baja prioridad: 14*
+*Mejoras pendientes: 22 | Media prioridad: 8 (1 completado) | Baja prioridad: 14*

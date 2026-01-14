@@ -5,6 +5,69 @@
  */
 
 /**
+ * Minimal interface for Node.js process object.
+ * Only includes the properties needed for environment detection.
+ */
+interface NodeProcess {
+  versions: {
+    node: string;
+  };
+}
+
+/**
+ * Interface representing globalThis augmented with optional Node.js process.
+ */
+interface GlobalThisWithProcess {
+  process?: NodeProcess;
+}
+
+/**
+ * Minimal interface for Node.js crypto Hash object.
+ */
+interface NodeCryptoHash {
+  update(data: string, encoding: BufferEncoding): NodeCryptoHash;
+  digest(encoding: "hex"): string;
+}
+
+/**
+ * Minimal interface for Node.js crypto module.
+ * Only includes the methods used by this module.
+ */
+interface NodeCryptoModule {
+  createHash(algorithm: "sha256"): NodeCryptoHash;
+}
+
+/**
+ * Type guard to detect if running in Node.js environment.
+ * Checks for the existence of process.versions.node property.
+ */
+function isNodeEnvironment(): boolean {
+  const global = globalThis as GlobalThisWithProcess;
+  return typeof global.process?.versions?.node === "string";
+}
+
+/**
+ * Attempts to load the Node.js crypto module.
+ * @returns The crypto module or null if not available.
+ */
+function tryLoadNodeCrypto(): NodeCryptoModule | null {
+  if (!isNodeEnvironment()) {
+    return null;
+  }
+
+  try {
+    // Use Function constructor to avoid static analysis from bundlers
+    // while maintaining type safety through our interface
+    const requireFn = new Function("m", "return require(m)") as (
+      moduleName: string,
+    ) => NodeCryptoModule;
+    return requireFn("node:crypto");
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Simple hash function that works in both Node.js and browser.
  * Uses node:crypto in Node.js, fast hash in browser.
  * @param input - String to hash
@@ -12,20 +75,10 @@
  */
 export function sha256Sync(input: string): string {
   // Check if we're in Node.js with crypto available
-  try {
-    // Try to use Node.js crypto module synchronously
-    // This works in most Node.js environments
-    // biome-ignore lint/suspicious/noExplicitAny: Dynamic require for Node.js compatibility
-    const crypto = (globalThis as any).process?.versions?.node
-      ? // biome-ignore lint/suspicious/noExplicitAny: Dynamic require for Node.js compatibility
-        (require as any)("node:crypto")
-      : null;
+  const crypto = tryLoadNodeCrypto();
 
-    if (crypto) {
-      return crypto.createHash("sha256").update(input, "utf8").digest("hex");
-    }
-  } catch {
-    // Crypto not available, fall through to browser implementation
+  if (crypto) {
+    return crypto.createHash("sha256").update(input, "utf8").digest("hex");
   }
 
   // Browser/fallback environment - use simple hash
