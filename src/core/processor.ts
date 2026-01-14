@@ -83,12 +83,12 @@ export interface ProcessResult {
  *
  * @example
  * ```typescript
- * const result = process(clippings, { detectedLanguage: "en" });
+ * const result = processClippings(clippings, { detectedLanguage: "en" });
  * console.log(`Removed ${result.duplicatesRemoved} duplicates`);
  * console.log(`Flagged ${result.suspiciousFlagged} suspicious highlights`);
  * ```
  */
-export function process(clippings: Clipping[], options?: ProcessOptions): ProcessResult {
+export function processClippings(clippings: Clipping[], options?: ProcessOptions): ProcessResult {
   let result = [...clippings];
   let emptyRemoved = 0;
   let duplicatesRemoved = 0;

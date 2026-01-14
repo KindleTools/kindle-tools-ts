@@ -6,7 +6,7 @@
 import type { Clipping, ClippingType } from "#app-types/clipping.js";
 import type { ParseOptions, ParseResult } from "#app-types/config.js";
 import type { SupportedLanguage } from "#app-types/language.js";
-import { process } from "#core/processor.js";
+import { processClippings } from "#core/processor.js";
 import * as StatUtils from "#domain/analytics/stats.js";
 import { type ExportResult, type ExportSuccess, formatUserMessage } from "#errors";
 import {
@@ -262,7 +262,7 @@ async function parseFile(): Promise<void> {
     // Use detected language from importer if available, otherwise default
     const detectedLanguage = (importResult.meta?.detectedLanguage as SupportedLanguage) || "en";
 
-    const processResult = process(importResult.clippings, {
+    const processResult = processClippings(importResult.clippings, {
       ...uiOptions,
       detectedLanguage,
     });

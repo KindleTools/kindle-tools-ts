@@ -27,7 +27,7 @@ export {
   loadConfigSync,
 } from "./config/index.js";
 export type { ProcessResult } from "./core/processor.js";
-export { process } from "./core/processor.js";
+export { processClippings } from "./core/processor.js";
 export type {
   AuthorCase,
   ExportedFile,

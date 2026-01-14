@@ -9,7 +9,7 @@ import type { Clipping } from "#app-types/clipping.js";
 import {
   filterToHighlightsOnly,
   linkNotesToHighlights,
-  process,
+  processClippings,
   removeDuplicates,
   smartMergeHighlights,
 } from "#core/processor.js";
@@ -372,7 +372,7 @@ describe("processor", () => {
     });
   });
 
-  describe("process (full pipeline)", () => {
+  describe("processClippings (full pipeline)", () => {
     it("should run all processing steps", () => {
       const clippings = [
         createClipping({
@@ -387,7 +387,7 @@ describe("processor", () => {
         }),
       ];
 
-      const result = process(clippings, { detectedLanguage: "en" });
+      const result = processClippings(clippings, { detectedLanguage: "en" });
 
       expect(result.clippings.length).toBe(2);
       expect(result.duplicatesRemoved).toBe(0);
@@ -409,7 +409,7 @@ describe("processor", () => {
         }),
       ];
 
-      const result = process(clippings, {
+      const result = processClippings(clippings, {
         removeDuplicates: true,
         detectedLanguage: "en",
       });
@@ -445,7 +445,7 @@ describe("processor", () => {
         }),
       ];
 
-      const result = process(clippings, {
+      const result = processClippings(clippings, {
         detectedLanguage: "en",
         highlightsOnly: true,
       });
@@ -475,7 +475,7 @@ describe("processor", () => {
         }),
       ];
 
-      const result = process(clippings, {
+      const result = processClippings(clippings, {
         detectedLanguage: "en",
         highlightsOnly: false,
       });

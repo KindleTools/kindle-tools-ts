@@ -10,7 +10,7 @@
 import type { Clipping, ClippingLocation, ClippingType } from "#app-types/clipping.js";
 import type { ParseOptions, ParseResult, ParseWarning } from "#app-types/config.js";
 import type { SupportedLanguage } from "#app-types/language.js";
-import { process } from "#core/processor.js";
+import { processClippings } from "#core/processor.js";
 import { calculateStats } from "#domain/analytics/stats.js";
 import { generateClippingId } from "#domain/core/identity.js";
 import { BLOCK_STRUCTURE } from "#domain/parsing/block-structure.js";
@@ -140,7 +140,7 @@ export function parseString(content: string, options?: ParseOptions): ParseResul
   let emptyRemoved = 0;
 
   if (needsProcessing) {
-    const processResult = process(clippings, {
+    const processResult = processClippings(clippings, {
       ...(options || {}),
       detectedLanguage,
     });

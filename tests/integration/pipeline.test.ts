@@ -5,7 +5,7 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { process } from "#core/processor.js";
+import { processClippings } from "#core/processor.js";
 import { CsvExporter } from "#exporters/formats/csv.exporter.js";
 import { HtmlExporter } from "#exporters/formats/html.exporter.js";
 import { JoplinExporter } from "#exporters/formats/joplin.exporter.js";
@@ -100,7 +100,7 @@ describe("Integration: Full Pipeline", () => {
       const parseResult = parse(inputWithDuplicate);
       expect(parseResult.clippings.length).toBe(10); // 5 + 5 duplicates
 
-      const processResult = process(parseResult.clippings, {
+      const processResult = processClippings(parseResult.clippings, {
         removeDuplicates: true,
         detectedLanguage: "en",
       });
@@ -113,7 +113,7 @@ describe("Integration: Full Pipeline", () => {
     it("should link notes to highlights", async () => {
       const parseResult = parse(SAMPLE_CLIPPINGS_EN);
 
-      const processResult = process(parseResult.clippings, {
+      const processResult = processClippings(parseResult.clippings, {
         mergeNotes: true,
         detectedLanguage: "en",
       });
@@ -125,7 +125,7 @@ describe("Integration: Full Pipeline", () => {
     it("should complete full pipeline with all processing", async () => {
       const parseResult = parse(SAMPLE_CLIPPINGS_EN);
 
-      const processResult = process(parseResult.clippings, {
+      const processResult = processClippings(parseResult.clippings, {
         removeDuplicates: true,
         mergeNotes: true,
         detectedLanguage: "en",
@@ -282,7 +282,7 @@ describe("Integration: MemoryFileSystem Pipeline", () => {
     expect(parseResult.meta.fileSize).toBeGreaterThan(0);
 
     // Step 2: Process clippings
-    const processResult = process(parseResult.clippings, {
+    const processResult = processClippings(parseResult.clippings, {
       removeDuplicates: true,
       mergeNotes: true,
       detectedLanguage: "en",
