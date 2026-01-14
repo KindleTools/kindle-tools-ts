@@ -94,6 +94,7 @@ export {
   // Import factories
   importSuccess,
   importUnknownError,
+  importValidationError,
   // Re-exports from neverthrow
   ok,
   okAsync,
@@ -109,6 +110,7 @@ export type {
   ExportError,
   FileSystemError,
   ImportError,
+  ImportErrorDetail,
   ValidationError,
   ValidationIssue,
 } from "./types.js";

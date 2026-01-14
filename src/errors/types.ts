@@ -49,6 +49,20 @@ export interface BaseErrorContext {
   cause?: unknown;
 }
 
+/**
+ * Detailed error information for a specific row/item
+ */
+export interface ImportErrorDetail {
+  /** Row number (1-based) */
+  row: number;
+  /** Field causing the error */
+  field: string;
+  /** Error message */
+  message: string;
+  /** Suggestion for fixing the error */
+  suggestion?: string;
+}
+
 // =============================================================================
 // Domain-Specific Error Types
 // =============================================================================
@@ -79,6 +93,12 @@ export type ImportError =
       message: string;
       /** Validation issues from schema */
       issues?: ValidationIssue[];
+      warnings?: string[];
+    }
+  | {
+      code: "IMPORT_VALIDATION_ERROR";
+      message: string;
+      errors: ImportErrorDetail[];
       warnings?: string[];
     }
   | {

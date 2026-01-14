@@ -10,7 +10,13 @@
 
 import { err, errAsync, ok, okAsync, type Result, type ResultAsync } from "neverthrow";
 import type { Clipping } from "#app-types/clipping.js";
-import type { AppError, ExportError, ImportError, ValidationIssue } from "./types.js";
+import type {
+  AppError,
+  ExportError,
+  ImportError,
+  ImportErrorDetail,
+  ValidationIssue,
+} from "./types.js";
 
 // =============================================================================
 // Re-export neverthrow utilities
@@ -169,6 +175,25 @@ export function importInvalidFormat(
     (error as { issues?: ValidationIssue[] }).issues = options.issues;
   if (options?.warnings !== undefined)
     (error as { warnings?: string[] }).warnings = options.warnings;
+  return err(error);
+}
+
+/**
+ * Create a validation error import result (for multiple row errors).
+ */
+export function importValidationError(
+  message: string,
+  errors: ImportErrorDetail[],
+  warnings?: string[],
+): ImportResult {
+  const error: ImportError = {
+    code: "IMPORT_VALIDATION_ERROR",
+    message,
+    errors,
+  };
+  if (warnings !== undefined) {
+    (error as { warnings?: string[] }).warnings = warnings;
+  }
   return err(error);
 }
 

@@ -166,31 +166,18 @@ export function generatePath(template: string, data: PathData): string {
 
 ---
 
-### 1.6 Mejorar Contexto de Errores en Importers
+### 1.6 ~~Mejorar Contexto de Errores en Importers~~ ✅ COMPLETADO
 
-**Mejoras:**
+**Mejoras solicitadas:**
 - Incluir numero de fila en mensajes de error
 - Acumular todos los errores antes de retornar
 - Sugerencias para errores comunes
 
-```typescript
-interface ImportError {
-  row: number;
-  field: string;
-  message: string;
-  suggestion?: string;
-}
-
-// Ejemplo de mensaje mejorado
-{
-  code: 'IMPORT_VALIDATION_ERROR',
-  message: 'Found 3 invalid rows',
-  errors: [
-    { row: 5, field: 'date', message: 'Invalid date format', suggestion: 'Use ISO 8601: YYYY-MM-DD' },
-    { row: 12, field: 'type', message: 'Unknown type "hightlight"', suggestion: 'Did you mean "highlight"?' }
-  ]
-}
-```
+**Implementacion Realizada:**
+- Se crearon tipos `ImportErrorDetail` y `IMPORT_VALIDATION_ERROR` en `src/errors/types.ts`.
+- Se actualizó `CsvImporter` para acumular errores de validación por fila y retornar `ImportValidationError` si no hay clippings validos.
+- Se agregaron sugerencias automáticas para errores comunes (formato de fecha, typos en `type`).
+- Se introdujo `importValidationError` factory en `src/errors/result.ts`.
 
 ---
 

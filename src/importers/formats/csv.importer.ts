@@ -8,7 +8,13 @@
 
 import { z } from "zod";
 import type { Clipping, ClippingType } from "#app-types/clipping.js";
-import { type ImportResult, importEmptyFile, importInvalidFormat, importParseError } from "#errors";
+import {
+  type ImportErrorDetail,
+  type ImportResult,
+  importEmptyFile,
+  importInvalidFormat,
+  importValidationError,
+} from "#errors";
 import { BaseImporter } from "../shared/base-importer.js";
 import { generateImportId, parseLocationString } from "../shared/index.js";
 
@@ -21,7 +27,7 @@ const CsvRowSchema = z.object({
   id: z.string().optional(),
   title: z.string().optional(),
   author: z.string().optional(),
-  type: z.string().optional(), // Validate specific values after parsing (accepts empty string)
+  type: z.string().optional(),
   page: z.string().optional(),
   location: z.string().optional(),
   date: z.string().optional(),
@@ -89,6 +95,21 @@ function parseCSV(content: string): string[][] {
 }
 
 /**
+ * Get suggestion for validation error.
+ */
+function getSuggestion(field: string, value: unknown): string | undefined {
+  if (field === "date") {
+    return "Use ISO 8601: YYYY-MM-DD";
+  }
+  if (field === "type" && typeof value === "string") {
+    const lower = value.toLowerCase();
+    if (lower === "hightlight") return "Did you mean 'highlight'?";
+    if (lower === "boomkark") return "Did you mean 'bookmark'?";
+  }
+  return undefined;
+}
+
+/**
  * Import clippings from CSV format.
  */
 export class CsvImporter extends BaseImporter {
@@ -103,6 +124,7 @@ export class CsvImporter extends BaseImporter {
    */
   protected async doImport(content: string): Promise<ImportResult> {
     const warnings: string[] = [];
+    const errors: ImportErrorDetail[] = [];
     const rows = parseCSV(content);
 
     if (rows.length < 2) {
@@ -167,8 +189,23 @@ export class CsvImporter extends BaseImporter {
         const validatedRow = CsvRowSchema.safeParse(rowData);
 
         if (!validatedRow.success) {
-          const issues = validatedRow.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`);
-          warnings.push(`Row ${rowIdx + 1} validation failed: ${issues.join(", ")}`);
+          validatedRow.error.issues.forEach((issue) => {
+            const field = issue.path.join(".") || "unknown";
+            const suggestion = getSuggestion(field, (rowData as any)[field]);
+
+            // Add to structured errors
+            errors.push({
+              row: rowIdx + 1,
+              field,
+              message: issue.message,
+              ...(suggestion ? { suggestion } : {}),
+            });
+
+            // Add to warnings for legacy support
+            warnings.push(
+              `Row ${rowIdx + 1} field '${field}' invalid: ${issue.message}${suggestion ? ` (${suggestion})` : ""}`,
+            );
+          });
           continue;
         }
 
@@ -182,7 +219,23 @@ export class CsvImporter extends BaseImporter {
         const page = pageStr ? Number.parseInt(pageStr, 10) : null;
         const location = parseLocationString(data.location ?? "");
         const dateStr = data.date ?? "";
+
+        // Manual date validation for suggestion
         const date = dateStr ? new Date(dateStr) : null;
+        if (dateStr && isNaN(date?.getTime() ?? NaN)) {
+          const suggestion = getSuggestion("date", dateStr);
+          errors.push({
+            row: rowIdx + 1,
+            field: "date",
+            message: "Invalid date format",
+            ...(suggestion ? { suggestion } : {}),
+          });
+          warnings.push(
+            `Row ${rowIdx + 1} invalid date: ${dateStr}${suggestion ? ` (${suggestion})` : ""}`,
+          );
+          continue; // Skip this row
+        }
+
         const content = data.content ?? "";
         const wordCountStr = data.wordcount;
         const wordCount = wordCountStr
@@ -226,12 +279,21 @@ export class CsvImporter extends BaseImporter {
 
         clippings.push(clipping);
       } catch (e) {
-        warnings.push(`Failed to parse row ${rowIdx + 1}: ${e}`);
+        const message = e instanceof Error ? e.message : String(e);
+        errors.push({
+          row: rowIdx + 1,
+          field: "row",
+          message: `Unexpected parse error: ${message}`,
+        });
+        warnings.push(`Row ${rowIdx + 1} parse error: ${message}`);
       }
     }
 
     if (clippings.length === 0) {
-      return importParseError("No valid clippings found in CSV file", { warnings });
+      if (errors.length > 0) {
+        return importValidationError("Parsed 0 valid clippings", errors, warnings);
+      }
+      return importEmptyFile("No valid clippings found in CSV file", warnings);
     }
 
     return this.success(clippings, warnings);

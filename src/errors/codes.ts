@@ -21,6 +21,8 @@ export const ImportErrorCodes = {
   EMPTY_FILE: "IMPORT_EMPTY_FILE",
   /** Input format is invalid or corrupted */
   INVALID_FORMAT: "IMPORT_INVALID_FORMAT",
+  /** Validation failed for specific items (accumulates errors) */
+  VALIDATION_ERROR: "IMPORT_VALIDATION_ERROR",
   /** Unknown import error */
   UNKNOWN: "IMPORT_UNKNOWN",
 } as const;
