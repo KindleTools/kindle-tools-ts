@@ -11,7 +11,7 @@
  */
 
 import type { Clipping } from "#app-types/clipping.js";
-import type { TemplateEngine, TemplatePreset } from "#templates/index.js";
+import type { TemplateEngine, TemplateOptions, TemplatePreset } from "#templates/index.js";
 import type { ExportedFile } from "../core/types.js";
 import { MultiFileExporter, type MultiFileExporterOptions } from "../shared/multi-file-exporter.js";
 
@@ -43,23 +43,22 @@ export class ObsidianExporter extends MultiFileExporter {
   readonly name = "obsidian";
   readonly extension = ".md";
 
-  // Override createTemplateEngine to capture options
-  protected override createTemplateEngine(options: ObsidianExporterOptions): TemplateEngine {
-    const engine = super.createTemplateEngine(options);
+  /** Default values for Obsidian-specific options */
+  private static readonly DEFAULTS = {
+    wikilinks: true,
+    useCallouts: true,
+    estimatePages: true,
+  } as const;
 
-    // Default values
-    const defaults = {
-      wikilinks: true,
-      useCallouts: true,
-      estimatePages: true,
+  /**
+   * Convert ObsidianExporterOptions to TemplateOptions for the opt helper.
+   */
+  private toTemplateOptions(options: ObsidianExporterOptions): TemplateOptions {
+    return {
+      wikilinks: options.wikilinks ?? ObsidianExporter.DEFAULTS.wikilinks,
+      useCallouts: options.useCallouts ?? ObsidianExporter.DEFAULTS.useCallouts,
+      estimatePages: options.estimatePages ?? ObsidianExporter.DEFAULTS.estimatePages,
     };
-
-    engine.registerHelper("opt", (key: string) => {
-      const val = options[key as keyof ObsidianExporterOptions];
-      return val !== undefined ? val : defaults[key as keyof typeof defaults];
-    });
-
-    return engine;
   }
 
   protected override getDefaultPreset(): TemplatePreset {
@@ -81,8 +80,11 @@ export class ObsidianExporter extends MultiFileExporter {
     const first = clippings[0];
     if (!first) return [];
 
-    // Generate context first so we can manipulate tags
-    const context = engine.toBookContext(clippings);
+    // Convert exporter options to template options for the opt helper
+    const templateOptions = this.toTemplateOptions(options);
+
+    // Generate context with template options so the opt helper can read them
+    const context = engine.toBookContext(clippings, templateOptions);
 
     // Apply tag logic
     // 1. Start with tags from options

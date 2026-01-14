@@ -157,4 +157,52 @@ describe("template-helpers", () => {
       expect(run("{{#isBookmark}}yes{{else}}no{{/isBookmark}}", { type: "highlight" })).toBe("no");
     });
   });
+
+  describe("Options Helper", () => {
+    it("opt returns true when option is enabled", () => {
+      const context = { options: { wikilinks: true } };
+      expect(run("{{#if (opt 'wikilinks')}}yes{{else}}no{{/if}}", context)).toBe("yes");
+    });
+
+    it("opt returns false when option is disabled", () => {
+      const context = { options: { wikilinks: false } };
+      expect(run("{{#if (opt 'wikilinks')}}yes{{else}}no{{/if}}", context)).toBe("no");
+    });
+
+    it("opt returns false when option is missing", () => {
+      const context = { options: {} };
+      expect(run("{{#if (opt 'wikilinks')}}yes{{else}}no{{/if}}", context)).toBe("no");
+    });
+
+    it("opt returns false when options object is missing", () => {
+      const context = {};
+      expect(run("{{#if (opt 'wikilinks')}}yes{{else}}no{{/if}}", context)).toBe("no");
+    });
+
+    it("opt works with multiple options", () => {
+      const context = { options: { wikilinks: true, useCallouts: false } };
+      expect(
+        run(
+          "{{#if (opt 'wikilinks')}}wiki{{/if}}{{#if (opt 'useCallouts')}}callout{{/if}}",
+          context,
+        ),
+      ).toBe("wiki");
+    });
+
+    it("opt works in conditional rendering pattern", () => {
+      const context = { author: "Test Author", options: { wikilinks: true } };
+      const template = "{{#if (opt 'wikilinks')}}[[{{author}}]]{{else}}{{author}}{{/if}}";
+      expect(run(template, context)).toBe("[[Test Author]]");
+    });
+
+    it("opt works with nested context (root access)", () => {
+      // Simulates being inside an #each loop where options is at root level
+      const context = {
+        items: [{ name: "Item 1" }],
+        options: { showDetails: true },
+      };
+      const template = "{{#each items}}{{#if (opt 'showDetails')}}{{name}}{{/if}}{{/each}}";
+      expect(run(template, context)).toBe("Item 1");
+    });
+  });
 });

@@ -370,6 +370,27 @@ export function generatePath(template: string, data: PathData): string {
 
 ---
 
+
+### 2.10 OS-Safe Filename Sanitization
+
+**Prioridad:** MEDIA | **Esfuerzo:** Bajo | **Estado:** Backlog
+
+Mejorar el sanitizador actual para manejar nombres reservados de Windows:
+
+```typescript
+const WINDOWS_RESERVED = ['CON', 'PRN', 'AUX', 'NUL', 'COM1', 'LPT1'];
+
+export function sanitizeFilename(name: string): string {
+  let safe = name.replace(/[<>:"/\\|?*]/g, '_');
+  if (WINDOWS_RESERVED.includes(safe.toUpperCase())) {
+    safe = `_${safe}`;
+  }
+  return safe.slice(0, 200);
+}
+```
+
+---
+
 ### 2.10 Dynamic Template Options (TemplateEngine)
 **Prioridad:** MEDIA | **Esfuerzo:** Medio | **Estado:** DONE ✓
 

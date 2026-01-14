@@ -176,3 +176,22 @@ export {
   resetFileSystem,
   setFileSystem,
 } from "./ports/filesystem.js";
+
+// =============================================================================
+// Template Engine API
+// =============================================================================
+
+export { TemplateEngine } from "./templates/engine.js";
+export {
+  getTemplatePreset,
+  listAvailablePresets,
+} from "./templates/presets.js";
+export type {
+  BookContext,
+  ClippingContext,
+  CustomTemplates,
+  ExportContext,
+  TemplateOptions,
+  TemplatePreset,
+  TemplateType,
+} from "./templates/types.js";
