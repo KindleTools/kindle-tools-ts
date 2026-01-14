@@ -183,8 +183,8 @@ export {
 
 export { TemplateEngine } from "./templates/engine.js";
 export {
+  getAvailablePresets,
   getTemplatePreset,
-  listAvailablePresets,
 } from "./templates/presets.js";
 export type {
   BookContext,

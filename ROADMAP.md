@@ -373,32 +373,40 @@ export function generatePath(template: string, data: PathData): string {
 
 ### 2.10 OS-Safe Filename Sanitization
 
-**Prioridad:** MEDIA | **Esfuerzo:** Bajo | **Estado:** DONE
+**Prioridad:** MEDIA | **Esfuerzo:** Bajo | **Estado:** DONE ✓
 
-Implementado en `src/exporters/shared/exporter-utils.ts`:
+Implementado sanitizador cross-platform en `src/exporters/shared/exporter-utils.ts`:
 
-- Constante `WINDOWS_RESERVED_NAMES` con todos los nombres reservados de Windows (CON, PRN, AUX, NUL, COM1-9, LPT1-9)
-- Función `sanitizeFilename()` actualizada para detectar y prefijar nombres reservados con `_`
-- Manejo case-insensitive (CON, con, Con → _CON, _con, _Con)
-- Soporte para nombres con extensión (NUL.txt → _NUL.txt)
-- Tests completos en `tests/unit/exporters/exporter-utils.test.ts`
+**Features:**
+- **Windows**: Nombres reservados (CON, PRN, AUX, NUL, COM0-9, LPT0-9) prefijados con `_`
+- **Windows**: Caracteres inválidos `<>:"/\|?*` reemplazados con `-`
+- **macOS**: Colon `:` reemplazado (separador de path en HFS+)
+- **Linux**: Forward slash `/` reemplazado (separador de path)
+- **All OS**: Caracteres de control (ASCII 0-31) reemplazados con `-`
+- **All OS**: Puntos trailing eliminados (Windows no los maneja bien)
+- **All OS**: Límite de longitud configurable (default: 100 chars)
+- **All OS**: Retorna `_` si el resultado queda vacío
 
 ```typescript
-const WINDOWS_RESERVED_NAMES = ['CON', 'PRN', 'AUX', 'NUL', 'COM1', ...];
+export function sanitizeFilename(name: string, maxLength = 100): string {
+  let safe = name
+    .replace(/[\x00-\x1f]/g, '-')      // Control chars
+    .replace(/[<>:"/\\|?*]/g, '-')     // Invalid chars
+    .replace(/\s+/g, ' ')              // Normalize spaces
+    .trim()
+    .replace(/\.+$/, '');              // Trailing dots
 
-export function sanitizeFilename(name: string): string {
-  let safe = name.replace(/[<>:"/\\|?*]/g, '-').replace(/\s+/g, ' ').trim();
-  
-  const dotIndex = safe.indexOf('.');
-  const baseName = dotIndex > 0 ? safe.slice(0, dotIndex) : safe;
-  
+  // Prefix Windows reserved names
+  const baseName = safe.split('.')[0] ?? safe;
   if (WINDOWS_RESERVED_NAMES.includes(baseName.toUpperCase())) {
     safe = `_${safe}`;
   }
-  
-  return safe.slice(0, maxLength);
+
+  return safe.length === 0 ? '_' : safe.slice(0, maxLength);
 }
 ```
+
+**Tests:** 16 casos en `tests/unit/exporters/exporter-utils.test.ts`
 
 ---
 

@@ -87,6 +87,8 @@ export function createErrorResult(error: unknown): ExportResult {
  * These names are reserved by the operating system and will cause issues
  * if used as filenames on Windows systems.
  *
+ * Includes COM0-9 and LPT0-9 as per official Microsoft documentation.
+ *
  * @see https://docs.microsoft.com/en-us/windows/win32/fileio/naming-a-file
  */
 const WINDOWS_RESERVED_NAMES = [
@@ -94,6 +96,7 @@ const WINDOWS_RESERVED_NAMES = [
   "PRN",
   "AUX",
   "NUL",
+  "COM0",
   "COM1",
   "COM2",
   "COM3",
@@ -103,6 +106,7 @@ const WINDOWS_RESERVED_NAMES = [
   "COM7",
   "COM8",
   "COM9",
+  "LPT0",
   "LPT1",
   "LPT2",
   "LPT3",
@@ -115,20 +119,25 @@ const WINDOWS_RESERVED_NAMES = [
 ];
 
 /**
- * Sanitize a string for use as a filename.
+ * Sanitize a string for use as a filename across all major operating systems.
  *
- * Removes invalid characters, handles Windows reserved names,
- * and limits length to avoid filesystem issues.
+ * This function handles:
+ * - **Windows**: Reserved names (CON, PRN, AUX, NUL, COM0-9, LPT0-9), invalid chars (<>:"/\|?*)
+ * - **macOS**: Colon (:) is replaced (used as path separator in HFS+)
+ * - **Linux**: Forward slash (/) is replaced (path separator)
+ * - **All OS**: Control characters (ASCII 0-31), trailing dots/spaces, length limits
  *
  * @param name - The name to sanitize
  * @param maxLength - Maximum length (default: 100)
- * @returns Safe filename
+ * @returns Safe filename compatible with Windows, macOS, and Linux
  *
  * @example
  * ```typescript
  * sanitizeFilename('File: "Name"') // Returns "File- -Name-"
  * sanitizeFilename('CON') // Returns "_CON"
  * sanitizeFilename('NUL.txt') // Returns "_NUL.txt"
+ * sanitizeFilename('file...') // Returns "file"
+ * sanitizeFilename('hello\x00world') // Returns "hello-world"
  * ```
  */
 export function sanitizeFilename(
@@ -136,9 +145,20 @@ export function sanitizeFilename(
   maxLength: number = SYSTEM_LIMITS.MAX_FILENAME_LENGTH,
 ): string {
   let safe = name
+    // Remove control characters (ASCII 0-31) - problematic on all OS
+    // biome-ignore lint/suspicious/noControlCharactersInRegex: Intentionally matching control chars for sanitization
+    .replace(/[\x00-\x1f]/g, "-")
+    // Replace Windows/macOS/Linux invalid characters
+    // Windows: < > : " / \ | ? *
+    // macOS: : (path separator in HFS+)
+    // Linux: / (path separator)
     .replace(/[<>:"/\\|?*]/g, "-")
+    // Normalize multiple spaces to single space
     .replace(/\s+/g, " ")
-    .trim();
+    // Trim leading/trailing whitespace
+    .trim()
+    // Remove trailing dots (Windows doesn't handle these well)
+    .replace(/\.+$/, "");
 
   // Check if the base name (without extension) is a Windows reserved name
   const dotIndex = safe.indexOf(".");
@@ -146,6 +166,11 @@ export function sanitizeFilename(
 
   if (WINDOWS_RESERVED_NAMES.includes(baseName.toUpperCase())) {
     safe = `_${safe}`;
+  }
+
+  // Handle empty result after sanitization
+  if (safe.length === 0) {
+    safe = "_";
   }
 
   return safe.slice(0, maxLength);
