@@ -83,23 +83,72 @@ export function createErrorResult(error: unknown): ExportResult {
 }
 
 /**
+ * Windows reserved filenames that cannot be used directly.
+ * These names are reserved by the operating system and will cause issues
+ * if used as filenames on Windows systems.
+ *
+ * @see https://docs.microsoft.com/en-us/windows/win32/fileio/naming-a-file
+ */
+const WINDOWS_RESERVED_NAMES = [
+  "CON",
+  "PRN",
+  "AUX",
+  "NUL",
+  "COM1",
+  "COM2",
+  "COM3",
+  "COM4",
+  "COM5",
+  "COM6",
+  "COM7",
+  "COM8",
+  "COM9",
+  "LPT1",
+  "LPT2",
+  "LPT3",
+  "LPT4",
+  "LPT5",
+  "LPT6",
+  "LPT7",
+  "LPT8",
+  "LPT9",
+];
+
+/**
  * Sanitize a string for use as a filename.
  *
- * Removes invalid characters and limits length to avoid filesystem issues.
+ * Removes invalid characters, handles Windows reserved names,
+ * and limits length to avoid filesystem issues.
  *
  * @param name - The name to sanitize
  * @param maxLength - Maximum length (default: 100)
  * @returns Safe filename
+ *
+ * @example
+ * ```typescript
+ * sanitizeFilename('File: "Name"') // Returns "File- -Name-"
+ * sanitizeFilename('CON') // Returns "_CON"
+ * sanitizeFilename('NUL.txt') // Returns "_NUL.txt"
+ * ```
  */
 export function sanitizeFilename(
   name: string,
   maxLength: number = SYSTEM_LIMITS.MAX_FILENAME_LENGTH,
 ): string {
-  return name
+  let safe = name
     .replace(/[<>:"/\\|?*]/g, "-")
     .replace(/\s+/g, " ")
-    .trim()
-    .slice(0, maxLength);
+    .trim();
+
+  // Check if the base name (without extension) is a Windows reserved name
+  const dotIndex = safe.indexOf(".");
+  const baseName = dotIndex > 0 ? safe.slice(0, dotIndex) : safe;
+
+  if (WINDOWS_RESERVED_NAMES.includes(baseName.toUpperCase())) {
+    safe = `_${safe}`;
+  }
+
+  return safe.slice(0, maxLength);
 }
 
 /**

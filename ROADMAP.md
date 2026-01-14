@@ -373,19 +373,30 @@ export function generatePath(template: string, data: PathData): string {
 
 ### 2.10 OS-Safe Filename Sanitization
 
-**Prioridad:** MEDIA | **Esfuerzo:** Bajo | **Estado:** Backlog
+**Prioridad:** MEDIA | **Esfuerzo:** Bajo | **Estado:** DONE
 
-Mejorar el sanitizador actual para manejar nombres reservados de Windows:
+Implementado en `src/exporters/shared/exporter-utils.ts`:
+
+- Constante `WINDOWS_RESERVED_NAMES` con todos los nombres reservados de Windows (CON, PRN, AUX, NUL, COM1-9, LPT1-9)
+- Función `sanitizeFilename()` actualizada para detectar y prefijar nombres reservados con `_`
+- Manejo case-insensitive (CON, con, Con → _CON, _con, _Con)
+- Soporte para nombres con extensión (NUL.txt → _NUL.txt)
+- Tests completos en `tests/unit/exporters/exporter-utils.test.ts`
 
 ```typescript
-const WINDOWS_RESERVED = ['CON', 'PRN', 'AUX', 'NUL', 'COM1', 'LPT1'];
+const WINDOWS_RESERVED_NAMES = ['CON', 'PRN', 'AUX', 'NUL', 'COM1', ...];
 
 export function sanitizeFilename(name: string): string {
-  let safe = name.replace(/[<>:"/\\|?*]/g, '_');
-  if (WINDOWS_RESERVED.includes(safe.toUpperCase())) {
+  let safe = name.replace(/[<>:"/\\|?*]/g, '-').replace(/\s+/g, ' ').trim();
+  
+  const dotIndex = safe.indexOf('.');
+  const baseName = dotIndex > 0 ? safe.slice(0, dotIndex) : safe;
+  
+  if (WINDOWS_RESERVED_NAMES.includes(baseName.toUpperCase())) {
     safe = `_${safe}`;
   }
-  return safe.slice(0, 200);
+  
+  return safe.slice(0, maxLength);
 }
 ```
 
