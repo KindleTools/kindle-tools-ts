@@ -228,6 +228,20 @@ export function createHandlebarsInstance(): typeof Handlebars {
   // ========== Conditional Block Helpers ==========
 
   /**
+   * Check if note was likely consumed as tags.
+   * Returns true if clipping has both tags and a note, suggesting the note
+   * content was parsed into tags. Useful for hiding redundant notes in Joplin.
+   *
+   * @example
+   * {{#if (not (noteConsumedAsTags))}}
+   * **My Note:** {{note}}
+   * {{/if}}
+   */
+  hbs.registerHelper("noteConsumedAsTags", function (this: ClippingContext) {
+    return this.hasTags && this.hasNote;
+  });
+
+  /**
    * Include block only for highlights: {{#isHighlight}}...{{/isHighlight}}
    */
   hbs.registerHelper(

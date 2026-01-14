@@ -274,7 +274,14 @@ export class JoplinExporter extends MultiFileExporter {
     engine: TemplateEngine,
   ): Promise<ExportedFile[]> {
     const first = clippings[0];
-    if (!first || !this.ctx) return [];
+    if (!first) return [];
+
+    // Context must be initialized by exportPreamble before processing books
+    if (!this.ctx) {
+      throw new Error(
+        "JoplinExporter: context not initialized. exportPreamble must be called first.",
+      );
+    }
 
     const { ctx } = this;
     const files: ExportedFile[] = [];

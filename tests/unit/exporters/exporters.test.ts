@@ -627,6 +627,27 @@ describe("JoplinExporter", () => {
       // Should not contain the clipping tag as a tag entry
       expect(content).not.toMatch(/\nsecret-tag\n\nid:/);
     });
+
+    it("should reset context between consecutive exports", async () => {
+      // First export with custom notebook name
+      const result1 = await exporter.export(SAMPLE_CLIPPINGS, { notebookName: "First Export" });
+      const content1 = getFilesContent(result1);
+
+      // Second export with different notebook name
+      const result2 = await exporter.export(SAMPLE_CLIPPINGS, { notebookName: "Second Export" });
+      const content2 = getFilesContent(result2);
+
+      // Each export should have its own notebook name, not carry over state
+      expect(content1).toContain("First Export");
+      expect(content1).not.toContain("Second Export");
+      expect(content2).toContain("Second Export");
+      expect(content2).not.toContain("First Export");
+
+      // File counts should be identical (same clippings)
+      const { files: files1 } = getExportSuccess(result1);
+      const { files: files2 } = getExportSuccess(result2);
+      expect(files1?.length).toBe(files2?.length);
+    });
   });
 });
 

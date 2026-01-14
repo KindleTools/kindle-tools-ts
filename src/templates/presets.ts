@@ -65,9 +65,10 @@ export const CLIPPING_COMPACT = `- {{content}}{{#if hasNote}} *({{note}})*{{/if}
 /**
  * Joplin-optimized clipping template for individual notes.
  * Python-compatible format: content first, metadata footer at bottom.
+ * Uses noteConsumedAsTags helper to hide notes that were parsed into tags.
  */
 export const CLIPPING_JOPLIN = `{{content}}
-{{#if hasNote}}
+{{#if (and hasNote (not (noteConsumedAsTags)))}}
 
 ---
 

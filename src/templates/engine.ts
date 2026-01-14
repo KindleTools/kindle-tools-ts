@@ -318,6 +318,7 @@ export class TemplateEngine {
       "isHighlight",
       "isNote",
       "isBookmark",
+      "noteConsumedAsTags",
       // Options
       "opt",
     ];
