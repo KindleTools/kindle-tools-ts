@@ -531,6 +531,45 @@ if (!validateExporterInstance(instance)) {
 | Return types implicitos | `src/templates/helpers.ts` | Agregar tipos explicitos |
 | Externalize HTML Styles | `html.exporter.ts` | Mover CSS a archivo separado |
 | Abstract grouping logic | `BaseExporter` | Crear helper `exportGroupedFiles(clippings, renderFn)` |
+| `isolatedDeclarations` | `tsconfig.json` | Habilitar para builds paralelos de `.d.ts` (TS 5.5+) |
+
+---
+
+### 2.15 Web Crypto API para Browsers
+
+**Ubicacion:** `src/utils/security/hashing.ts`
+
+**Propuesta:** Añadir soporte para SHA-256 real en navegadores usando Web Crypto API:
+
+```typescript
+export async function sha256Async(input: string): Promise<string> {
+  // 1. Intentar Node.js crypto (cached)
+  const nodeCrypto = getNodeCrypto();
+  if (nodeCrypto) {
+    return nodeCrypto.createHash("sha256").update(input, "utf8").digest("hex");
+  }
+
+  // 2. Web Crypto API (browsers modernos)
+  if (typeof globalThis.crypto?.subtle !== "undefined") {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(input);
+    const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+    return Array.from(new Uint8Array(hashBuffer))
+      .map(b => b.toString(16).padStart(2, "0"))
+      .join("");
+  }
+
+  // 3. Fallback a hash simple
+  return simpleHash(input);
+}
+```
+
+**Beneficios:**
+- SHA-256 criptografico real en browsers
+- Compatible con todos los navegadores modernos
+- Fallback graceful a `simpleHash()`
+
+**Nota:** Requiere cambiar la firma a `async`, lo que puede requerir cambios en llamadas existentes.
 
 ---
 
@@ -578,4 +617,4 @@ if (!validateExporterInstance(instance)) {
 ---
 
 *Documento actualizado: 2026-01-14*
-*Mejoras pendientes: 22 | Media prioridad: 8 (1 completado) | Baja prioridad: 14*
+*Mejoras pendientes: 23 | Media prioridad: 8 (1 completado) | Baja prioridad: 15*

@@ -40,8 +40,9 @@ interface NodeCryptoModule {
 /**
  * Type guard to detect if running in Node.js environment.
  * Checks for the existence of process.versions.node property.
+ * Exported for reuse in other modules that need environment detection.
  */
-function isNodeEnvironment(): boolean {
+export function isNodeEnvironment(): boolean {
   const global = globalThis as GlobalThisWithProcess;
   return typeof global.process?.versions?.node === "string";
 }
@@ -68,14 +69,32 @@ function tryLoadNodeCrypto(): NodeCryptoModule | null {
 }
 
 /**
+ * Cached crypto module instance.
+ * undefined = not yet checked, null = not available, NodeCryptoModule = available
+ */
+let cachedCrypto: NodeCryptoModule | null | undefined;
+
+/**
+ * Gets the Node.js crypto module with lazy caching.
+ * Only loads the module once on first call.
+ * @returns The cached crypto module or null if not available.
+ */
+function getNodeCrypto(): NodeCryptoModule | null {
+  if (cachedCrypto === undefined) {
+    cachedCrypto = tryLoadNodeCrypto();
+  }
+  return cachedCrypto;
+}
+
+/**
  * Simple hash function that works in both Node.js and browser.
  * Uses node:crypto in Node.js, fast hash in browser.
  * @param input - String to hash
  * @returns 64-character hex string
  */
 export function sha256Sync(input: string): string {
-  // Check if we're in Node.js with crypto available
-  const crypto = tryLoadNodeCrypto();
+  // Check if we're in Node.js with crypto available (cached)
+  const crypto = getNodeCrypto();
 
   if (crypto) {
     return crypto.createHash("sha256").update(input, "utf8").digest("hex");

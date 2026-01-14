@@ -84,3 +84,6 @@ tmp/
 
 # GUI distribution
 dist-gui
+
+# Claude Code temporary files
+tmpclaude-*
