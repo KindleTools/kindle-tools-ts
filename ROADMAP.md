@@ -271,19 +271,14 @@ export interface ProcessOptions {
 
 ## 2. Baja Prioridad
 
-### 2.1 Renombrar `process` a `processClippings`
+### 2.1 ~~Renombrar `process` a `processClippings`~~ ✅ COMPLETADO
 
 **Ubicacion:** `src/core/processor.ts`, `src/index.ts`
 
-**Implementacion:**
-```typescript
-export function processClippings(clippings: Clipping[], options?: ProcessOptions): ProcessResult {
-  // ...
-}
-
-// Alias para backward compatibility
-export { processClippings as process };
-```
+**Implementacion Realizada:**
+- Se renombró la funcion principal a `processClippings`.
+- Se eliminó el alias `process` para evitar ambigüedad (breaking change intencional).
+- Se actualizó `parser.ts` y todos los tests para usar el nuevo nombre.
 
 ---
 
