@@ -374,6 +374,100 @@ tests/fixtures/
 
 ---
 
+### 2.10 Exportar Helpers de Logging
+
+| Impacto | Esfuerzo | Riesgo | ROI |
+|---------|----------|--------|-----|
+| 🟢 Bajo | 🟢 Bajo | 🟢 Bajo | ⭐⭐⭐ |
+
+**Ubicación:** `src/index.ts`
+
+**Problema:** `logDebug` y `logInfo` existen en `logger.ts` pero no están exportados en el API público. Usuarios avanzados que quieran instrumentar su código no pueden usarlos.
+
+**Solución:**
+```typescript
+// En src/index.ts, añadir a los exports de Logger API:
+export {
+  getLogger,
+  logDebug,    // ← añadir
+  logError,
+  logInfo,     // ← añadir
+  logWarning,
+  nullLogger,
+  resetLogger,
+  setLogger,
+} from "./errors/logger.js";
+```
+
+---
+
+### 2.11 Documentar Error Codes en README
+
+| Impacto | Esfuerzo | Riesgo | ROI |
+|---------|----------|--------|-----|
+| 🟡 Medio | 🟢 Bajo | 🟢 Bajo | ⭐⭐⭐ |
+
+**Ubicación:** `README.md`, sección "Error Handling"
+
+**Problema:** README menciona códigos de error pero no hay lista completa.
+
+**Solución:** Añadir tabla con todos los códigos:
+
+```markdown
+### Error Codes Reference
+
+| Domain | Code | Description |
+|--------|------|-------------|
+| Import | `IMPORT_PARSE_ERROR` | Failed to parse file content |
+| Import | `IMPORT_EMPTY_FILE` | File has no content |
+| Import | `IMPORT_INVALID_FORMAT` | Schema validation failed |
+| Import | `IMPORT_VALIDATION_ERROR` | Row-level validation errors |
+| Export | `EXPORT_UNKNOWN_FORMAT` | Unsupported export format |
+| Export | `EXPORT_WRITE_FAILED` | Failed to write output |
+| Export | `EXPORT_NO_CLIPPINGS` | No clippings to export |
+| Config | `CONFIG_NOT_FOUND` | Config file not found |
+| Config | `CONFIG_INVALID` | Invalid config structure |
+| Plugin | `PLUGIN_INIT_ERROR` | Plugin initialization failed |
+| Plugin | `PLUGIN_INVALID_INSTANCE` | Plugin returned invalid instance |
+```
+
+---
+
+### 2.12 Script para Validar schema.json
+
+| Impacto | Esfuerzo | Riesgo | ROI |
+|---------|----------|--------|-----|
+| 🟢 Bajo | 🟢 Bajo | 🟢 Bajo | ⭐⭐ |
+
+**Ubicación:** `scripts/validate-schema.ts`
+
+**Problema:** `schema.json` se genera manualmente y podría desincronizarse con los schemas Zod.
+
+**Solución:**
+```typescript
+// scripts/validate-schema.ts
+import { zodToJsonSchema } from "zod-to-json-schema";
+import { ConfigFileSchema } from "../src/schemas/config.schema.js";
+import existingSchema from "../schema.json";
+
+const generated = zodToJsonSchema(ConfigFileSchema);
+
+// Comparar y fallar si difieren
+if (JSON.stringify(generated) !== JSON.stringify(existingSchema)) {
+  console.error("schema.json is out of sync! Run `pnpm generate:schema`");
+  process.exit(1);
+}
+```
+
+**Script en package.json:**
+```json
+"check:schema": "tsx scripts/validate-schema.ts"
+```
+
+**Añadir a CI:** Incluir en workflow de CI para detectar desincronización.
+
+---
+
 ## 3. Para Estudio
 
 ### 3.1 Plugin Registry Split
@@ -451,14 +545,14 @@ kindle-tools-ts/
 | Prioridad | Total | ROI Alto (⭐⭐⭐) |
 |-----------|-------|------------------|
 | Media | 5 | 4 (1.1, 1.2, 1.4, 1.5) |
-| Baja | 9 | 4 (2.2, 2.3, 2.4, 2.6) |
+| Baja | 12 | 6 (2.2, 2.3, 2.4, 2.10, 2.11, 2.12) |
 | Estudio | 2 | 0 |
 
 ### Orden de Ejecución Recomendado
 
 1. **Urgente:** 1.1 Bug Fix CSV Type Validation
-2. **Quick Wins:** 1.2, 1.4, 1.5, 2.2, 2.3, 2.4
-3. **Cuando haya tiempo:** 1.3, 2.1, 2.5-2.9
+2. **Quick Wins:** 1.2, 1.4, 1.5, 2.2, 2.3, 2.4, 2.10, 2.11
+3. **Cuando haya tiempo:** 1.3, 2.1, 2.5-2.9, 2.12
 4. **Evaluar necesidad:** 3.1, 3.2
 
 ---
@@ -481,4 +575,4 @@ kindle-tools-ts/
 ---
 
 *Documento actualizado: 2026-01-15*
-*Mejoras pendientes: 16 | Media: 5 | Baja: 9 | Estudio: 2*
+*Mejoras pendientes: 19 | Media: 5 | Baja: 12 | Estudio: 2*
