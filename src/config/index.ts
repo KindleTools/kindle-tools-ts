@@ -1,32 +1,24 @@
 /**
- * Configuration loading and management.
+ * Configuration types and helpers.
  *
  * @packageDocumentation
  */
 
 import type { ConfigFileInput } from "#schemas/config.schema.js";
 
-export {
-  clearConfigCache,
-  clearConfigCacheSync,
-  type LoadConfigOptions,
-  type LoadedConfig,
-  loadConfig,
-  loadConfigSync,
-} from "./loader.js";
+export { DEFAULTS, LOCATION_CONSTANTS } from "./defaults.js";
 
 /**
  * Define configuration with type safety.
  *
- * This helper function doesn't do anything at runtime but provides
- * type inference and autocompletion in JavaScript configuration files.
+ * This helper function provides type inference and autocompletion
+ * when creating configuration objects.
  *
  * @example
- * ```javascript
- * // kindletools.config.js
+ * ```typescript
  * import { defineConfig } from 'kindle-tools-ts';
  *
- * export default defineConfig({
+ * const config = defineConfig({
  *   format: "obsidian",
  *   output: "./exports"
  * });

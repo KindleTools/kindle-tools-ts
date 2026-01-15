@@ -169,8 +169,6 @@
     "zod-to-json-schema": "^3.25.1"
   },
   "dependencies": {
-    "@iarna/toml": "^2.2.5",
-    "cosmiconfig": "^9.0.0",
     "date-fns": "^4.1.0",
     "fastest-levenshtein": "^1.0.16",
     "handlebars": "^4.7.8",

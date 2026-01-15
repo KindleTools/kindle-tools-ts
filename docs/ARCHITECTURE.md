@@ -13,7 +13,7 @@ This document describes the architecture and key design decisions of the KindleT
 
 ```
 src/
-├── config/           # Configuration loading (cosmiconfig)
+├── config/           # Configuration helpers and constants
 ├── core/             # Core processing logic
 │   └── processing/   # Deduplication, merging, filtering, quality flags
 ├── domain/           # Domain models and business logic
@@ -141,19 +141,20 @@ throw new AppException({
 });
 ```
 
-### 4. Configuration Loading (cosmiconfig)
+### 4. Configuration
 
-Configuration is loaded via cosmiconfig with singleton caching:
+Configuration is passed directly as options to exporters and processors:
 
 ```typescript
-// Supported files:
-// .kindletoolsrc, .kindletoolsrc.json, .kindletoolsrc.yaml,
-// .kindletoolsrc.toml, kindletools.config.js, package.json#kindletools
+import { defineConfig, ObsidianExporter } from 'kindle-tools-ts';
 
-// Features:
-// - Environment variable expansion: ${HOME}/output
-// - Fuzzy error suggestions: "Did you mean 'folderStructure'?"
-// - Zod validation with detailed error messages
+const config = defineConfig({
+  format: "obsidian",
+  folderStructure: "by-author",
+});
+
+const exporter = new ObsidianExporter();
+await exporter.export(clippings, config);
 ```
 
 ### 5. Template Engine (Handlebars)

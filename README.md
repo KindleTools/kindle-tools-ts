@@ -151,56 +151,35 @@ Sanitized: '=SUM(A1:A10)
 
 ## ⚙️ Configuration
 
-The library uses `cosmiconfig` to load configuration from files. This is useful for sharing settings between projects or users.
+Configuration is passed directly as options to the exporter or processor functions. Use `defineConfig` for type inference and autocompletion.
 
-### Supported Files
-- `.kindletoolsrc` (JSON/YAML)
-- `.kindletoolsrc.json`, `.kindletoolsrc.yaml`, `.kindletoolsrc.yml`
-- `.kindletoolsrc.toml` (New! ✨)
-- `.kindletoolsrc.js`, `.kindletoolsrc.cjs`
-- `kindletools.config.js`, `kindletools.config.cjs`
-- `package.json` (under `kindletools` key)
+### TypeScript/JavaScript Configuration
 
-### Features
+```typescript
+import { defineConfig, ObsidianExporter } from 'kindle-tools-ts';
 
-#### 1. Environment Variables Expansion ✨
-You can use environment variables in your config file using shell syntax `${VAR}` or `${VAR:-default}`.
-
-```json
-{
-  "output": "${HOME}/Dropbox/Kindle",
-  "title": "${EXPORT_TITLE:-My Clippings}"
-}
-```
-
-#### 2. TypeScript/JavaScript Configuration
-Use `defineConfig` for full type inference and autocompletion.
-
-```javascript
-// kindletools.config.js
-import { defineConfig } from 'kindle-tools-ts';
-
-export default defineConfig({
+const config = defineConfig({
   format: "obsidian",
   folderStructure: "by-author",
-  // Autocomplete works here!
+  extractTags: true,
+  // Full autocomplete support!
 });
+
+const exporter = new ObsidianExporter();
+const result = await exporter.export(clippings, config);
 ```
 
-#### 3. JSON Schema Autocomplete
-Add the `$schema` property to your JSON config to get instant validation and tooltips in VS Code.
+### JSON Schema for Validation
+
+You can use the included JSON Schema for validation in your own configuration files:
 
 ```json
-// .kindletoolsrc.json
 {
   "$schema": "./node_modules/kindle-tools-ts/schema.json",
   "format": "joplin",
   "extractTags": true
 }
 ```
-
-#### 4. Fuzzy Suggestions
-Typo protection included. If you type `"folderStruture"`, the error message will suggest: *"Did you mean 'folderStructure'?"*.
 
 ---
 

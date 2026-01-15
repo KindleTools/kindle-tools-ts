@@ -46,7 +46,7 @@ kindle-tools-ts/
 │   ├── templates/          # Handlebars templates
 │   ├── plugins/            # Plugin system (registry, hooks, discovery)
 │   ├── errors/             # Error handling (neverthrow Result types)
-│   ├── config/             # Configuration loading (cosmiconfig)
+│   ├── config/             # Configuration helpers and constants
 │   ├── node/               # Node.js-specific entry point (parseFile)
 │   └── index.ts            # Public API (browser-safe)
 │
@@ -491,7 +491,6 @@ const ClippingStrictSchema = z.object({
 - `jszip`: Archive creation (Joplin JEX, etc.)
 - `zod`: Schema validation
 - `neverthrow`: Type-safe error handling
-- `cosmiconfig`: Configuration file discovery
 
 **Development**:
 - `tsup`: Build (ESM + CJS + DTS)

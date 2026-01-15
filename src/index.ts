@@ -17,15 +17,8 @@
 // Main API Exports
 // =============================================================================
 
-// Config file loading (cosmiconfig integration)
-export {
-  clearConfigCache,
-  clearConfigCacheSync,
-  type LoadConfigOptions,
-  type LoadedConfig,
-  loadConfig,
-  loadConfigSync,
-} from "./config/index.js";
+// Config helpers and constants
+export { DEFAULTS, defineConfig, LOCATION_CONSTANTS } from "./config/index.js";
 export type { ProcessResult } from "./core/processor.js";
 export { processClippings } from "./core/processor.js";
 export type {
