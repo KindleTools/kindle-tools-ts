@@ -8,7 +8,6 @@
  */
 
 import { ResultAsync } from "neverthrow";
-import { AppException } from "#errors/types.js";
 import { ExporterFactory } from "#exporters/core/factory.js";
 import type { Exporter } from "#exporters/core/types.js";
 import { ImporterFactory } from "#importers/core/factory.js";
@@ -35,35 +34,27 @@ export function syncExporterPlugins(): void {
   for (const plugin of plugins) {
     if (!isExporterPlugin(plugin)) continue;
 
-    // Capture explicit type for closure usage
     const exporterPlugin = plugin;
     const formats = [exporterPlugin.format, ...(exporterPlugin.aliases ?? [])];
     const pluginName = exporterPlugin.name;
 
-    // Create a wrapper class that implements the Exporter interface
+    // Create a wrapper class that delegates to the registry singleton
     const ExporterPluginClass = class implements Exporter {
       name = pluginName;
 
-      private _instance: ExporterInstance | undefined;
-
-      // Lazy getter for extension - instantiates on first access if needed
+      // Delegate to singleton
       get extension(): string {
         return this.getInstance().extension;
       }
 
       private getInstance(): ExporterInstance {
-        if (!this._instance) {
-          try {
-            this._instance = exporterPlugin.create();
-          } catch (error) {
-            throw new AppException({
-              code: "PLUGIN_INIT_ERROR",
-              message: `Failed to initialize exporter plugin '${pluginName}'`,
-              cause: error,
-            });
-          }
+        // This will retrieve or create/validate the singleton
+        const instance = pluginRegistry.getExporter(exporterPlugin.format);
+        if (!instance) {
+          // Should not happen if plugin is registered, but best to be safe
+          throw new Error(`Plugin '${pluginName}' not found in registry`);
         }
-        return this._instance;
+        return instance;
       }
 
       async export(
@@ -92,30 +83,27 @@ export function syncImporterPlugins(): void {
   for (const plugin of plugins) {
     if (!isImporterPlugin(plugin)) continue;
 
-    // Capture explicit type for closure usage
     const importerPlugin = plugin;
     const extensions = importerPlugin.extensions;
     const pluginName = importerPlugin.name;
 
-    // Create a wrapper class that implements the Importer interface
+    // Create a wrapper class that delegates to the registry singleton
     const ImporterPluginClass = class implements Importer {
       name = pluginName;
       extensions = extensions;
-      private _instance: ImporterInstance | undefined;
 
       private getInstance(): ImporterInstance {
-        if (!this._instance) {
-          try {
-            this._instance = importerPlugin.create();
-          } catch (error) {
-            throw new AppException({
-              code: "PLUGIN_INIT_ERROR",
-              message: `Failed to initialize importer plugin '${pluginName}'`,
-              cause: error,
-            });
-          }
+        // This will retrieve or create/validate the singleton
+        // We use the first extension as the key lookup
+        const extension = extensions[0];
+        if (!extension) {
+          throw new Error(`Plugin '${pluginName}' has no extensions`);
         }
-        return this._instance;
+        const instance = pluginRegistry.getImporter(extension);
+        if (!instance) {
+          throw new Error(`Plugin '${pluginName}' not found in registry`);
+        }
+        return instance;
       }
 
       import(content: string) {
@@ -143,25 +131,17 @@ export function enableAutoSync(): () => void {
 
       const ExporterPluginClass = class implements Exporter {
         name = plugin.name;
-        private _instance: ExporterInstance | undefined;
 
         get extension(): string {
           return this.getInstance().extension;
         }
 
         private getInstance(): ExporterInstance {
-          if (!this._instance) {
-            try {
-              this._instance = plugin.create();
-            } catch (error) {
-              throw new AppException({
-                code: "PLUGIN_INIT_ERROR",
-                message: `Failed to initialize exporter plugin '${plugin.name}'`,
-                cause: error,
-              });
-            }
+          const instance = pluginRegistry.getExporter(plugin.format);
+          if (!instance) {
+            throw new Error(`Plugin '${plugin.name}' not found in registry`);
           }
-          return this._instance;
+          return instance;
         }
 
         async export(
@@ -186,23 +166,18 @@ export function enableAutoSync(): () => void {
       const ImporterPluginClass = class implements Importer {
         name = plugin.name;
         extensions = plugin.extensions;
-        private _instance: ImporterInstance | undefined;
 
         private getInstance(): ImporterInstance {
-          if (!this._instance) {
-            try {
-              this._instance = plugin.create();
-            } catch (error) {
-              throw new AppException({
-                code: "PLUGIN_INIT_ERROR",
-                message: `Failed to initialize importer plugin '${plugin.name}'`,
-                cause: error,
-              });
-            }
+          const extension = plugin.extensions[0];
+          if (!extension) {
+            throw new Error(`Plugin '${plugin.name}' has no extensions`);
           }
-          return this._instance; // Corrected: return _instance
+          const instance = pluginRegistry.getImporter(extension);
+          if (!instance) {
+            throw new Error(`Plugin '${plugin.name}' not found in registry`);
+          }
+          return instance;
         }
-
         import(content: string) {
           return new ResultAsync(this.getInstance().import(content));
         }

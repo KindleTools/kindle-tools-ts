@@ -109,6 +109,31 @@ function validateExporterPlugin(plugin: ExporterPlugin): PluginValidationResult 
   return { valid: errors.length === 0, errors, warnings };
 }
 
+/**
+ * Validate an exporter instance at runtime.
+ */
+function validateExporterInstance(instance: unknown): instance is ExporterInstance {
+  return (
+    typeof instance === "object" &&
+    instance !== null &&
+    typeof (instance as ExporterInstance).export === "function" &&
+    typeof (instance as ExporterInstance).name === "string" &&
+    typeof (instance as ExporterInstance).extension === "string"
+  );
+}
+
+/**
+ * Validate an importer instance at runtime.
+ */
+function validateImporterInstance(instance: unknown): instance is ImporterInstance {
+  return (
+    typeof instance === "object" &&
+    instance !== null &&
+    typeof (instance as ImporterInstance).import === "function" &&
+    typeof (instance as ImporterInstance).name === "string"
+  );
+}
+
 // =============================================================================
 // Plugin Registry Implementation
 // =============================================================================
@@ -119,6 +144,7 @@ function validateExporterPlugin(plugin: ExporterPlugin): PluginValidationResult 
 interface RegisteredImporter {
   plugin: ImporterPlugin;
   extensions: string[];
+  instance?: ImporterInstance;
 }
 
 /**
@@ -127,6 +153,7 @@ interface RegisteredImporter {
 interface RegisteredExporter {
   plugin: ExporterPlugin;
   formats: string[];
+  instance?: ExporterInstance;
 }
 
 /**
@@ -255,7 +282,33 @@ class PluginRegistry {
       return null;
     }
 
-    return entry.plugin.create();
+    // Check for existing instance (Singleton)
+    if (entry.instance) {
+      return entry.instance;
+    }
+
+    // Create and validate new instance
+    let instance: unknown;
+    try {
+      instance = entry.plugin.create();
+    } catch (error) {
+      throw new AppException({
+        code: "PLUGIN_INIT_ERROR",
+        message: `Failed to initialize importer plugin '${entry.plugin.name}'`,
+        cause: error,
+      });
+    }
+
+    if (!validateImporterInstance(instance)) {
+      throw new AppException({
+        code: "PLUGIN_INVALID_INSTANCE",
+        message: `Plugin '${entry.plugin.name}' did not return a valid Importer instance`,
+      });
+    }
+
+    // Cache instance
+    entry.instance = instance;
+    return instance;
   }
 
   /**
@@ -354,7 +407,33 @@ class PluginRegistry {
       return null;
     }
 
-    return entry.plugin.create();
+    // Check for existing instance (Singleton)
+    if (entry.instance) {
+      return entry.instance;
+    }
+
+    // Create and validate new instance
+    let instance: unknown;
+    try {
+      instance = entry.plugin.create();
+    } catch (error) {
+      throw new AppException({
+        code: "PLUGIN_INIT_ERROR",
+        message: `Failed to initialize exporter plugin '${entry.plugin.name}'`,
+        cause: error,
+      });
+    }
+
+    if (!validateExporterInstance(instance)) {
+      throw new AppException({
+        code: "PLUGIN_INVALID_INSTANCE",
+        message: `Plugin '${entry.plugin.name}' did not return a valid Exporter instance`,
+      });
+    }
+
+    // Cache instance
+    entry.instance = instance;
+    return instance;
   }
 
   /**
@@ -435,6 +514,34 @@ class PluginRegistry {
         listener(event);
       } catch (error) {
         console.error(`[PluginRegistry] Event listener error:`, error);
+      }
+    }
+  }
+
+  // ==========================================================================
+  // Lifecycle Management
+  // ==========================================================================
+
+  /**
+   * Reset a plugin's instance.
+   *
+   * This clears the cached singleton instance of the plugin, forcing it to be
+   * re-created on next access. Useful for testing or hot-reloading.
+   *
+   * @param pluginName - Name of the plugin to reset
+   */
+  resetPluginInstance(pluginName: string): void {
+    // Check importers
+    for (const entry of this.importers.values()) {
+      if (entry.plugin.name === pluginName) {
+        delete entry.instance;
+      }
+    }
+
+    // Check exporters
+    for (const entry of this.exporters.values()) {
+      if (entry.plugin.name === pluginName) {
+        delete entry.instance;
       }
     }
   }

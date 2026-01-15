@@ -241,11 +241,16 @@ export type FileSystemError =
  *
  * Returned when plugin operations fail.
  */
-export type PluginError = {
-  code: "PLUGIN_INIT_ERROR";
-  message: string;
-  cause?: unknown;
-};
+export type PluginError =
+  | {
+      code: "PLUGIN_INIT_ERROR";
+      message: string;
+      cause?: unknown;
+    }
+  | {
+      code: "PLUGIN_INVALID_INSTANCE";
+      message: string;
+    };
 
 // =============================================================================
 // Unified Application Error

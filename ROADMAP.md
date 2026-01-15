@@ -867,6 +867,27 @@ Retrasar la compilación de templates Handlebars hasta el primer uso.
  
  ---
 
+### 4.5 Post-Implementation Plugin System Improvements
+
+**Estado:** Post-Implementación (Feedback y Mejoras Futuras)
+
+**Ubicacion:** `src/plugins/`
+
+1.  **Optimización en `resetPluginInstance`:**
+    - Actualmente iteramos `this.importers.values()`, lo que puede visitar la misma instancia múltiples veces si tiene alias.
+    - **Mejora:** Usar `new Set(this.importers.values())` para iterar solo instancias únicas al resetear.
+
+2.  **Validación "Dry-Run" (Investigación):**
+    - `validateExporterInstance` solo chequea `typeof === 'function'`.
+    - Investigar si es posible (y seguro) hacer una llamada de prueba con datos dummy para validar que el plugin no explota inmediatamente.
+
+3.  **Restricción de Sincronía en `create()`:**
+    - **Constraint:** El diseño actual asume que `plugin.create()` es síncrono para soportar getters como `extension`.
+    - **Futuro:** Si se necesitan plugins con inicialización pesada/asíncrona (WASM, DB), se requerirá refactorizar para soportar `await pluginRegistry.getExporter()`.
+    - **Regla actual:** Mantener `create()` ligero y mover trabajo pesado a `export()`/`import()`.
+
+---
+
 ## Referencias
 
 ### TypeScript Libraries 2025
