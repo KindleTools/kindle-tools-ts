@@ -18,6 +18,7 @@ import { removeDuplicates } from "./processing/deduplicator.js";
 import { filterClippings, filterToHighlightsOnly } from "./processing/filter.js";
 import { linkNotesToHighlights } from "./processing/linker.js";
 import { smartMergeHighlights } from "./processing/merger.js";
+import { removeLinkedNotes } from "./processing/note-merger.js";
 import { flagFuzzyDuplicates, flagSuspiciousHighlights } from "./processing/quality.js";
 import { extractTagsFromLinkedNotes } from "./processing/tag-processor.js";
 
@@ -25,6 +26,7 @@ export { mergeTags, removeDuplicates } from "./processing/deduplicator.js";
 export { filterClippings, filterToHighlightsOnly } from "./processing/filter.js";
 export { linkNotesToHighlights } from "./processing/linker.js";
 export { smartMergeHighlights } from "./processing/merger.js";
+export { removeLinkedNotes } from "./processing/note-merger.js";
 // Re-export specific processing steps for granular use
 export { flagFuzzyDuplicates, flagSuspiciousHighlights } from "./processing/quality.js";
 export { extractTagsFromLinkedNotes } from "./processing/tag-processor.js";
@@ -59,6 +61,9 @@ export interface ProcessResult {
 
   /** Number of notes/bookmarks filtered when highlightsOnly is enabled */
   filteredForHighlightsOnly: number;
+
+  /** Number of linked notes consumed (removed when mergedOutput is enabled) */
+  notesConsumed: number;
 }
 
 /**
@@ -70,6 +75,7 @@ export interface ProcessResult {
  * 3. Smart merge overlapping highlights (optional)
  * 4. Link notes to highlights (optional)
  * 5. Extract tags from notes (optional)
+ * 5.5. Remove linked notes (optional) - mergedOutput mode
  * 6. Filter to highlights only (optional) - removes notes and bookmarks
  * 7. Flag suspicious highlights (always runs, just adds flags)
  * 8. Flag fuzzy duplicates (always runs, just adds flags)
@@ -98,6 +104,7 @@ export function processClippings(clippings: Clipping[], options?: ProcessOptions
   let fuzzyDuplicatesFlagged = 0;
   let tagsExtracted = 0;
   let filteredForHighlightsOnly = 0;
+  let notesConsumed = 0;
 
   // Step 0: Apply basic filtering (type, length, books)
   if (options) {
@@ -140,6 +147,19 @@ export function processClippings(clippings: Clipping[], options?: ProcessOptions
     tagsExtracted = tagResult.extractedCount;
   }
 
+  // Step 5.5: Remove linked notes (optional, default: false)
+  // When enabled, notes that have been linked to highlights are removed
+  // from output. Their content remains embedded in the highlight's note field.
+  // Less aggressive than highlightsOnly which removes ALL non-highlights.
+  // If removeUnlinkedNotes is also true, unlinked notes are removed too.
+  if (options?.mergedOutput) {
+    const mergeResult = removeLinkedNotes(result, {
+      removeUnlinked: options.removeUnlinkedNotes,
+    });
+    result = mergeResult.clippings;
+    notesConsumed = mergeResult.consumedCount;
+  }
+
   // Step 6: Filter to highlights only (optional, default: false)
   // When enabled, returns only highlights with embedded notes (removes notes/bookmarks)
   if (options?.highlightsOnly) {
@@ -168,5 +188,6 @@ export function processClippings(clippings: Clipping[], options?: ProcessOptions
     fuzzyDuplicatesFlagged,
     tagsExtracted,
     filteredForHighlightsOnly,
+    notesConsumed,
   };
 }

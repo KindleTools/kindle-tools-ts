@@ -63,6 +63,26 @@ export interface ParseOptions {
    */
   highlightsOnly?: boolean;
 
+  /**
+   * Remove notes that have been linked to highlights from output.
+   * When enabled, linked notes are "consumed" - their content remains
+   * embedded in the highlight's `note` field, but they don't appear
+   * as separate entries. Unlinked notes are preserved by default.
+   * This is less aggressive than `highlightsOnly` which removes ALL
+   * non-highlights.
+   * Default: false
+   */
+  mergedOutput?: boolean;
+
+  /**
+   * Also remove notes that are not linked to any highlight.
+   * Only has effect when `mergedOutput` is enabled.
+   * Use this when you want to completely eliminate notes from output,
+   * keeping only highlights with their embedded notes.
+   * Default: false
+   */
+  removeUnlinkedNotes?: boolean;
+
   // ===== Normalization =====
 
   /** Apply Unicode NFC normalization. Default: true */

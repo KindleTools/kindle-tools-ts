@@ -151,6 +151,14 @@ export const ParseOptionsSchema = z.object({
     .boolean()
     .default(false)
     .describe("Return only highlights with embedded notes"),
+  mergedOutput: z.coerce
+    .boolean()
+    .default(false)
+    .describe("Remove linked notes from output (embedded in highlights)"),
+  removeUnlinkedNotes: z.coerce
+    .boolean()
+    .default(false)
+    .describe("Also remove unlinked notes (requires mergedOutput)"),
 
   // Normalization
   normalizeUnicode: z.coerce.boolean().default(true).describe("Apply Unicode NFC normalization"),
@@ -279,6 +287,8 @@ export const ConfigFileSchema = z
         extractTags: z.coerce.boolean().optional(),
         tagCase: TagCaseSchema.optional(),
         highlightsOnly: z.coerce.boolean().optional(),
+        mergedOutput: z.coerce.boolean().optional(),
+        removeUnlinkedNotes: z.coerce.boolean().optional(),
         normalizeUnicode: z.coerce.boolean().optional(),
         cleanContent: z.coerce.boolean().optional(),
         cleanTitles: z.coerce.boolean().optional(),
