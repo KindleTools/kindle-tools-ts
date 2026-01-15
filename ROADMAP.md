@@ -30,7 +30,9 @@ Mejoras pendientes organizadas por prioridad con valoración de impacto, esfuerz
 
 ## 1. Media Prioridad
 
-### 1.1 Bug Fix: CSV Importer Type Validation
+### 1.1 [COMPLETADO] Bug Fix: CSV Importer Type Validation
+
+**Estado:** Completado el 2026-01-15.
 
 | Impacto | Esfuerzo | Riesgo | ROI |
 |---------|----------|--------|-----|
@@ -67,15 +69,18 @@ const type = rawType as ClippingType;
 
 ---
 
-### 1.2 Límites de Seguridad de Memoria
+### 1.2 [COMPLETADO] Límites de Seguridad de Memoria
+
+**Estado:** Completado el 2026-01-15.
 
 | Impacto | Esfuerzo | Riesgo | ROI |
 |---------|----------|--------|-----|
 | 🟡 Medio | 🟢 Bajo | 🟢 Bajo | ⭐⭐⭐ |
 
-**Ubicación:** `src/importers/formats/csv.importer.ts`, `src/importers/formats/json.importer.ts`
+**Ubicación:** `src/importers/formats/csv.importer.ts`, `src/importers/formats/json.importer.ts`, `src/importers/formats/txt/parser.ts`
 
 **Problema:** Sin límite, un archivo corrupto con miles de errores puede causar OOM.
+Se ha implementado un límite de `MAX_VALIDATION_ERRORS = 100` en CSV, JSON y TXT.
 
 ```typescript
 const MAX_VALIDATION_ERRORS = 100;

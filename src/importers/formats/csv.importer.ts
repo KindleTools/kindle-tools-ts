@@ -16,7 +16,7 @@ import {
   importValidationError,
 } from "#errors";
 import { BaseImporter } from "../shared/base-importer.js";
-import { generateImportId, parseLocationString } from "../shared/index.js";
+import { generateImportId, MAX_VALIDATION_ERRORS, parseLocationString } from "../shared/index.js";
 
 /**
  * Schema for validating CSV row data.
@@ -124,7 +124,7 @@ function getSuggestion(field: string, value: unknown): string | undefined {
  */
 export class CsvImporter extends BaseImporter {
   readonly name = "csv";
-  readonly extensions = [".csv"];
+  readonly extensions: string[] = [".csv"];
 
   /**
    * Import clippings from CSV content.
@@ -170,6 +170,17 @@ export class CsvImporter extends BaseImporter {
 
     // Parse data rows
     for (let rowIdx = 1; rowIdx < rows.length; rowIdx++) {
+      if (errors.length >= MAX_VALIDATION_ERRORS) {
+        const msg = `Stopped after ${MAX_VALIDATION_ERRORS} errors. File may be corrupted.`;
+        errors.push({
+          row: -1,
+          field: "file",
+          message: msg,
+        });
+        warnings.push(msg); // Add to warnings for visibility in partial success
+        break;
+      }
+
       const row = rows[rowIdx];
       if (!row || row.length === 0 || (row.length === 1 && !row[0]?.trim())) {
         continue; // Skip empty rows

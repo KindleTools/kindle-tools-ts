@@ -11,7 +11,7 @@ import type { SupportedLanguage } from "#app-types/language.js";
 import { type ImportResult, importInvalidFormat, importParseError } from "#errors";
 import { type ClippingImport, ClippingsExportSchema } from "../../schemas/clipping.schema.js";
 import { BaseImporter } from "../shared/base-importer.js";
-import { generateImportId, parseLocationString } from "../shared/index.js";
+import { generateImportId, MAX_VALIDATION_ERRORS, parseLocationString } from "../shared/index.js";
 
 /**
  * Parse a location value that could be a string or object.
@@ -111,7 +111,7 @@ function jsonToClipping(json: ClippingImport, index: number): Clipping {
  */
 export class JsonImporter extends BaseImporter {
   readonly name = "json";
-  readonly extensions = [".json"];
+  readonly extensions: string[] = [".json"];
 
   /**
    * Import clippings from JSON content.
@@ -149,25 +149,35 @@ export class JsonImporter extends BaseImporter {
 
     // Handle array format (Legacy/Alternative)
     if (Array.isArray(data)) {
-      data.forEach((jsonClipping, i) => {
+      for (const [i, jsonClipping] of data.entries()) {
+        if (warnings.length >= MAX_VALIDATION_ERRORS) {
+          warnings.push(`Stopped after ${MAX_VALIDATION_ERRORS} warnings. File may be corrupted.`);
+          break;
+        }
         try {
           clippings.push(jsonToClipping(jsonClipping, i));
         } catch (e) {
           warnings.push(`Failed to process clipping at index ${i}: ${e}`);
         }
-      });
+      }
     } else {
       // Handle Object format
 
       // 1. Flat clippings
       if (data.clippings) {
-        data.clippings.forEach((jsonClipping, i) => {
+        for (const [i, jsonClipping] of data.clippings.entries()) {
+          if (warnings.length >= MAX_VALIDATION_ERRORS) {
+            warnings.push(
+              `Stopped after ${MAX_VALIDATION_ERRORS} warnings. File may be corrupted.`,
+            );
+            break;
+          }
           try {
             clippings.push(jsonToClipping(jsonClipping, i));
           } catch (e) {
             warnings.push(`Failed to process clipping at index ${i}: ${e}`);
           }
-        });
+        }
       }
 
       // 2. Grouped by book
@@ -176,6 +186,12 @@ export class JsonImporter extends BaseImporter {
         for (const [bookTitle, bookClippings] of Object.entries(data.books)) {
           if (Array.isArray(bookClippings)) {
             for (const jsonClipping of bookClippings) {
+              if (warnings.length >= MAX_VALIDATION_ERRORS) {
+                warnings.push(
+                  `Stopped after ${MAX_VALIDATION_ERRORS} warnings. File may be corrupted.`,
+                );
+                break;
+              }
               try {
                 const enriched = { ...jsonClipping };
                 if (!enriched.title) {
