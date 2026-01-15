@@ -543,6 +543,9 @@ Usar `fastest-levenshtein` para mapear columnas del CSV a las esperadas (`Title`
 - **WASM Web App:** Complejidad vs beneficio bajo
 - **Mutation Testing (Stryker):** Costoso en CI
 - **E2E Testing (Playwright):** Solo para workbench
+- **Refactorizar con `measureTime`:** Unificar medición de tiempos en `TxtImporter` y `Processor`.
+- **Estandarizar Metadatos:** Unificar `meta` (fileSize, duration) en todos los Importers.
+- **Instrumentar Exporters:** Añadir logs de inicio/fin a `BaseExporter`.
 
 ---
 
