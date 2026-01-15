@@ -760,6 +760,58 @@ El `z.string().optional()` permite cualquier string. El cast a `ClippingType` es
    }
    ```
 
+
+
+### 4.1 Refactor: Pipeline Pattern
+
+**Ubicacion:** `src/core/processor.ts`
+
+**Problema:** `processClippings` es una "God Function" difícil de testear y extender.
+
+**Solucion:**
+```typescript
+interface ProcessorStep {
+  name: string;
+  run(clippings: Clipping[], context: Context): Clipping[];
+}
+
+class Pipeline {
+  use(step: ProcessorStep);
+  execute(input: Clipping[]): ProcessResult;
+}
+```
+
+---
+
+### 4.2 Property-Based Testing
+
+**Ubicacion:** `tests/property/`
+
+**Propuesta:** Usar `fast-check` para verificar invariantes en el pipeline de procesamiento.
+- "Si highlightsOnly=true, output nunca contiene notas"
+- "Deduplicación nunca pierde datos únicos"
+
+---
+
+### 4.3 Lazy Template Compilation
+
+**Ubicacion:** `src/templates/engine.ts`, `src/templates/factory.ts`
+
+**Propuesta:**
+Actualmente se compilan todos los templates al instanciar el engine. Cambiar a compilación bajo demanda (getters) para mejorar performance de arranque.
+
+---
+
+### Tests: Mejorar Cobertura en Importers
+
+**Ubicacion:** `tests/unit/importers/importers.test.ts`
+
+**Mejoras:**
+1. Agregar casos de prueba para el nuevo flujo de `IMPORT_VALIDATION_ERROR`.
+2. Verificar que las sugerencias de typos funcionan correctamente.
+3. Testear la acumulación de múltiples errores en una misma fila y en múltiples filas.
+
+
 ---
 
 ## Referencias
@@ -781,14 +833,6 @@ El `z.string().optional()` permite cualquier string. El cast a `ClippingType` es
 ### Tooling
 - [Biome Configuration](https://biomejs.dev/guides/configure-biome/)
 
-### Tests: Mejorar Cobertura en Importers
-
-**Ubicacion:** `tests/unit/importers/importers.test.ts`
-
-**Mejoras:**
-1. Agregar casos de prueba para el nuevo flujo de `IMPORT_VALIDATION_ERROR`.
-2. Verificar que las sugerencias de typos funcionan correctamente.
-3. Testear la acumulación de múltiples errores en una misma fila y en múltiples filas.
 
 ---
 
