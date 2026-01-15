@@ -53,6 +53,9 @@ export interface ExporterOptions {
   /** Output file or directory path */
   outputPath?: string;
 
+  /** Archive format to wrap output in */
+  archive?: "zip" | "tar";
+
   /** Group clippings by book */
   groupByBook?: boolean;
 

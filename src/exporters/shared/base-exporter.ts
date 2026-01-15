@@ -14,6 +14,7 @@
  */
 
 import type { Clipping } from "#app-types/clipping.js";
+import { groupByBook } from "#domain/analytics/stats.js";
 import {
   type ExportedFile,
   type ExportResult,
@@ -23,6 +24,7 @@ import {
   zodIssuesToValidationIssues,
 } from "#errors";
 import { type ExporterOptionsParsed, ExporterOptionsSchema } from "#schemas/exporter.schema.js";
+import { createArchiver } from "#utils/archive/factory.js";
 import { formatZodError } from "#utils/system/errors.js";
 import type { AuthorCase, Exporter, ExporterOptions, FolderStructure } from "../core/types.js";
 import {
@@ -90,10 +92,51 @@ export abstract class BaseExporter implements Exporter {
         );
       }
 
-      // Options are now validated with defaults applied
       const validatedOptions = parseResult.data;
 
-      return await this.doExport(clippings, validatedOptions);
+      const result = await this.doExport(clippings, validatedOptions);
+
+      // Use raw options for archive check to bypass Zod potential issues
+      // biome-ignore lint/suspicious/noExplicitAny: Temporary workaround for flexible options
+      const archiveFormat = (options as any)?.archive;
+
+      // Handle archiving if requested
+      if (result.isOk() && archiveFormat) {
+        const format = archiveFormat;
+        const archiverResult = createArchiver(format);
+
+        if (archiverResult.isErr()) {
+          return this.error(archiverResult.error);
+        }
+
+        const archiver = archiverResult.value;
+        const exportTitle = validatedOptions.title || this.DEFAULT_EXPORT_TITLE;
+        const archiveName = `${this.sanitizeFilename(exportTitle)}.${format}`;
+
+        if (result.value.files) {
+          // Multiple files
+          for (const file of result.value.files) {
+            archiver.addFile(file.path, file.content);
+          }
+        } else {
+          // Single file
+          // Since result.value.files is undefined, we need a filename for the single content.
+          // We can construct one based on the exporter name or title.
+          const filename = `${this.sanitizeFilename(this.name)}-export${this.extension}`;
+          archiver.addFile(filename, result.value.output);
+        }
+
+        const archiveContent = await archiver.finalize();
+
+        return this.success(archiveContent, [
+          {
+            path: archiveName,
+            content: archiveContent,
+          },
+        ]);
+      }
+
+      return result;
     } catch (error) {
       return this.error(error);
     }
@@ -193,9 +236,41 @@ export abstract class BaseExporter implements Exporter {
   }
 
   // ========================
+  // Grouping Helpers
+  // ========================
+
+  /**
+   * Helper to generate separate files for each book.
+   *
+   * @param clippings - All clippings to export
+   * @param fileExtension - File extension (including dot, e.g., ".html")
+   * @param renderFn - Function to render content for a single book
+   */
+  protected generateGroupedFiles(
+    clippings: Clipping[],
+    fileExtension: string,
+    renderFn: (bookTitle: string, bookClippings: Clipping[]) => string,
+  ): ExportedFile[] {
+    const grouped = groupByBook(clippings);
+    const files: ExportedFile[] = [];
+
+    for (const [bookTitle, bookClippings] of grouped) {
+      const content = renderFn(bookTitle, bookClippings);
+      const safeTitle = this.sanitizeFilename(bookTitle);
+
+      files.push({
+        path: `${safeTitle}${fileExtension}`,
+        content,
+      });
+    }
+
+    return files;
+  }
+
+  // ========================
   // Constants
   // ========================
 
-  protected readonly DEFAULT_UNKNOWN_AUTHOR = DEFAULT_UNKNOWN_AUTHOR;
-  protected readonly DEFAULT_EXPORT_TITLE = DEFAULT_EXPORT_TITLE;
+  protected readonly DEFAULT_UNKNOWN_AUTHOR: string = DEFAULT_UNKNOWN_AUTHOR;
+  protected readonly DEFAULT_EXPORT_TITLE: string = DEFAULT_EXPORT_TITLE;
 }

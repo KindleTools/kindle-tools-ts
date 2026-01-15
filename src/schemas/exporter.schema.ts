@@ -35,6 +35,14 @@ import { CaseTransformSchema, FolderStructureBaseSchema } from "./shared.schema.
  * Folder structure options for Markdown-based exporters.
  * Re-exported from shared for convenience.
  */
+// =============================================================================
+// Re-exports from shared (for convenience and backward compatibility)
+// =============================================================================
+
+/**
+ * Folder structure options for Markdown-based exporters.
+ * Re-exported from shared for convenience.
+ */
 export const FolderStructureSchema = FolderStructureBaseSchema;
 
 /**
@@ -51,25 +59,10 @@ export const ExporterTagCaseSchema = CaseTransformSchema;
 
 // =============================================================================
 // Template Preset Schema
-// =============================================================================
+// // =============================================================================
 
 /**
  * Template preset options for Markdown-based exporters.
- *
- * - 'default': Standard template with balanced detail
- * - 'minimal': Compact output with minimal formatting
- * - 'obsidian': Optimized for Obsidian with YAML frontmatter
- * - 'notion': Formatted for Notion import
- * - 'academic': Citation-friendly format
- * - 'compact': Dense single-line format
- * - 'verbose': Full detail with all metadata
- * - 'joplin': Optimized for Joplin import
- *
- * @example
- * ```typescript
- * TemplatePresetSchema.parse("obsidian"); // ✓ OK
- * TemplatePresetSchema.parse("custom");   // ✗ Throws error
- * ```
  */
 export const TemplatePresetSchema = z.enum(
   ["default", "minimal", "obsidian", "notion", "academic", "compact", "verbose", "joplin"],
@@ -90,14 +83,6 @@ export type TemplatePreset = z.infer<typeof TemplatePresetSchema>;
 
 /**
  * Custom Handlebars templates for book and clipping rendering.
- *
- * @example
- * ```typescript
- * CustomTemplatesSchema.parse({
- *   book: "# {{title}}\n{{#each clippings}}...",
- *   clipping: "> {{content}}"
- * });
- * ```
  */
 export const CustomTemplatesSchema = z.object({
   /** Custom template for book header */
@@ -112,33 +97,6 @@ export const CustomTemplatesSchema = z.object({
 
 /**
  * Schema for exporter options validation.
- *
- * Provides full configuration for export operations with sensible defaults.
- * All exporters accept these options, though not all options apply to all formats.
- *
- * @example
- * ```typescript
- * import { ExporterOptionsSchema } from 'kindle-tools-ts';
- *
- * // Minimal usage - gets all defaults
- * const defaults = ExporterOptionsSchema.parse({});
- * // {
- * //   groupByBook: true,
- * //   includeStats: false,
- * //   pretty: true,
- * //   folderStructure: "by-author",
- * //   authorCase: "uppercase",
- * //   ...
- * // }
- *
- * // Override specific options
- * const custom = ExporterOptionsSchema.parse({
- *   folderStructure: "by-author-book",
- *   authorCase: "lowercase",
- *   includeStats: true,
- *   title: "My Reading Notes"
- * });
- * ```
  */
 export const ExporterOptionsSchema = z
   .object({
@@ -147,6 +105,7 @@ export const ExporterOptionsSchema = z
       .string()
       .optional()
       .describe("Output file path or directory for multi-file exports"),
+    archive: z.enum(["zip", "tar"]).optional().describe("Archive format (zip or tar)"),
 
     // Grouping
     groupByBook: z.boolean().default(false).describe("Group clippings by book in output"),
@@ -185,7 +144,6 @@ export const ExporterOptionsSchema = z
     creator: z.string().optional().describe("Creator/author attribution for the export"),
   })
   // Allow additional exporter-specific options to pass through
-  // (e.g., folder, useCallouts, wikilinks for Obsidian; tags, geoLocation for Joplin; etc.)
   .passthrough();
 
 /**
@@ -209,18 +167,6 @@ export type ExporterOptionsParsed = z.output<typeof ExporterOptionsSchema>;
  * @param input - Raw options object to validate
  * @returns Validated options with defaults applied
  * @throws ZodError if validation fails
- *
- * @example
- * ```typescript
- * try {
- *   const options = parseExporterOptions({
- *     folderStructure: "by-author-book"
- *   });
- *   console.log(options.authorCase); // "uppercase" (default)
- * } catch (error) {
- *   console.error("Invalid options:", error);
- * }
- * ```
  */
 export function parseExporterOptions(input: unknown): ExporterOptionsParsed {
   return ExporterOptionsSchema.parse(input);
@@ -232,16 +178,6 @@ export function parseExporterOptions(input: unknown): ExporterOptionsParsed {
  *
  * @param input - Raw options object to validate
  * @returns SafeParseResult with success/error information
- *
- * @example
- * ```typescript
- * const result = safeParseExporterOptions(userInput);
- * if (result.success) {
- *   runExport(data, result.data);
- * } else {
- *   showValidationErrors(result.error.format());
- * }
- * ```
  */
 export function safeParseExporterOptions(input: unknown) {
   return ExporterOptionsSchema.safeParse(input);

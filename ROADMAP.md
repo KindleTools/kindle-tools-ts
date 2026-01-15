@@ -18,7 +18,7 @@ Mejoras pendientes organizadas por prioridad. Cada item incluye instrucciones cl
 
 ## 1. Media Prioridad
 
-### 1.1 Carga Dinamica de Locales date-fns
+### 1.1 Carga Dinamica de Locales date-fns ✅ COMPLETADO
 
 **Ubicacion:** `src/domain/parsing/dates.ts:11`
 
@@ -376,7 +376,7 @@ kindle-tools-ts/
 
 ---
 
-### 2.6 Unified Archiver Interface
+### 2.6 Unified Archiver Interface ✅ COMPLETADO
 
 **Ubicacion:** Crear `src/utils/archive/archiver.ts`
 
@@ -506,7 +506,7 @@ tests/fixtures/
 
 ---
 
-### 2.12 Plugin Instance Reset
+### 2.12 Plugin Instance Reset ✅ COMPLETADO
 
 **Ubicacion:** `src/plugins/registry.ts`
 
@@ -523,7 +523,7 @@ class PluginRegistry {
 
 ---
 
-### 2.13 Plugin Runtime Validation
+### 2.13 Plugin Runtime Validation ✅ COMPLETADO
 
 **Ubicacion:** `src/plugins/adapters.ts`
 
@@ -548,7 +548,7 @@ if (!validateExporterInstance(instance)) {
 
 ---
 
-### 2.14 Minor Code Improvements
+### 2.14 Minor Code Improvements ✅ COMPLETADO
 
 | Issue | Ubicacion | Solucion |
 |-------|-----------|----------|

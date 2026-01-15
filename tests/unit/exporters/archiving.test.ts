@@ -10,6 +10,7 @@ class MockExporter extends BaseExporter {
   extension = ".txt";
 
   protected async doExport(clippings: Clipping[], options: any) {
+    console.log("MockExporter.doExport called with options:", options);
     return this.success("Mock Content", [
       { path: "file1.txt", content: "Content 1" },
       { path: "file2.txt", content: "Content 2" },
@@ -28,11 +29,14 @@ class SingleFileMockExporter extends BaseExporter {
 }
 
 describe("BaseExporter Archiving", () => {
-  it("should wrap multi-file export in zip", async () => {
+  it("should wrap multi-file export in zip with custom title", async () => {
     const exporter = new MockExporter();
-    const result = await exporter.export([], { archive: "zip" });
+    const result = await exporter.export([], { archive: "zip", title: "export" });
 
-    if (result.isErr()) throw result.error;
+    if (result.isErr()) {
+      console.error("TEST FAILED WITH ERROR:", result.error);
+      throw result.error;
+    }
 
     expect(result.value.files).toHaveLength(1);
     expect(result.value.files![0].path).toBe("export.zip");
