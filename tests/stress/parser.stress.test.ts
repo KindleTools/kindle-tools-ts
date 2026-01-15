@@ -11,7 +11,7 @@ describe("Stress Testing: TXT Parser", () => {
   it("should handle purely random garbage without crashing", async () => {
     const garbageInfo = generateGarbage(100 * 1024); // 100KB of garbage
     try {
-      const result = parse(garbageInfo);
+      const result = await parse(garbageInfo);
       expect(result).toBeDefined();
       expect(Array.isArray(result.clippings)).toBe(true);
       expect(Array.isArray(result.warnings)).toBe(true);
@@ -22,7 +22,7 @@ describe("Stress Testing: TXT Parser", () => {
 
   it("should handle 'Naughty Strings' in all fields", async () => {
     const naughtyContent = generateNaughtyFile();
-    const result = parse(naughtyContent);
+    const result = await parse(naughtyContent);
 
     expect(result).toBeDefined();
     expect(result.clippings.length).toBeGreaterThan(0);
@@ -30,7 +30,7 @@ describe("Stress Testing: TXT Parser", () => {
 
   it("should handle broken/malformed structures gracefully", async () => {
     const brokenContent = generateBrokenStructureFile();
-    const result = parse(brokenContent);
+    const result = await parse(brokenContent);
     expect(result).toBeDefined();
 
     // The broken structure file contains various malformed blocks.
@@ -56,7 +56,7 @@ describe("Stress Testing: TXT Parser", () => {
     const massiveContent = generateMassiveFile(5); // 5MB
     const start = performance.now();
 
-    const result = parse(massiveContent);
+    const result = await parse(massiveContent);
 
     const end = performance.now();
     const duration = end - start;

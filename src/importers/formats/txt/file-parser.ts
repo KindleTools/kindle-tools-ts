@@ -44,7 +44,7 @@ export async function parseFile(filePath: string, options?: ParseOptions): Promi
   const fileSize = buffer.length;
 
   const startTime = performance.now();
-  const result = parseString(content, options);
+  const result = await parseString(content, options);
   const parseTime = performance.now() - startTime;
 
   return {

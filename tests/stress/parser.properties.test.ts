@@ -4,9 +4,9 @@ import { parse } from "../../src/importers/formats/txt/parser.js";
 
 describe("TXT Parser Properties", () => {
   // 1. Invariance: Parsing should NEVER crash, no matter the input
-  test.prop([fc.string()])("should never throw on arbitrary string input", (input) => {
+  test.prop([fc.string()])("should never throw on arbitrary string input", async (input) => {
     try {
-      const result = parse(input);
+      const result = await parse(input);
       expect(result).toBeDefined();
       expect(Array.isArray(result.clippings)).toBe(true);
       expect(Array.isArray(result.warnings)).toBe(true);
@@ -28,14 +28,14 @@ describe("TXT Parser Properties", () => {
       page: fc.integer({ min: 1, max: 9999 }),
       locStart: fc.integer({ min: 1, max: 99999 }),
     }),
-  ])("should parse syntactically valid constructed blocks", (data) => {
+  ])("should parse syntactically valid constructed blocks", async (data) => {
     const { title, author, content, page, locStart } = data;
 
     // Construct the strictly valid format
     const metaLine = `- Your Highlight on page ${page} | Location ${locStart} | Added on Monday, January 1, 2024 12:00:00 AM`;
     const block = `${title} (${author})\n${metaLine}\n\n${content}\n==========`;
 
-    const result = parse(block);
+    const result = await parse(block);
 
     // We expect at least one clipping if the format is strictly adhered to
     // NOTE: Sanitizers might empty the content if it's just whitespace, but minLength: 1 helps.

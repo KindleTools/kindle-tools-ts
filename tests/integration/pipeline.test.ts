@@ -23,7 +23,7 @@ describe("Integration: Full Pipeline", () => {
   describe("Parse → Export", () => {
     it("should parse and export to JSON", async () => {
       // Parse
-      const parseResult = parse(SAMPLE_CLIPPINGS_EN);
+      const parseResult = await parse(SAMPLE_CLIPPINGS_EN);
       expect(parseResult.clippings.length).toBe(5);
 
       // Export
@@ -37,7 +37,7 @@ describe("Integration: Full Pipeline", () => {
     });
 
     it("should parse and export to CSV", async () => {
-      const parseResult = parse(SAMPLE_CLIPPINGS_EN);
+      const parseResult = await parse(SAMPLE_CLIPPINGS_EN);
       const exporter = new CsvExporter();
       const exportResult = await exporter.export(parseResult.clippings);
       const { output } = getExportSuccess(exportResult);
@@ -48,7 +48,7 @@ describe("Integration: Full Pipeline", () => {
     });
 
     it("should parse and export to Markdown", async () => {
-      const parseResult = parse(SAMPLE_CLIPPINGS_EN);
+      const parseResult = await parse(SAMPLE_CLIPPINGS_EN);
       const exporter = new MarkdownExporter();
       const exportResult = await exporter.export(parseResult.clippings);
       const { output } = getExportSuccess(exportResult);
@@ -59,7 +59,7 @@ describe("Integration: Full Pipeline", () => {
     });
 
     it("should parse and export to Obsidian", async () => {
-      const parseResult = parse(SAMPLE_CLIPPINGS_EN);
+      const parseResult = await parse(SAMPLE_CLIPPINGS_EN);
       const exporter = new ObsidianExporter();
       const exportResult = await exporter.export(parseResult.clippings);
       const { output, files } = getExportSuccess(exportResult);
@@ -70,7 +70,7 @@ describe("Integration: Full Pipeline", () => {
     });
 
     it("should parse and export to Joplin", async () => {
-      const parseResult = parse(SAMPLE_CLIPPINGS_EN);
+      const parseResult = await parse(SAMPLE_CLIPPINGS_EN);
       const exporter = new JoplinExporter();
       const exportResult = await exporter.export(parseResult.clippings);
       const { files } = getExportSuccess(exportResult);
@@ -81,7 +81,7 @@ describe("Integration: Full Pipeline", () => {
     });
 
     it("should parse and export to HTML", async () => {
-      const parseResult = parse(SAMPLE_CLIPPINGS_EN);
+      const parseResult = await parse(SAMPLE_CLIPPINGS_EN);
       const exporter = new HtmlExporter();
       const exportResult = await exporter.export(parseResult.clippings);
       const { output } = getExportSuccess(exportResult);
@@ -97,7 +97,7 @@ describe("Integration: Full Pipeline", () => {
       // Create input with duplicate
       const inputWithDuplicate = SAMPLE_CLIPPINGS_EN + SAMPLE_CLIPPINGS_EN;
 
-      const parseResult = parse(inputWithDuplicate);
+      const parseResult = await parse(inputWithDuplicate);
       expect(parseResult.clippings.length).toBe(10); // 5 + 5 duplicates
 
       const processResult = processClippings(parseResult.clippings, {
@@ -111,7 +111,7 @@ describe("Integration: Full Pipeline", () => {
     });
 
     it("should link notes to highlights", async () => {
-      const parseResult = parse(SAMPLE_CLIPPINGS_EN);
+      const parseResult = await parse(SAMPLE_CLIPPINGS_EN);
 
       const processResult = processClippings(parseResult.clippings, {
         mergeNotes: true,
@@ -123,7 +123,7 @@ describe("Integration: Full Pipeline", () => {
     });
 
     it("should complete full pipeline with all processing", async () => {
-      const parseResult = parse(SAMPLE_CLIPPINGS_EN);
+      const parseResult = await parse(SAMPLE_CLIPPINGS_EN);
 
       const processResult = processClippings(parseResult.clippings, {
         removeDuplicates: true,
@@ -149,8 +149,8 @@ describe("Integration: Full Pipeline", () => {
 
   describe("Consistency", () => {
     it("should produce consistent IDs across multiple runs", async () => {
-      const result1 = parse(SAMPLE_CLIPPINGS_EN);
-      const result2 = parse(SAMPLE_CLIPPINGS_EN);
+      const result1 = await parse(SAMPLE_CLIPPINGS_EN);
+      const result2 = await parse(SAMPLE_CLIPPINGS_EN);
 
       // IDs should be deterministic
       for (let i = 0; i < result1.clippings.length; i++) {
@@ -159,7 +159,7 @@ describe("Integration: Full Pipeline", () => {
     });
 
     it("should produce consistent export IDs for Joplin", async () => {
-      const parseResult = parse(SAMPLE_CLIPPINGS_EN);
+      const parseResult = await parse(SAMPLE_CLIPPINGS_EN);
       const exporter = new JoplinExporter();
 
       const result1 = await exporter.export(parseResult.clippings);
@@ -176,7 +176,7 @@ describe("Integration: Full Pipeline", () => {
 
   describe("Export roundtrip", () => {
     it("should preserve all essential data in JSON export", async () => {
-      const parseResult = parse(SAMPLE_CLIPPINGS_EN);
+      const parseResult = await parse(SAMPLE_CLIPPINGS_EN);
       const exporter = new JsonExporter();
 
       const exportResult = await exporter.export(parseResult.clippings, { includeRaw: true });
@@ -197,7 +197,7 @@ describe("Integration: Full Pipeline", () => {
   describe("Error handling", () => {
     it("should handle invalid input gracefully", async () => {
       const invalidInput = "This is not a valid clippings file";
-      const parseResult = parse(invalidInput);
+      const parseResult = await parse(invalidInput);
 
       // Should not crash
       expect(parseResult.clippings.length).toBe(0);
@@ -229,7 +229,7 @@ Habe nun, ach! Philosophie, Juristerei und Medizin
 ==========`;
 
   it("should parse Spanish clippings and export", async () => {
-    const parseResult = parse(spanishContent);
+    const parseResult = await parse(spanishContent);
 
     expect(parseResult.clippings.length).toBe(1);
     expect(parseResult.clippings[0]?.language).toBe("es");
@@ -244,7 +244,7 @@ Habe nun, ach! Philosophie, Juristerei und Medizin
   });
 
   it("should parse German clippings and export", async () => {
-    const parseResult = parse(germanContent);
+    const parseResult = await parse(germanContent);
 
     expect(parseResult.clippings.length).toBe(1);
     expect(parseResult.clippings[0]?.language).toBe("de");

@@ -153,9 +153,12 @@ export function processClippings(clippings: Clipping[], options?: ProcessOptions
   // Less aggressive than highlightsOnly which removes ALL non-highlights.
   // If removeUnlinkedNotes is also true, unlinked notes are removed too.
   if (options?.mergedOutput) {
-    const mergeResult = removeLinkedNotes(result, {
-      removeUnlinked: options.removeUnlinkedNotes,
-    });
+    const mergeResult = removeLinkedNotes(
+      result,
+      options.removeUnlinkedNotes !== undefined
+        ? { removeUnlinked: options.removeUnlinkedNotes }
+        : {},
+    );
     result = mergeResult.clippings;
     notesConsumed = mergeResult.consumedCount;
   }

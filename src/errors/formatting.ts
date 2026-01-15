@@ -27,8 +27,14 @@ function formatImportError(error: ImportError): string {
       return "The file appears to be empty or contains no valid content.";
     case "IMPORT_INVALID_FORMAT":
       return `Invalid file format: ${error.message}`;
+    case "IMPORT_VALIDATION_ERROR":
+      return `Validation error: ${error.message}`;
     case "IMPORT_UNKNOWN":
       return `An unexpected error occurred during import: ${error.message}`;
+    default: {
+      const _exhaustiveCheck: never = error;
+      return `Unknown import error: ${(_exhaustiveCheck as ImportError).message}`;
+    }
   }
 }
 

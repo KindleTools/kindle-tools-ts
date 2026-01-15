@@ -8,7 +8,7 @@ describe("Parser Snapshot Tests", () => {
     const fixturePath = path.resolve(__dirname, "fixtures/standard.txt");
     const content = fs.readFileSync(fixturePath, "utf-8");
 
-    const result = parse(content);
+    const result = await parse(content);
 
     // We normalize the parseTime in the meta stats because it's dynamic
     const normalizedResult = {

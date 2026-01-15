@@ -31,7 +31,7 @@ export class TxtImporter extends BaseImporter {
   protected async doImport(content: string): Promise<ImportResult> {
     // Parse without options to get raw clippings (no filtering/processing)
     // The unified pipeline in the main application will handle filtering and processing.
-    const parseResult = parseString(content);
+    const parseResult = await parseString(content);
 
     if (parseResult.clippings.length === 0 && parseResult.warnings.length > 0) {
       // If no clippings but we have warnings, treat it as a potential error,

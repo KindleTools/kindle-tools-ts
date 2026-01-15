@@ -8,9 +8,9 @@ import { formatDateHuman, formatDateISO } from "#utils/system/dates.js";
 
 describe("date utilities", () => {
   describe("parseKindleDate", () => {
-    it("should parse English dates (long format)", () => {
+    it("should parse English dates (long format)", async () => {
       const input = "Friday, January 1, 2024 10:30:45 AM";
-      const result = parseKindleDate(input, "en");
+      const result = await parseKindleDate(input, "en");
 
       expect(result).not.toBeNull();
       expect(result?.getFullYear()).toBe(2024);
@@ -21,9 +21,9 @@ describe("date utilities", () => {
       expect(result?.getSeconds()).toBe(45);
     });
 
-    it("should parse Spanish dates", () => {
+    it("should parse Spanish dates", async () => {
       const input = "viernes, 1 de enero de 2024 10:30:45";
-      const result = parseKindleDate(input, "es");
+      const result = await parseKindleDate(input, "es");
 
       expect(result).not.toBeNull();
       expect(result?.getFullYear()).toBe(2024);
@@ -31,37 +31,37 @@ describe("date utilities", () => {
       expect(result?.getDate()).toBe(1);
     });
 
-    it("should return null for invalid language", () => {
+    it("should return null for invalid language", async () => {
       // @ts-expect-error Testing invalid language
-      const result = parseKindleDate("Some date", "invalid");
+      const result = await parseKindleDate("Some date", "invalid");
       expect(result).toBeNull();
     });
 
-    it("should return null for unparseable date", () => {
-      const result = parseKindleDate("Not a date", "en");
+    it("should return null for unparseable date", async () => {
+      const result = await parseKindleDate("Not a date", "en");
       expect(result).toBeNull();
     });
   });
 
   describe("parseKindleDateAuto", () => {
-    it("should detect English automatically", () => {
+    it("should detect English automatically", async () => {
       const input = "Friday, January 1, 2024 10:30:45 AM";
-      const result = parseKindleDateAuto(input);
+      const result = await parseKindleDateAuto(input);
 
       expect(result.detectedLanguage).toBe("en");
       expect(result.date).not.toBeNull();
     });
 
-    it("should detect Spanish automatically", () => {
+    it("should detect Spanish automatically", async () => {
       const input = "viernes, 1 de enero de 2024 10:30:45";
-      const result = parseKindleDateAuto(input);
+      const result = await parseKindleDateAuto(input);
 
       expect(result.detectedLanguage).toBe("es");
       expect(result.date).not.toBeNull();
     });
 
-    it("should return nulls for unknown format", () => {
-      const result = parseKindleDateAuto("gibberish");
+    it("should return nulls for unknown format", async () => {
+      const result = await parseKindleDateAuto("gibberish");
 
       expect(result.date).toBeNull();
       expect(result.detectedLanguage).toBeNull();

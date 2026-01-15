@@ -3,8 +3,8 @@ import { parse } from "../../src/importers/formats/txt/parser.js";
 import type { Clipping, ParseResult } from "../../src/types/index.js";
 
 describe("Type Testing: Public API Surface", () => {
-  test("parser.parse returns strict ParseResult structure", () => {
-    const result = parse("some input");
+  test("parser.parse returns strict ParseResult structure", async () => {
+    const result = await parse("some input");
 
     // 1. Should match the exact ParseResult interface
     expectTypeOf(result).toEqualTypeOf<ParseResult>();

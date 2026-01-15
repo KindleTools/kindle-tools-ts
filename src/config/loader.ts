@@ -91,7 +91,7 @@ function getAsyncExplorer() {
     asyncExplorer = cosmiconfig(MODULE_NAME, {
       searchPlaces: SEARCH_PLACES,
       loaders: {
-        ".toml": (filepath, content) => parseToml(content),
+        ".toml": (_filepath, content) => parseToml(content),
       },
     });
   }
@@ -106,7 +106,7 @@ function getSyncExplorer() {
     syncExplorer = cosmiconfigSync(MODULE_NAME, {
       searchPlaces: SEARCH_PLACES,
       loaders: {
-        ".toml": (filepath, content) => parseToml(content),
+        ".toml": (_filepath, content) => parseToml(content),
       },
     });
   }
@@ -169,7 +169,6 @@ function processResult(result: CosmiconfigResult): LoadedConfig | null {
       code: "CONFIG_INVALID",
       message: `Invalid configuration in ${result.filepath}:\n${baseErrorMessage}${customErrorMessage}`,
       path: result.filepath,
-      cause: error,
     });
   }
 

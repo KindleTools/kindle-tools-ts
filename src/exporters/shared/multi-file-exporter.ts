@@ -16,7 +16,6 @@ import type { Clipping } from "#app-types/clipping.js";
 import { groupByBook } from "#domain/analytics/stats.js";
 import type { ExporterOptionsParsed } from "#schemas/exporter.schema.js";
 import {
-  getTemplatePreset,
   type TemplateEngine,
   TemplateEngineFactory,
   type TemplatePreset,
@@ -150,7 +149,7 @@ export abstract class MultiFileExporter extends BaseExporter {
   /**
    * Configure the template engine with exporter-specific helpers.
    */
-  protected configureTemplateEngine(engine: TemplateEngine): void {
+  protected configureTemplateEngine(_engine: TemplateEngine): void {
     // Override in subclass to add helpers
   }
 }

@@ -48,7 +48,7 @@ interface MetadataParseResult {
   dateRaw: string;
 }
 
-export function parseString(content: string, options?: ParseOptions): ParseResult {
+export async function parseString(content: string, options?: ParseOptions): Promise<ParseResult> {
   const startTime = performance.now();
   const warnings: ParseWarning[] = [];
 
@@ -76,7 +76,7 @@ export function parseString(content: string, options?: ParseOptions): ParseResul
   let parsedBlocks = 0;
 
   for (const block of blocks) {
-    const clipping = parseBlock(block.lines, block.index, detectedLanguage);
+    const clipping = await parseBlock(block.lines, block.index, detectedLanguage);
 
     if (clipping) {
       // Apply filtering options
@@ -181,9 +181,9 @@ export function parseString(content: string, options?: ParseOptions): ParseResul
  *
  * @param content - Raw file content
  * @param options - Parse options
- * @returns Parse result with clippings and stats
+ * @returns Promise resolving to parse result with clippings and stats
  */
-export function parse(content: string, options?: ParseOptions): ParseResult {
+export async function parse(content: string, options?: ParseOptions): Promise<ParseResult> {
   return parseString(content, options);
 }
 
@@ -198,13 +198,13 @@ export function parse(content: string, options?: ParseOptions): ParseResult {
  * @param lines - Lines of the block
  * @param blockIndex - Index of this block
  * @param language - Language for parsing
- * @returns Parsed Clipping or null if parsing failed
+ * @returns Promise resolving to parsed Clipping or null if parsing failed
  */
-export function parseBlock(
+export async function parseBlock(
   lines: string[],
   blockIndex: number,
   language: SupportedLanguage,
-): Clipping | null {
+): Promise<Clipping | null> {
   // Need at least 2 lines (title + metadata)
   if (lines.length < BLOCK_STRUCTURE.MIN_BLOCK_LINES) {
     return null;
@@ -246,7 +246,7 @@ export function parseBlock(
   const source = isSideloaded(titleLine) ? "sideload" : "kindle";
 
   // Parse date
-  const date = metadata.dateRaw ? parseKindleDate(metadata.dateRaw, language) : null;
+  const date = metadata.dateRaw ? await parseKindleDate(metadata.dateRaw, language) : null;
 
   // Generate deterministic ID
   const id = generateClippingId(title, metadata.location.raw, metadata.type, content);
