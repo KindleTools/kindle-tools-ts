@@ -15,6 +15,7 @@ import {
   importEmptyFile,
   importInvalidFormat,
   importValidationError,
+  logDebug,
 } from "#errors";
 import { BaseImporter } from "../shared/base-importer.js";
 import { generateImportId, MAX_VALIDATION_ERRORS, parseLocationString } from "../shared/index.js";
@@ -152,11 +153,20 @@ export class CsvImporter extends BaseImporter {
    * id, title, author, type, page, location, date, content, wordCount, tags
    */
   protected async doImport(content: string): Promise<ImportResult> {
+    logDebug("CSV Import started", {
+      operation: "import_csv",
+      data: { contentLength: content.length },
+    });
+
     const warnings: string[] = [];
     const errors: ImportErrorDetail[] = [];
     const rows = parseCSV(content);
 
     if (rows.length < 2) {
+      logDebug("CSV Import failed: no data rows", {
+        operation: "import_csv",
+        data: { rowsFound: rows.length },
+      });
       return importEmptyFile("CSV file has no data rows");
     }
 
@@ -335,6 +345,14 @@ export class CsvImporter extends BaseImporter {
       }
       return importEmptyFile("No valid clippings found in CSV file", warnings);
     }
+
+    logDebug("CSV Import completed", {
+      operation: "import_csv",
+      data: {
+        clippingsFound: clippings.length,
+        warningsCount: warnings.length,
+      },
+    });
 
     return this.success(clippings, warnings);
   }

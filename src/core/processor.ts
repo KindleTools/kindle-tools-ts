@@ -14,6 +14,7 @@
 
 import type { Clipping } from "#app-types/clipping.js";
 import type { ProcessOptions } from "#app-types/config.js";
+import { logInfo } from "#errors";
 import { removeDuplicates } from "./processing/deduplicator.js";
 import { filterClippings, filterToHighlightsOnly } from "./processing/filter.js";
 import { linkNotesToHighlights } from "./processing/linker.js";
@@ -95,6 +96,14 @@ export interface ProcessResult {
  * ```
  */
 export function processClippings(clippings: Clipping[], options?: ProcessOptions): ProcessResult {
+  logInfo("Processing clippings started", {
+    operation: "process_clippings",
+    data: {
+      initialCount: clippings.length,
+      options: options ? JSON.stringify(options) : "defaults",
+    },
+  });
+
   let result = [...clippings];
   let emptyRemoved = 0;
   let duplicatesRemoved = 0;
@@ -181,7 +190,7 @@ export function processClippings(clippings: Clipping[], options?: ProcessOptions
   result = fuzzyResult.clippings;
   fuzzyDuplicatesFlagged = fuzzyResult.flaggedCount;
 
-  return {
+  const stats: ProcessResult = {
     clippings: result,
     duplicatesRemoved,
     mergedHighlights,
@@ -193,4 +202,17 @@ export function processClippings(clippings: Clipping[], options?: ProcessOptions
     filteredForHighlightsOnly,
     notesConsumed,
   };
+
+  logInfo("Processing clippings completed", {
+    operation: "process_clippings",
+    data: {
+      finalCount: stats.clippings.length,
+      duplicatesRemoved,
+      mergedHighlights,
+      linkedNotes,
+      suspiciousFlagged,
+    },
+  });
+
+  return stats;
 }

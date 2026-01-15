@@ -250,7 +250,9 @@ export function validatePathTemplate(
 
 ---
 
-### 2.4 Logging Improvements
+### 2.4 [COMPLETADO] Logging Improvements
+
+**Estado:** Completado el 2026-01-15.
 
 | Impacto | Esfuerzo | Riesgo | ROI |
 |---------|----------|--------|-----|
@@ -379,7 +381,9 @@ tests/fixtures/
 
 ---
 
-### 2.10 Exportar Helpers de Logging
+### 2.10 [COMPLETADO] Exportar Helpers de Logging
+
+**Estado:** Completado el 2026-01-15.
 
 | Impacto | Esfuerzo | Riesgo | ROI |
 |---------|----------|--------|-----|
@@ -563,13 +567,14 @@ Usar `fastest-levenshtein` para mapear columnas del CSV a las esperadas (`Title`
 | Prioridad | Total | ROI Alto (⭐⭐⭐) |
 |-----------|-------|------------------|
 | Media | 5 | 4 (1.1, 1.2, 1.4, 1.5) |
-| Baja | 12 | 6 (2.2, 2.3, 2.4, 2.10, 2.11, 2.12) |
+| Baja | 10 | 4 (2.2, 2.3, 2.11, 2.12) |
+| Completado | 2 | 2 (2.4, 2.10) |
 | Estudio | 2 | 0 |
 
 ### Orden de Ejecución Recomendado
 
 1. **Urgente:** 1.1 Bug Fix CSV Type Validation
-2. **Quick Wins:** 1.2, 1.4, 1.5, 2.2, 2.3, 2.4, 2.10, 2.11
+2. **Quick Wins:** 1.2, 1.4, 1.5, 2.2, 2.3, 2.11
 3. **Cuando haya tiempo:** 1.3, 2.1, 2.5-2.9, 2.12
 4. **Evaluar necesidad:** 3.1, 3.2
 
@@ -593,4 +598,4 @@ Usar `fastest-levenshtein` para mapear columnas del CSV a las esperadas (`Title`
 ---
 
 *Documento actualizado: 2026-01-15*
-*Mejoras pendientes: 19 | Media: 5 | Baja: 12 | Estudio: 2*
+*Mejoras pendientes: 17 | Media: 5 | Baja: 10 | Estudio: 2*

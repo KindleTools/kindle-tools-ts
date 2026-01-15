@@ -8,7 +8,7 @@
 
 import type { Clipping, ClippingLocation, ClippingType } from "#app-types/clipping.js";
 import type { SupportedLanguage } from "#app-types/language.js";
-import { type ImportResult, importInvalidFormat, importParseError } from "#errors";
+import { type ImportResult, importInvalidFormat, importParseError, logDebug } from "#errors";
 import { type ClippingImport, ClippingsExportSchema } from "../../schemas/clipping.schema.js";
 import { BaseImporter } from "../shared/base-importer.js";
 import { generateImportId, MAX_VALIDATION_ERRORS, parseLocationString } from "../shared/index.js";
@@ -117,6 +117,11 @@ export class JsonImporter extends BaseImporter {
    * Import clippings from JSON content.
    */
   protected async doImport(content: string): Promise<ImportResult> {
+    logDebug("JSON Import started", {
+      operation: "import_json",
+      data: { contentLength: content.length },
+    });
+
     const warnings: string[] = [];
     const clippings: Clipping[] = [];
 
@@ -124,6 +129,10 @@ export class JsonImporter extends BaseImporter {
     try {
       rawJson = JSON.parse(content);
     } catch (e) {
+      logDebug("JSON Import failed: invalid syntax", {
+        operation: "import_json",
+        data: { error: String(e) },
+      });
       return importParseError(`Invalid JSON syntax: ${e}`);
     }
 
@@ -138,6 +147,11 @@ export class JsonImporter extends BaseImporter {
         message: i.message,
         code: String(i.code),
       }));
+
+      logDebug("JSON Import failed: schema validation error", {
+        operation: "import_json",
+        data: { issueCount: issues.length },
+      });
 
       return importInvalidFormat("JSON content does not match expected schema", {
         issues: details,
@@ -209,8 +223,17 @@ export class JsonImporter extends BaseImporter {
 
     if (clippings.length === 0) {
       warnings.push("No clippings found in JSON file");
+      logDebug("JSON Import parsed 0 clippings", { operation: "import_json" });
       return importParseError("No clippings found in JSON file", { warnings });
     }
+
+    logDebug("JSON Import completed", {
+      operation: "import_json",
+      data: {
+        clippingsFound: clippings.length,
+        warningsCount: warnings.length,
+      },
+    });
 
     return this.success(clippings, warnings);
   }

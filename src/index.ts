@@ -150,7 +150,9 @@ export type {
 } from "./errors/logger.js";
 export {
   getLogger,
+  logDebug,
   logError,
+  logInfo,
   logWarning,
   nullLogger,
   resetLogger,

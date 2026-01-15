@@ -7,6 +7,7 @@
  * @packageDocumentation
  */
 
+import { logDebug } from "#errors";
 import { ClippingImportSchema } from "#schemas/clipping.schema.js";
 import type { ImportResult } from "../core/types.js";
 import { BaseImporter } from "../shared/base-importer.js";
@@ -20,7 +21,7 @@ import { parseString } from "./txt/parser.js";
  */
 export class TxtImporter extends BaseImporter {
   readonly name = "txt";
-  readonly extensions = [".txt"];
+  readonly extensions: string[] = [".txt"];
 
   /**
    * Import clippings from TXT content.
@@ -29,6 +30,11 @@ export class TxtImporter extends BaseImporter {
    * data consistency. Invalid clippings generate warnings but don't stop processing.
    */
   protected async doImport(content: string): Promise<ImportResult> {
+    logDebug("TXT Import started", {
+      operation: "import_txt",
+      data: { contentLength: content.length },
+    });
+
     // Parse without options to get raw clippings (no filtering/processing)
     // The unified pipeline in the main application will handle filtering and processing.
     const parseResult = await parseString(content);
@@ -72,6 +78,15 @@ export class TxtImporter extends BaseImporter {
       totalBlocks: parseResult.meta.totalBlocks,
       parsedBlocks: parseResult.meta.parsedBlocks,
     };
+
+    logDebug("TXT Import completed", {
+      operation: "import_txt",
+      data: {
+        clippingsFound: validatedClippings.length,
+        blocksParsed: meta.parsedBlocks,
+        durationMs: meta.parseTime,
+      },
+    });
 
     return this.success(validatedClippings, warnings, meta);
   }
