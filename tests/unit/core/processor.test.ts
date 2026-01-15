@@ -483,5 +483,252 @@ describe("processor", () => {
       expect(result.clippings.length).toBe(3);
       expect(result.filteredForHighlightsOnly).toBe(0);
     });
+
+    describe("mergedOutput option", () => {
+      it("should remove linked notes when mergedOutput is true", () => {
+        const clippings = [
+          createClipping({
+            id: "highlight-1",
+            title: "Book A",
+            type: "highlight",
+            content: "A highlight",
+            location: { raw: "100-110", start: 100, end: 110 },
+          }),
+          createClipping({
+            id: "note-1",
+            title: "Book A",
+            type: "note",
+            content: "A note for the highlight",
+            location: { raw: "105", start: 105, end: null },
+          }),
+        ];
+
+        const result = processClippings(clippings, {
+          detectedLanguage: "en",
+          mergedOutput: true,
+        });
+
+        expect(result.clippings.length).toBe(1);
+        expect(result.clippings[0]?.type).toBe("highlight");
+        expect(result.clippings[0]?.note).toBe("A note for the highlight");
+        expect(result.linkedNotes).toBe(1);
+        expect(result.notesConsumed).toBe(1);
+      });
+
+      it("should keep unlinked notes when mergedOutput is true", () => {
+        const clippings = [
+          createClipping({
+            id: "highlight-1",
+            type: "highlight",
+            location: { raw: "100-110", start: 100, end: 110 },
+          }),
+          createClipping({
+            id: "note-1",
+            type: "note",
+            content: "Standalone note far away",
+            location: { raw: "500", start: 500, end: null }, // Too far to link
+          }),
+        ];
+
+        const result = processClippings(clippings, {
+          detectedLanguage: "en",
+          mergedOutput: true,
+        });
+
+        expect(result.clippings.length).toBe(2);
+        expect(result.linkedNotes).toBe(0);
+        expect(result.notesConsumed).toBe(0);
+      });
+
+      it("should not remove notes when mergedOutput is false (default)", () => {
+        const clippings = [
+          createClipping({
+            id: "highlight-1",
+            title: "Book A",
+            type: "highlight",
+            location: { raw: "100-110", start: 100, end: 110 },
+          }),
+          createClipping({
+            id: "note-1",
+            title: "Book A",
+            type: "note",
+            location: { raw: "105", start: 105, end: null },
+          }),
+        ];
+
+        const result = processClippings(clippings, {
+          detectedLanguage: "en",
+          mergedOutput: false,
+        });
+
+        // Both should remain (note is linked but not removed)
+        expect(result.clippings.length).toBe(2);
+        expect(result.notesConsumed).toBe(0);
+      });
+
+      it("should work with extractTags before consuming notes", () => {
+        const clippings = [
+          createClipping({
+            id: "highlight-1",
+            title: "Book A",
+            type: "highlight",
+            content: "Important quote",
+            location: { raw: "100-110", start: 100, end: 110 },
+          }),
+          createClipping({
+            id: "note-1",
+            title: "Book A",
+            type: "note",
+            content: "philosophy, review, important",
+            location: { raw: "105", start: 105, end: null },
+          }),
+        ];
+
+        const result = processClippings(clippings, {
+          detectedLanguage: "en",
+          extractTags: true,
+          mergedOutput: true,
+        });
+
+        expect(result.clippings.length).toBe(1);
+        expect(result.clippings[0]?.tags).toContain("PHILOSOPHY");
+        expect(result.clippings[0]?.tags).toContain("REVIEW");
+        expect(result.clippings[0]?.tags).toContain("IMPORTANT");
+        expect(result.tagsExtracted).toBe(1);
+        expect(result.notesConsumed).toBe(1);
+      });
+
+      it("should handle mixed types correctly: highlight + linked note + standalone note", () => {
+        const clippings = [
+          createClipping({
+            id: "highlight-1",
+            title: "Book A",
+            type: "highlight",
+            content: "Highlight content",
+            location: { raw: "100-110", start: 100, end: 110 },
+          }),
+          createClipping({
+            id: "note-1",
+            title: "Book A",
+            type: "note",
+            content: "Linked note content",
+            location: { raw: "105", start: 105, end: null },
+          }),
+          createClipping({
+            id: "note-2",
+            title: "Book A",
+            type: "note",
+            content: "Standalone note content",
+            location: { raw: "200", start: 200, end: null },
+          }),
+        ];
+
+        const result = processClippings(clippings, {
+          detectedLanguage: "en",
+          mergedOutput: true,
+          highlightsOnly: false,
+        });
+
+        expect(result.clippings.length).toBe(2);
+
+        // Highlight should remain and have note embedded
+        const highlight = result.clippings.find((c) => c.id === "highlight-1");
+        expect(highlight).toBeDefined();
+        expect(highlight?.note).toBe("Linked note content");
+
+        // Linked note (note-1) should be removed
+        const linkedNote = result.clippings.find((c) => c.id === "note-1");
+        expect(linkedNote).toBeUndefined();
+
+        // Standalone note (note-2) should remain
+        const standaloneNote = result.clippings.find((c) => c.id === "note-2");
+        expect(standaloneNote).toBeDefined();
+        expect(standaloneNote?.content).toBe("Standalone note content");
+
+        expect(result.notesConsumed).toBe(1);
+      });
+
+      it("should also remove unlinked notes when removeUnlinkedNotes is true", () => {
+        const clippings = [
+          createClipping({
+            id: "highlight-1",
+            title: "Book A",
+            type: "highlight",
+            content: "A highlight",
+            location: { raw: "100-110", start: 100, end: 110 },
+          }),
+          createClipping({
+            id: "note-1",
+            title: "Book A",
+            type: "note",
+            content: "Linked note",
+            location: { raw: "105", start: 105, end: null },
+          }),
+          createClipping({
+            id: "note-2",
+            title: "Book A",
+            type: "note",
+            content: "Unlinked note",
+            location: { raw: "500", start: 500, end: null },
+          }),
+        ];
+
+        const result = processClippings(clippings, {
+          detectedLanguage: "en",
+          mergedOutput: true,
+          removeUnlinkedNotes: true,
+        });
+
+        // Both linked and unlinked notes should be removed
+        expect(result.clippings.length).toBe(1);
+        expect(result.clippings[0]?.type).toBe("highlight");
+        expect(result.clippings[0]?.note).toBe("Linked note");
+        expect(result.notesConsumed).toBe(2); // linked + unlinked
+      });
+
+      it("should work together with highlightsOnly (mergedOutput runs first)", () => {
+        const clippings = [
+          createClipping({
+            id: "highlight-1",
+            title: "Book A",
+            type: "highlight",
+            content: "A highlight",
+            location: { raw: "100-110", start: 100, end: 110 },
+          }),
+          createClipping({
+            id: "note-1",
+            title: "Book A",
+            type: "note",
+            content: "Linked note",
+            location: { raw: "105", start: 105, end: null },
+          }),
+          createClipping({
+            id: "note-2",
+            title: "Book A",
+            type: "note",
+            content: "Unlinked note",
+            location: { raw: "500", start: 500, end: null },
+          }),
+          createClipping({
+            id: "bookmark-1",
+            type: "bookmark",
+            content: "",
+          }),
+        ];
+
+        const result = processClippings(clippings, {
+          detectedLanguage: "en",
+          mergedOutput: true,
+          highlightsOnly: true,
+        });
+
+        // mergedOutput removes linked note (note-1)
+        // highlightsOnly removes remaining note (note-2) and bookmark
+        expect(result.clippings.length).toBe(1);
+        expect(result.clippings[0]?.type).toBe("highlight");
+        expect(result.notesConsumed).toBe(1);
+        expect(result.filteredForHighlightsOnly).toBe(2); // unlinked note + bookmark
+      });
+    });
   });
 });

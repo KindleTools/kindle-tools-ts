@@ -241,23 +241,35 @@ jobs:
 
 ---
 
-### 1.9 Merged Output Mode
+### ~~1.9 Merged Output Mode~~ ✅ COMPLETADO
 
-**Propuesta:** Opcion para embeber notas en highlights:
+**Implementación Realizada:**
+
+Se añadió la opción `mergedOutput?: boolean` que elimina del output las notas vinculadas a highlights:
 
 ```typescript
 export interface ProcessOptions {
   mergedOutput?: boolean;  // default: false
 }
 
-// Resultado cuando mergedOutput: true
-{
-  type: "highlight",
-  content: "The quote text",
-  note: "My thoughts on this",  // Embebido
-  tags: ["review", "important"]
-}
+// Cuando mergedOutput: true, las notas vinculadas se "consumen"
+// y solo quedan los highlights con sus notas embebidas
+const result = processClippings(clippings, {
+  detectedLanguage: "en",
+  mergedOutput: true
+});
+// result.notesConsumed = número de notas eliminadas
 ```
+
+**Diferencia con `highlightsOnly`:**
+- `highlightsOnly: true` elimina TODOS los no-highlights (notas, bookmarks, clips)
+- `mergedOutput: true` solo elimina notas vinculadas; preserva notas sin vincular
+
+**Archivos modificados:**
+- `src/types/config.ts` - Añadida opción `mergedOutput`
+- `src/schemas/config.schema.ts` - Schema Zod actualizado
+- `src/core/processing/note-merger.ts` - Nueva función `removeLinkedNotes()`
+- `src/core/processor.ts` - Integrado como Step 5.5, añadido `notesConsumed` a `ProcessResult`
 
 ---
 
@@ -285,19 +297,26 @@ export interface ProcessOptions {
 
 ---
 
-### 2.3 TemplateEngine Cache
+### ~~2.3 TemplateEngine Cache~~ ✅ COMPLETADO
 
 **Ubicacion:** `src/templates/engine.ts`
 
-**Implementacion:**
+**Implementacion Realizada:**
 ```typescript
 export class TemplateEngineFactory {
   private static instances = new Map<string, TemplateEngine>();
 
-  static getEngine(preset: TemplatePreset | CustomTemplates): TemplateEngine {
-    const key = JSON.stringify(preset);
+  static getEngine(config: TemplatePreset | CustomTemplates = "default"): TemplateEngine {
+    let key: string;
+    if (typeof config === "string") {
+      key = `preset:${config}`;  // Prefijo para presets (evita colisiones)
+    } else {
+      key = `custom:${JSON.stringify(config)}`;  // Prefijo para custom templates
+    }
+
     if (!this.instances.has(key)) {
-      this.instances.set(key, new TemplateEngine(preset));
+      // Resuelve preset a CustomTemplates si es necesario
+      this.instances.set(key, new TemplateEngine(templates));
     }
     return this.instances.get(key)!;
   }
@@ -307,6 +326,11 @@ export class TemplateEngineFactory {
   }
 }
 ```
+
+**Mejoras sobre la propuesta original:**
+- Usa prefijos `preset:` y `custom:` para evitar colisiones de keys
+- Resuelve presets mediante `getTemplatePreset()` antes de crear instancia
+- Parámetro por defecto `"default"` para uso simplificado
 
 ---
 

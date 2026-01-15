@@ -10,18 +10,73 @@
 import type Handlebars from "handlebars";
 import type { Clipping } from "#app-types/clipping.js";
 import { createHandlebarsInstance } from "./helpers.js";
-import { BOOK_DEFAULT, CLIPPING_DEFAULT, EXPORT_DEFAULT } from "./presets.js";
+import { BOOK_DEFAULT, CLIPPING_DEFAULT, EXPORT_DEFAULT, getTemplatePreset } from "./presets.js";
 import type {
   BookContext,
   ClippingContext,
   CustomTemplates,
   ExportContext,
   TemplateOptions,
+  TemplatePreset,
   TemplateType,
 } from "./types.js";
 
 // Re-export types for convenience
 export type { CustomTemplates, TemplateOptions, TemplateType } from "./types.js";
+
+// ============================================================================
+// Template Engine Factory
+// ============================================================================
+
+export class TemplateEngineFactory {
+  private static instances = new Map<string, TemplateEngine>();
+
+  /**
+   * Get a TemplateEngine instance from cache or create a new one.
+   *
+   * @param config - Template preset name or custom templates object
+   */
+  static getEngine(config: TemplatePreset | CustomTemplates = "default"): TemplateEngine {
+    // If config is a string (preset name), resolve it to templates first
+    // This ensures that "default" and getTemplatePreset("default") map to the same key
+    let key: string;
+    let templates: CustomTemplates;
+
+    if (typeof config === "string") {
+      // It's a preset name
+      key = `preset:${config}`;
+      // We don't need to resolve templates yet if it's cached
+    } else {
+      // It's a custom templates object
+      // Stable stringify could be better but JSON.stringify is "good enough" for this
+      // strict equality requirement on custom objects
+      key = `custom:${JSON.stringify(config)}`;
+      templates = config;
+    }
+
+    if (!TemplateEngineFactory.instances.has(key)) {
+      if (typeof config === "string") {
+        const collection = getTemplatePreset(config);
+        // Convert collection to CustomTemplates
+        templates = {
+          clipping: collection.clipping,
+          book: collection.book,
+          export: collection.export,
+        };
+      }
+      TemplateEngineFactory.instances.set(key, new TemplateEngine(templates!));
+    }
+
+    return TemplateEngineFactory.instances.get(key)!;
+  }
+
+  /**
+   * Clear the template engine cache.
+   */
+  static clearCache(): void {
+    TemplateEngineFactory.instances.clear();
+  }
+}
 
 // ============================================================================
 // Template Engine Class

@@ -15,7 +15,12 @@
 import type { Clipping } from "#app-types/clipping.js";
 import { groupByBook } from "#domain/analytics/stats.js";
 import type { ExporterOptionsParsed } from "#schemas/exporter.schema.js";
-import { getTemplatePreset, TemplateEngine, type TemplatePreset } from "#templates/index.js";
+import {
+  getTemplatePreset,
+  type TemplateEngine,
+  TemplateEngineFactory,
+  type TemplatePreset,
+} from "#templates/index.js";
 import type { ExportedFile, ExportResult } from "../core/types.js";
 import { BaseExporter } from "./base-exporter.js";
 
@@ -118,15 +123,18 @@ export abstract class MultiFileExporter extends BaseExporter {
   protected createTemplateEngine(options: MultiFileExporterOptions): TemplateEngine {
     // Custom templates take precedence
     if (options.customTemplates) {
-      return new TemplateEngine(options.customTemplates);
+      return TemplateEngineFactory.getEngine(options.customTemplates);
     }
 
     // Use preset if specified, otherwise subclass default
     const presetName = options.templatePreset || this.getDefaultPreset();
-    const preset = getTemplatePreset(presetName);
 
     // Allow subclasses to inject extra helpers or config
-    const engine = new TemplateEngine(preset);
+    // Note: This might modify the cached instance, which is a potential side effect if multiple exporters use the same preset.
+    // However, configureTemplateEngine currently seems to add helpers which are idempotent or harmless if re-added.
+    // If subclasses add unique state to the engine, we might need a way to clone or reset, or accept that they share the instance.
+    // For now, we assume helpers are global/stateless or unique per class not per instance usage.
+    const engine = TemplateEngineFactory.getEngine(presetName);
     this.configureTemplateEngine(engine);
 
     return engine;
