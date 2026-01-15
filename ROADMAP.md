@@ -245,30 +245,38 @@ jobs:
 
 **Implementación Realizada:**
 
-Se añadió la opción `mergedOutput?: boolean` que elimina del output las notas vinculadas a highlights:
+Se añadieron opciones para control granular de notas en el output:
 
 ```typescript
 export interface ProcessOptions {
-  mergedOutput?: boolean;  // default: false
+  mergedOutput?: boolean;        // default: false - eliminar notas vinculadas
+  removeUnlinkedNotes?: boolean; // default: false - también eliminar notas sin vincular
 }
 
-// Cuando mergedOutput: true, las notas vinculadas se "consumen"
-// y solo quedan los highlights con sus notas embebidas
+// Ejemplo: eliminar solo notas vinculadas (preserva standalone notes)
 const result = processClippings(clippings, {
   detectedLanguage: "en",
   mergedOutput: true
 });
-// result.notesConsumed = número de notas eliminadas
+
+// Ejemplo: eliminar TODAS las notas (vinculadas y no vinculadas)
+const result2 = processClippings(clippings, {
+  detectedLanguage: "en",
+  mergedOutput: true,
+  removeUnlinkedNotes: true
+});
+// result.notesConsumed = número total de notas eliminadas
 ```
 
 **Diferencia con `highlightsOnly`:**
-- `highlightsOnly: true` elimina TODOS los no-highlights (notas, bookmarks, clips)
-- `mergedOutput: true` solo elimina notas vinculadas; preserva notas sin vincular
+- `highlightsOnly: true` - Elimina TODOS los no-highlights (notas, bookmarks, clips)
+- `mergedOutput: true` - Solo elimina notas vinculadas; preserva notas sin vincular
+- `mergedOutput + removeUnlinkedNotes` - Elimina todas las notas pero preserva bookmarks/clips
 
 **Archivos modificados:**
-- `src/types/config.ts` - Añadida opción `mergedOutput`
+- `src/types/config.ts` - Añadidas opciones `mergedOutput` y `removeUnlinkedNotes`
 - `src/schemas/config.schema.ts` - Schema Zod actualizado
-- `src/core/processing/note-merger.ts` - Nueva función `removeLinkedNotes()`
+- `src/core/processing/note-merger.ts` - Nueva función `removeLinkedNotes(options)`
 - `src/core/processor.ts` - Integrado como Step 5.5, añadido `notesConsumed` a `ProcessResult`
 
 ---
