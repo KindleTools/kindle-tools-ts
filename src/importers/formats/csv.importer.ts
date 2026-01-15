@@ -27,12 +27,22 @@ const CsvRowSchema = z.object({
   id: z.string().optional(),
   title: z.string().optional(),
   author: z.string().optional(),
-  type: z.string().optional(),
-  page: z.string().optional(),
+  type: z.enum(["highlight", "note", "bookmark", "clip", "article"]).or(z.literal("")).optional(),
+  page: z
+    .string()
+    .optional()
+    .refine((val) => !val || /^\d+$/.test(val), {
+      message: "Page must be a valid number",
+    }),
   location: z.string().optional(),
   date: z.string().optional(),
   content: z.string().optional(),
-  wordcount: z.string().optional(),
+  wordcount: z
+    .string()
+    .optional()
+    .refine((val) => !val || /^\d+$/.test(val), {
+      message: "Word count must be a valid number",
+    }),
   tags: z.string().optional(),
 });
 
