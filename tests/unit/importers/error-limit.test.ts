@@ -97,4 +97,24 @@ describe("Importer Memory Safety Limits", () => {
     // But "1.2 tests" was general.
     // Actually, I can use vi.mock at top of file.
   });
+
+  it("CsvImporter suggests correct type for typos using Levenshtein", async () => {
+    const importer = new CsvImporter();
+    const csvContent =
+      "title,content,type\nTest Title,Test Content,hightlight\nTest 2,Content 2,boomkark";
+
+    const result = await importer.import(csvContent);
+
+    // Since all rows have invalid types, no clippings are created.
+    // This results in an IMPORT_VALIDATION_ERROR.
+    expect(result.isErr()).toBe(true);
+
+    if (result.isErr()) {
+      expect(result.error.warnings).toBeDefined();
+      const warnings = result.error.warnings || [];
+
+      expect(warnings.some((w) => w.includes("Did you mean 'highlight'?"))).toBe(true);
+      expect(warnings.some((w) => w.includes("Did you mean 'bookmark'?"))).toBe(true);
+    }
+  });
 });

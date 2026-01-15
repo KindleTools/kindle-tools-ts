@@ -517,6 +517,19 @@ kindle-tools-ts/
 
 ---
 
+### 3.3 Fuzzy CSV Headers
+
+| Impacto | Esfuerzo | Riesgo | ROI |
+|---------|----------|--------|-----|
+| 🟡 Medio | 🟢 Bajo | 🟢 Bajo | ⭐⭐⭐ |
+
+**Problema:** Errores en nombres de columnas (`Titl` vs `Title`) hacen que se ignoren datos silenciosamente.
+
+**Solución propuesta:**
+Usar `fastest-levenshtein` para mapear columnas del CSV a las esperadas (`Title`, `Author`, etc.) si la distancia es pequeña.
+
+---
+
 ## 4. Not Planned
 
 ### Descartado Permanentemente

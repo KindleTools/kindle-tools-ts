@@ -6,6 +6,7 @@
  * @packageDocumentation
  */
 
+import { distance } from "fastest-levenshtein";
 import { z } from "zod";
 import type { Clipping, ClippingType } from "#app-types/clipping.js";
 import {
@@ -105,16 +106,34 @@ function parseCSV(content: string): string[][] {
 }
 
 /**
- * Get suggestion for validation error.
+ * Get suggestion for validation error using Levenshtein distance.
  */
 function getSuggestion(field: string, value: unknown): string | undefined {
   if (field === "date") {
     return "Use ISO 8601: YYYY-MM-DD";
   }
   if (field === "type" && typeof value === "string") {
+    const validTypes = ["highlight", "note", "bookmark", "clip", "article"];
     const lower = value.toLowerCase();
-    if (lower === "hightlight") return "Did you mean 'highlight'?";
-    if (lower === "boomkark") return "Did you mean 'bookmark'?";
+
+    // Find closest match
+    let bestMatch = "";
+    let minDistance = Infinity;
+
+    for (const type of validTypes) {
+      if (lower === type) return undefined; // Exact match (should be handled by validator but safe to keep)
+
+      const d = distance(lower, type);
+      if (d < minDistance) {
+        minDistance = d;
+        bestMatch = type;
+      }
+    }
+
+    // Only suggest if distance is small enough (arbitrary threshold, e.g. 3)
+    if (minDistance <= 3) {
+      return `Did you mean '${bestMatch}'?`;
+    }
   }
   return undefined;
 }
