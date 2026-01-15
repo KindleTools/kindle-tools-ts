@@ -393,9 +393,15 @@ export class TarArchiver implements Archiver { /* ... */ }
 
 ---
 
-### 2.7 Structured Logging Expansion
+### 2.7 ~~Structured Logging Expansion~~ ✅ COMPLETADO
 
 **Ubicacion:** `src/errors/logger.ts`
+
+**Implementacion Realizada:**
+- Se actualizó la interfaz `Logger` con metodos `debug` y `info`.
+- Se implementaron los metodos en `defaultLogger` (console) y `nullLogger`.
+- Se crearon helpers `logDebug` y `logInfo` en `src/errors/logger.ts`.
+- Se añadió soporte para `DEBUG` env var y filtrado por `NODE_ENV`.
 
 ```typescript
 export interface Logger {
@@ -798,7 +804,31 @@ class Pipeline {
 **Ubicacion:** `src/templates/engine.ts`, `src/templates/factory.ts`
 
 **Propuesta:**
-Actualmente se compilan todos los templates al instanciar el engine. Cambiar a compilación bajo demanda (getters) para mejorar performance de arranque.
+Retrasar la compilación de templates Handlebars hasta el primer uso.
+- `TemplateEngineFactory` devuelve proxy o thunk.
+- Reduce tiempo de inicio si no se usan todos los templates.
+
+---
+
+### 4.4 Logging Improvements (Post-2.7)
+
+**Propuestas para maximizar el sistema de logging estructurado:**
+
+1.  **Instrumentación Core (Media Prioridad):**
+    - Añadir `logInfo` y `logDebug` estratégicos en Importers, Processors y Exporters.
+    - Objetivo: Visibilidad del flujo de datos y filtrado de notas.
+
+2.  **Configuración en `kindletoolsrc` (Baja Prioridad):**
+    - Permitir configurar nivel y formato de logs en el JSON/YAML de config.
+    - Ejemplo: `{ "logging": { "level": "debug", "format": "json" } }`
+
+3.  **Utility `MeasureTime` (DX):**
+    - Helper para medir rendimiento usando el logger.
+    - `measure("parsing", () => ...)` -> logDebug con `durationMs`.
+
+4.  **Sanitización de Logs (Seguridad):**
+    - Regla: Contexto (`ctx`) solo debe tener metadatos (IDs), no contenido de usuario.
+    - Prevenir leak de contenido privado en logs de debug.
 
 ---
 

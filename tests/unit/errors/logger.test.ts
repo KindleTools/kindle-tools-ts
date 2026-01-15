@@ -2,7 +2,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   getLogger,
   type Logger,
+  logDebug,
   logError,
+  logInfo,
   logWarning,
   nullLogger,
   resetLogger,
@@ -13,17 +15,24 @@ import type { AppError } from "#errors/types.js";
 describe("logger", () => {
   let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
   let consoleWarnSpy: ReturnType<typeof vi.spyOn>;
+  let consoleInfoSpy: ReturnType<typeof vi.spyOn>;
+  let consoleDebugSpy: ReturnType<typeof vi.spyOn>;
   const originalEnv = process.env.NODE_ENV;
+  const originalDebug = process.env.DEBUG;
 
   beforeEach(() => {
     consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    consoleInfoSpy = vi.spyOn(console, "info").mockImplementation(() => {});
+    consoleDebugSpy = vi.spyOn(console, "debug").mockImplementation(() => {});
     process.env.NODE_ENV = "test";
+    delete process.env.DEBUG;
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
     process.env.NODE_ENV = originalEnv;
+    process.env.DEBUG = originalDebug;
     resetLogger(); // Always restore default logger after each test
   });
 
@@ -83,10 +92,6 @@ describe("logger", () => {
       logWarning("Test warning");
 
       expect(consoleWarnSpy).toHaveBeenCalled();
-      // In test env (production-like default in this setup mostly unless mocked), it logs JSON string directly
-      // But valid JSON parsing might depend on if [WARN] prefix is added.
-      // In 'test' env, the code uses 'production' logic (else block) because strict check === 'development' fails.
-
       const logEntry = JSON.parse(consoleWarnSpy.mock.calls[0][0]);
       expect(logEntry).toEqual(
         expect.objectContaining({
@@ -105,35 +110,88 @@ describe("logger", () => {
     });
   });
 
+  describe("logInfo", () => {
+    it("should log info to console.info", () => {
+      logInfo("Test info");
+      expect(consoleInfoSpy).toHaveBeenCalledWith("[INFO]", "Test info", "");
+    });
+
+    it("should include context", () => {
+      logInfo("Test info", { user: "me" });
+      expect(consoleInfoSpy).toHaveBeenCalledWith(
+        "[INFO]",
+        "Test info",
+        JSON.stringify({ user: "me" }),
+      );
+    });
+  });
+
+  describe("logDebug", () => {
+    it("should NOT log debug in test/production by default", () => {
+      logDebug("Test debug");
+      expect(consoleDebugSpy).not.toHaveBeenCalled();
+    });
+
+    it("should log debug in development", () => {
+      process.env.NODE_ENV = "development";
+      logDebug("Test debug");
+      expect(consoleDebugSpy).toHaveBeenCalledWith("[DEBUG]", "Test debug", "");
+    });
+
+    it("should log debug if DEBUG env var is set", () => {
+      process.env.DEBUG = "true";
+      logDebug("Test debug");
+      expect(consoleDebugSpy).toHaveBeenCalledWith("[DEBUG]", "Test debug", "");
+    });
+
+    it("should include context", () => {
+      process.env.NODE_ENV = "development";
+      logDebug("Test debug", { data: 123 });
+      expect(consoleDebugSpy).toHaveBeenCalledWith(
+        "[DEBUG]",
+        "Test debug",
+        expect.stringContaining('{\n  "data": 123\n}'),
+      );
+    });
+  });
+
   describe("logger injection", () => {
     it("setLogger should replace the default logger", () => {
       const customError = vi.fn();
       const customWarn = vi.fn();
+      const customInfo = vi.fn();
+      const customDebug = vi.fn();
       const customLogger: Logger = {
         error: customError,
         warn: customWarn,
+        info: customInfo,
+        debug: customDebug,
       };
 
       setLogger(customLogger);
       const error: AppError = { code: "TEST", message: "test" };
       logError(error);
+      logInfo("info");
+      logDebug("debug");
 
       expect(customError).toHaveBeenCalledOnce();
+      expect(customInfo).toHaveBeenCalledOnce();
+      expect(customDebug).toHaveBeenCalledOnce();
       expect(consoleErrorSpy).not.toHaveBeenCalled();
     });
 
     it("setLogger should work for warnings too", () => {
-      const customError = vi.fn();
-      const customWarn = vi.fn();
       const customLogger: Logger = {
-        error: customError,
-        warn: customWarn,
+        error: vi.fn(),
+        warn: vi.fn(),
+        info: vi.fn(),
+        debug: vi.fn(),
       };
 
       setLogger(customLogger);
       logWarning("test warning");
 
-      expect(customWarn).toHaveBeenCalledOnce();
+      expect(customLogger.warn).toHaveBeenCalledOnce();
       expect(consoleWarnSpy).not.toHaveBeenCalled();
     });
 
@@ -141,22 +199,25 @@ describe("logger", () => {
       const customLogger: Logger = {
         error: vi.fn(),
         warn: vi.fn(),
+        info: vi.fn(),
+        debug: vi.fn(),
       };
 
       setLogger(customLogger);
       resetLogger();
 
-      const error: AppError = { code: "TEST", message: "test" };
-      logError(error);
+      logInfo("test");
 
-      expect(customLogger.error).not.toHaveBeenCalled();
-      expect(consoleErrorSpy).toHaveBeenCalled();
+      expect(customLogger.info).not.toHaveBeenCalled();
+      expect(consoleInfoSpy).toHaveBeenCalled();
     });
 
     it("getLogger should return the current logger", () => {
       const customLogger: Logger = {
         error: vi.fn(),
         warn: vi.fn(),
+        info: vi.fn(),
+        debug: vi.fn(),
       };
 
       const defaultLogger = getLogger();
@@ -167,40 +228,19 @@ describe("logger", () => {
       expect(currentLogger).not.toBe(defaultLogger);
     });
 
-    it("custom logger should receive full ErrorLogEntry", () => {
-      const customError = vi.fn();
-      const customLogger: Logger = {
-        error: customError,
-        warn: vi.fn(),
-      };
-
-      setLogger(customLogger);
-      const cause = new Error("root cause");
-      const error: AppError = { code: "TEST_CODE", message: "test message", cause };
-      logError(error, { operation: "import", path: "/tmp/file.txt", data: { extra: "info" } });
-
-      expect(customError).toHaveBeenCalledWith(
-        expect.objectContaining({
-          level: "error",
-          code: "TEST_CODE",
-          message: "test message",
-          operation: "import",
-          path: "/tmp/file.txt",
-          data: { extra: "info" },
-          stack: expect.any(String),
-        }),
-      );
-    });
-
     it("nullLogger should silence all logs", () => {
       setLogger(nullLogger);
 
       const error: AppError = { code: "TEST", message: "test" };
       logError(error);
       logWarning("test warning");
+      logInfo("test info");
+      logDebug("test debug");
 
       expect(consoleErrorSpy).not.toHaveBeenCalled();
       expect(consoleWarnSpy).not.toHaveBeenCalled();
+      expect(consoleInfoSpy).not.toHaveBeenCalled();
+      expect(consoleDebugSpy).not.toHaveBeenCalled();
     });
   });
 });

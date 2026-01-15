@@ -69,6 +69,10 @@ export interface ErrorLogEntry {
  * ```
  */
 export interface Logger {
+  /** Log a debug message (development only) */
+  debug(message: string, context?: object): void;
+  /** Log an info message */
+  info(message: string, context?: object): void;
   /** Log an error entry */
   error(entry: ErrorLogEntry): void;
   /** Log a warning entry */
@@ -80,6 +84,17 @@ export interface Logger {
  * Uses pretty print in development, single-line JSON in production.
  */
 const defaultLogger: Logger = {
+  debug: (message, context) => {
+    // Only log debug in development or if explicitly enabled
+    if (process.env["NODE_ENV"] === "development" || process.env["DEBUG"]) {
+      // biome-ignore lint/suspicious/noConsole: Logger implementation
+      console.debug("[DEBUG]", message, context ? JSON.stringify(context, null, 2) : "");
+    }
+  },
+  info: (message, context) => {
+    // biome-ignore lint/suspicious/noConsole: Logger implementation
+    console.info("[INFO]", message, context ? JSON.stringify(context) : "");
+  },
   error: (entry) => {
     if (process.env["NODE_ENV"] === "development") {
       // biome-ignore lint/suspicious/noConsole: Logger implementation
@@ -115,6 +130,8 @@ const defaultLogger: Logger = {
  * ```
  */
 export const nullLogger: Logger = {
+  debug: () => {},
+  info: () => {},
   error: () => {},
   warn: () => {},
 };
@@ -208,4 +225,24 @@ export function logWarning(message: string, context?: ErrorLogContext): void {
   };
 
   currentLogger.warn(entry);
+}
+
+/**
+ * Log an info message.
+ *
+ * @param message - The info message
+ * @param context - Optional context for the message
+ */
+export function logInfo(message: string, context?: object): void {
+  currentLogger.info(message, context);
+}
+
+/**
+ * Log a debug message.
+ *
+ * @param message - The debug message
+ * @param context - Optional context for the message
+ */
+export function logDebug(message: string, context?: object): void {
+  currentLogger.debug(message, context);
 }
