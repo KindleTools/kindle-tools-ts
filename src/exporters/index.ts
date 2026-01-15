@@ -23,6 +23,7 @@ export { MarkdownExporter } from "./formats/markdown.exporter.js";
 export { ObsidianExporter } from "./formats/obsidian.exporter.js";
 // Shared Base & Utilities
 export { BaseExporter } from "./shared/base-exporter.js";
+export type { PathData } from "./shared/exporter-utils.js";
 export {
   applyCase,
   createErrorResult,
@@ -30,6 +31,8 @@ export {
   escapeCSV,
   escapeHtml,
   escapeYaml,
+  generatePath,
+  PATH_TEMPLATES,
   sanitizeFilename,
   withExportErrorHandling,
 } from "./shared/exporter-utils.js";

@@ -20,6 +20,45 @@ import { SYSTEM_LIMITS } from "../../core/limits.js";
 import { sanitizeCSVField } from "../../utils/security/csv-sanitizer.js";
 import type { AuthorCase, FolderStructure } from "../core/types.js";
 
+// =============================================================================
+// Path Templating Types
+// =============================================================================
+
+/**
+ * Data available for dynamic path templating.
+ *
+ * @example
+ * ```typescript
+ * const data: PathData = {
+ *   title: "The Great Gatsby",
+ *   author: "F. Scott Fitzgerald",
+ *   year: "1925",
+ *   series: "Classics"
+ * };
+ * ```
+ */
+export interface PathData {
+  /** Book title */
+  title: string;
+  /** Author name */
+  author: string;
+  /** Publication year (optional) */
+  year?: string;
+  /** Book series name (optional) */
+  series?: string;
+}
+
+/**
+ * Predefined path templates mapping to FolderStructure values.
+ * These provide backwards compatibility with the enum-based approach.
+ */
+export const PATH_TEMPLATES: Record<FolderStructure, string> = {
+  flat: "{title}",
+  "by-book": "{title}/{title}",
+  "by-author": "{author}/{title}",
+  "by-author-book": "{author}/{title}/{title}",
+} as const;
+
 /**
  * Default value for unknown authors.
  */
@@ -177,6 +216,38 @@ export function sanitizeFilename(
 }
 
 /**
+ * Generate a path from a template string and data.
+ *
+ * Replaces placeholders like `{title}`, `{author}`, `{year}`, `{series}` with
+ * sanitized values from the provided data. Unknown placeholders are replaced
+ * with 'unknown'.
+ *
+ * @param template - Template string with placeholders (e.g., "{author}/{title}")
+ * @param data - Data object containing values for placeholders
+ * @returns Sanitized path string
+ *
+ * @example
+ * ```typescript
+ * const data = { title: "1984", author: "George Orwell", year: "1949" };
+ *
+ * generatePath("{author}/{title}", data);
+ * // Returns: "George Orwell/1984"
+ *
+ * generatePath("{year} - {title}", data);
+ * // Returns: "1949 - 1984"
+ *
+ * generatePath("{series}/{title}", data);
+ * // Returns: "unknown/1984" (series is undefined)
+ * ```
+ */
+export function generatePath(template: string, data: PathData): string {
+  return template.replace(/{(\w+)}/g, (_, key) => {
+    const value = data[key as keyof PathData];
+    return sanitizeFilename(value ?? "unknown");
+  });
+}
+
+/**
  * Apply case transformation to a string.
  *
  * @param str - The string to transform
@@ -321,17 +392,9 @@ export function generateFilePath(
   // If baseFolder is ".", treat as empty (root)
   const prefix = baseFolder && baseFolder !== "." ? `${baseFolder}/` : "";
 
-  switch (structure) {
-    case "by-book":
-      return `${prefix}${cleanTitle}/${cleanTitle}${ext}`;
-    case "by-author":
-      return `${prefix}${cleanAuthor}/${cleanTitle}${ext}`;
-    case "by-author-book":
-      // Author is a folder here, ensure it's not empty if something went wrong with sanitization
-      // (sanitizeFilename can return empty string if input was all bad chars)
-      // but assuming reasonable input or default "Unknown"
-      return `${prefix}${cleanAuthor}/${cleanTitle}/${cleanTitle}${ext}`;
-    default: // flat
-      return `${prefix}${cleanTitle}${ext}`;
-  }
+  // Use predefined template for the folder structure
+  const template = PATH_TEMPLATES[structure];
+  const path = template.replace(/{title}/g, cleanTitle).replace(/{author}/g, cleanAuthor);
+
+  return `${prefix}${path}${ext}`;
 }

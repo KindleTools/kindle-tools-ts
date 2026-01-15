@@ -141,26 +141,32 @@ if (result.errors.length > 0) {
 
 ---
 
-### 1.5 Dynamic Path Templating
+### ~~1.5 Dynamic Path Templating~~ ✅ COMPLETADO
 
 **Ubicacion:** `src/exporters/shared/exporter-utils.ts`
 
-**Propuesta:** Reemplazar enums de `FolderStructure` con template strings:
+**Implementacion Realizada:**
+- Se creo la interfaz `PathData` con campos: `title`, `author`, `year?`, `series?`
+- Se implemento la funcion `generatePath(template, data)` que reemplaza placeholders `{field}` con valores sanitizados
+- Se creo el objeto `PATH_TEMPLATES` que mapea los valores de `FolderStructure` a templates:
+  - `flat` -> `"{title}"`
+  - `by-book` -> `"{title}/{title}"`
+  - `by-author` -> `"{author}/{title}"`
+  - `by-author-book` -> `"{author}/{title}/{title}"`
+- Se refactorizo `generateFilePath` para usar `PATH_TEMPLATES` internamente
 
+**Uso:**
 ```typescript
-interface PathData {
-  title: string;
-  author: string;
-  year?: string;
-  series?: string;
-}
+import { generatePath, PathData, PATH_TEMPLATES } from "./exporter-utils.js";
 
-// Uso: --path-format="{author}/{year} - {title}.md"
-export function generatePath(template: string, data: PathData): string {
-  return template.replace(/{(\w+)}/g, (_, key) =>
-    sanitizeFilename(data[key as keyof PathData] ?? 'unknown')
-  );
-}
+const data: PathData = { title: "1984", author: "George Orwell", year: "1949" };
+
+// Templates personalizados
+generatePath("{author}/{title}", data);           // "George Orwell/1984"
+generatePath("{year} - {title}", data);           // "1949 - 1984"
+
+// Usar templates predefinidos
+generatePath(PATH_TEMPLATES["by-author"], data);  // "George Orwell/1984"
 ```
 
 ---
@@ -616,6 +622,113 @@ El `z.string().optional()` permite cualquier string. El cast a `ClippingType` es
 
 ---
 
+### Mejoras Post-1.3: MultiFileExporter y Templates
+
+**Ubicacion:** `src/exporters/`, `src/templates/`
+
+**Propuestas:**
+
+1. **Hook de cleanup en MultiFileExporter:**
+   - Añadir método `exportCleanup()` que se llame tras `doExport()`
+   - JoplinExporter lo usaría para resetear `this.ctx = null`
+   - Beneficio: Liberación explícita de memoria, patrón más defensivo
+
+   ```typescript
+   // En MultiFileExporter
+   protected async exportCleanup(): Promise<void> {}
+
+   // En JoplinExporter
+   protected override async exportCleanup(): Promise<void> {
+     this.ctx = null;
+   }
+   ```
+
+2. **Mejorar heurística de `noteConsumedAsTags`:**
+   - Actual: `hasTags && hasNote` (puede dar falsos positivos)
+   - Alternativas:
+     - Comparar si `note` coincide exactamente con los tags
+     - Añadir flag explícito en el parser cuando detecta tags en notas
+     - Hacerlo configurable via `TemplateOptions`
+
+3. **Tipado fuerte para helper `opt`:**
+   - Crear tipo para opciones conocidas
+   - Mejorar autocompletado y validación en templates
+
+   ```typescript
+   type KnownTemplateOption = 'wikilinks' | 'useCallouts' | 'includeBookmarks';
+   ```
+
+---
+
+### Mejoras Post-1.5: Dynamic Path Templating
+
+**Ubicacion:** `src/exporters/`, `src/schemas/`, `tests/`
+
+**Propuestas:**
+
+1. **Tests para `generatePath`:**
+   - Añadir tests unitarios en `tests/unit/exporters/exporter-utils.test.ts`
+   - Cubrir: templates básicos, placeholders faltantes, caracteres especiales, sanitización
+
+   ```typescript
+   describe("generatePath", () => {
+     it("replaces placeholders with sanitized values", () => {
+       const data = { title: "1984", author: "George Orwell" };
+       expect(generatePath("{author}/{title}", data)).toBe("George Orwell/1984");
+     });
+
+     it("replaces missing fields with 'unknown'", () => {
+       const data = { title: "Book", author: "Author" };
+       expect(generatePath("{series}/{title}", data)).toBe("unknown/Book");
+     });
+   });
+   ```
+
+2. **Integración con CLI (`--path-format`):**
+   - Añadir `pathFormat?: string` a `ExporterOptions` en `src/exporters/core/types.ts`
+   - Crear schema en `src/schemas/exporter.schema.ts`:
+     ```typescript
+     pathFormat: z.string()
+       .regex(/^[^<>:"|?*]+$/, "Invalid characters in path template")
+       .optional()
+     ```
+   - Modificar exporters multi-file para usar template custom cuando se proporcione
+
+3. **Extensibilidad de `PathData`:**
+   - Añadir índice para campos custom:
+     ```typescript
+     export interface PathData {
+       title: string;
+       author: string;
+       year?: string;
+       series?: string;
+       [key: string]: string | undefined; // campos adicionales
+     }
+     ```
+   - Permitir campos desde metadata del clipping (ej: `{language}`, `{source}`)
+
+4. **Validación de placeholders:**
+   - Añadir modo estricto opcional que advierta sobre placeholders no reconocidos
+   - Útil para detectar typos en templates custom (ej: `{autor}` en vez de `{author}`)
+
+   ```typescript
+   export function validatePathTemplate(
+     template: string,
+     knownFields: string[] = ["title", "author", "year", "series"]
+   ): string[] {
+     const warnings: string[] = [];
+     const placeholders = template.match(/{(\w+)}/g) || [];
+     for (const ph of placeholders) {
+       const field = ph.slice(1, -1);
+       if (!knownFields.includes(field)) {
+         warnings.push(`Unknown placeholder: ${ph}`);
+       }
+     }
+     return warnings;
+   }
+   ```
+
+---
 
 ## Referencias
 
@@ -648,4 +761,4 @@ El `z.string().optional()` permite cualquier string. El cast a `ClippingType` es
 ---
 
 *Documento actualizado: 2026-01-14*
-*Mejoras pendientes: 22 | Media prioridad: 8 (2 completados) | Baja prioridad: 15*
+*Mejoras pendientes: 22 | Media prioridad: 8 (3 completados) | Baja prioridad: 15*
