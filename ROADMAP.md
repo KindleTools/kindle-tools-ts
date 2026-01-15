@@ -811,8 +811,31 @@ Actualmente se compilan todos los templates al instanciar el engine. Cambiar a c
 2. Verificar que las sugerencias de typos funcionan correctamente.
 3. Testear la acumulación de múltiples errores en una misma fila y en múltiples filas.
 
-
 ---
+
+### 4.4 Mejoras en Archiver Interface (Unified Archiver)
+ 
+ **Ubicacion:** `src/utils/archive/`
+ 
+ **Propuestas:**
+ 
+ 1. **Memory vs Streaming:**
+    - Actualmente `ZipArchiver.finalize()` genera todo en memoria (`Uint8Array`).
+    - Migrar a streams (`generateNodeStream`) para soportar exports masivos sin OOM.
+ 
+ 2. **Opciones de Compresion:**
+    - Añadir soporte para nival de compresion (`STORE` vs `DEFLATE`).
+    - Util para archivos ya comprimidos (imagenes, PDFs).
+ 
+ 3. **Implementacion Real de Tar:**
+    - Implementar un `TarArchiver` ligero (sin dependencias pesadas).
+    - Concatenar bloques con headers POSIX standard.
+ 
+ 4. **Metadatos de Archivos:**
+    - Permitir establecer fecha de modificacion explicita en `addFile`.
+    - Usar fecha del clipping o del export para consistencia.
+ 
+ ---
 
 ## Referencias
 
