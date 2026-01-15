@@ -1,127 +1,86 @@
 # KindleToolsTS - Roadmap
 
-Mejoras pendientes organizadas por prioridad. Cada item incluye instrucciones claras para su implementacion.
+Mejoras pendientes organizadas por prioridad. Cada item incluye valoración de impacto, esfuerzo y riesgo.
 
-**Estado del proyecto:** Libreria TypeScript pura + Visual Workbench. Clean Architecture / DDD.
+**Estado del proyecto:** Librería TypeScript pura + Visual Workbench. Clean Architecture / DDD.
 
 > **Arquitectura documentada en:** [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 
 ---
 
-## Indice
+## Leyenda de Valoración
+
+| Criterio | Descripción |
+|----------|-------------|
+| **Impacto** | Beneficio para usuarios/DX (🔴 Alto, 🟡 Medio, 🟢 Bajo) |
+| **Esfuerzo** | Tiempo/complejidad de implementación (🟢 Bajo, 🟡 Medio, 🔴 Alto) |
+| **Riesgo** | Probabilidad de breaking changes o bugs (🟢 Bajo, 🟡 Medio, 🔴 Alto) |
+| **ROI** | Relación Impacto/Esfuerzo (⭐⭐⭐ Excelente, ⭐⭐ Bueno, ⭐ Bajo) |
+
+---
+
+## Índice
 
 1. [Media Prioridad](#1-media-prioridad)
 2. [Baja Prioridad](#2-baja-prioridad)
-3. [Not Planned](#3-not-planned)
+3. [Para Estudio](#3-para-estudio)
+4. [Not Planned](#4-not-planned)
+5. [Completado](#5-completado)
 
 ---
 
 ## 1. Media Prioridad
 
-### 1.1 Carga Dinamica de Locales date-fns ✅ COMPLETADO
+### 1.1 Bug Fix: CSV Importer Type Validation
 
-**Ubicacion:** `src/domain/parsing/dates.ts:11`
+| Impacto | Esfuerzo | Riesgo | ROI |
+|---------|----------|--------|-----|
+| 🔴 Alto | 🟢 Bajo | 🟢 Bajo | ⭐⭐⭐ |
 
-**Problema:** Se importan estaticamente todos los locales de date-fns (~50KB+ de locales no usados en browser).
+**Ubicación:** `src/importers/formats/csv.importer.ts:217`
 
-**Implementacion:**
+**Problema:**
+El cast `as ClippingType` es inseguro. Permite valores inválidos que causarán errores downstream.
+
 ```typescript
-const LOCALE_LOADERS: Record<SupportedLanguage, () => Promise<Locale>> = {
-  en: () => import("date-fns/locale/en-US").then(m => m.enUS),
-  es: () => import("date-fns/locale/es").then(m => m.es),
-  // ...
-};
+// ACTUAL - Inseguro
+const type = (data.type || "highlight") as ClippingType;
 
-async function getLocale(lang: SupportedLanguage): Promise<Locale> {
-  return LOCALE_LOADERS[lang]();
+// SOLUCIÓN
+import { closest } from "fastest-levenshtein";
+
+const VALID_TYPES = ["highlight", "note", "bookmark", "clip", "article"] as const;
+const rawType = data.type?.toLowerCase() || "highlight";
+
+if (!VALID_TYPES.includes(rawType as typeof VALID_TYPES[number])) {
+  errors.push({
+    row: rowIdx + 1,
+    field: "type",
+    message: `Invalid type: "${rawType}"`,
+    suggestion: `Did you mean "${closest(rawType, [...VALID_TYPES])}"?`,
+  });
+  continue;
 }
+const type = rawType as ClippingType;
 ```
 
-**Impacto:** Requiere refactorizar `parseKindleDate` a async (cambio en cascada). No urgente mientras target principal sea Node.js.
+**Consecuencias de NO hacerlo:** Datos corruptos en exports, errores silenciosos en runtime.
 
 ---
 
-### 1.2 ~~Eliminar `any` en Deteccion de Entorno~~ ✅ COMPLETADO
+### 1.2 Mejorar Parser CSV
 
-**Ubicacion:** `src/utils/security/hashing.ts`
+| Impacto | Esfuerzo | Riesgo | ROI |
+|---------|----------|--------|-----|
+| 🟡 Medio | 🟡 Medio | 🟡 Medio | ⭐⭐ |
 
-**Problema resuelto:** Se usaban casts `any` para deteccion de entorno Node.js vs Browser.
+**Ubicación:** `src/importers/formats/csv.importer.ts`
 
-**Solucion implementada:**
-```typescript
-// Interfaces type-safe para Node.js process y crypto
-interface NodeProcess {
-  versions: { node: string };
-}
+**Estado actual:** Parser manual funciona pero es frágil ante edge cases.
 
-interface GlobalThisWithProcess {
-  process?: NodeProcess;
-}
+**Opciones:**
 
-interface NodeCryptoModule {
-  createHash(algorithm: "sha256"): NodeCryptoHash;
-}
-
-// Type guard para deteccion de entorno
-function isNodeEnvironment(): boolean {
-  const global = globalThis as GlobalThisWithProcess;
-  return typeof global.process?.versions?.node === "string";
-}
-
-// Carga dinamica type-safe del modulo crypto
-function tryLoadNodeCrypto(): NodeCryptoModule | null {
-  if (!isNodeEnvironment()) return null;
-  try {
-    const requireFn = new Function("m", "return require(m)") as (m: string) => NodeCryptoModule;
-    return requireFn("node:crypto");
-  } catch { return null; }
-}
-```
-
-**Beneficios:**
-- Eliminados todos los `any` sin perder funcionalidad
-- Type guard reutilizable `isNodeEnvironment()`
-- Interfaces minimas para evitar dependencias de `@types/node`
-- Uso de `Function` constructor evita problemas con bundlers
-
----
-
-### 1.3 ~~Mejoras en MultiFileExporter~~ ✅ COMPLETADO
-
-**Ubicacion:** `src/exporters/shared/multi-file-exporter.ts`, `src/exporters/formats/joplin.exporter.ts`
-
-**Mejoras implementadas:**
-
-1. **Pasar clippings a exportPreamble:**
-   - Firma actualizada a `exportPreamble(clippings, options)`
-   - Permite generar tags globales y otros recursos que dependen de todos los clippings
-
-2. **Stateless Refactoring (JoplinExporter):**
-   - Reemplazados campos de estado (`rootNotebookId`, `tagMap`, etc.) por `JoplinExportContext` efímero
-   - El contexto se crea en `exportPreamble` y se usa en `processBook`
-   - Cada export es independiente sin estado residual
-
-3. **Migración a Templates (Joplin):**
-   - Creada plantilla `CLIPPING_JOPLIN` en `presets.ts`
-   - `processBook` ahora usa `engine.renderClipping(clipping)` en lugar de `generateNoteBody()`
-   - Eliminado método `generateNoteBody` obsoleto
-
-4. **Optimización de Memoria:**
-   - `generateSummaryContent()` ahora devuelve resumen ligero con conteos
-   - Evita concatenar todo el contenido de archivos (mejora significativa para exports grandes)
-
----
-
-### 1.4 Mejorar Parser CSV
-
-**Ubicacion:** `src/importers/formats/csv.importer.ts`
-
-**Mejoras:**
-- Validacion de conteo de campos por fila
-- Considerar migracion a `papaparse` o `csv-parse/sync`
-- Mejores mensajes de error con numero de linea
-
-**Implementacion con papaparse:**
+**Opción A - Migrar a papaparse (~50KB):**
 ```typescript
 import Papa from 'papaparse';
 
@@ -132,68 +91,34 @@ const result = Papa.parse(content, {
 });
 
 if (result.errors.length > 0) {
-  return err({
-    code: 'IMPORT_PARSE_ERROR',
-    message: `CSV parse errors at rows: ${result.errors.map(e => e.row).join(', ')}`
-  });
+  return importValidationError(
+    "CSV parse errors",
+    result.errors.map(e => ({ row: e.row, field: "csv", message: e.message }))
+  );
 }
 ```
 
----
+**Opción B - Mejorar parser actual:**
+- Validación de conteo de campos por fila
+- Mejor manejo de encoding (UTF-16, etc.)
+- Tests exhaustivos de edge cases
 
-### ~~1.5 Dynamic Path Templating~~ ✅ COMPLETADO
-
-**Ubicacion:** `src/exporters/shared/exporter-utils.ts`
-
-**Implementacion Realizada:**
-- Se creo la interfaz `PathData` con campos: `title`, `author`, `year?`, `series?`
-- Se implemento la funcion `generatePath(template, data)` que reemplaza placeholders `{field}` con valores sanitizados
-- Se creo el objeto `PATH_TEMPLATES` que mapea los valores de `FolderStructure` a templates:
-  - `flat` -> `"{title}"`
-  - `by-book` -> `"{title}/{title}"`
-  - `by-author` -> `"{author}/{title}"`
-  - `by-author-book` -> `"{author}/{title}/{title}"`
-- Se refactorizo `generateFilePath` para usar `PATH_TEMPLATES` internamente
-
-**Uso:**
-```typescript
-import { generatePath, PathData, PATH_TEMPLATES } from "./exporter-utils.js";
-
-const data: PathData = { title: "1984", author: "George Orwell", year: "1949" };
-
-// Templates personalizados
-generatePath("{author}/{title}", data);           // "George Orwell/1984"
-generatePath("{year} - {title}", data);           // "1949 - 1984"
-
-// Usar templates predefinidos
-generatePath(PATH_TEMPLATES["by-author"], data);  // "George Orwell/1984"
-```
+**Consecuencias:** Opción A añade dependencia; Opción B requiere más trabajo de testing.
 
 ---
 
-### 1.6 ~~Mejorar Contexto de Errores en Importers~~ ✅ COMPLETADO
+### 1.3 TypeDoc API Documentation
 
-**Mejoras solicitadas:**
-- Incluir numero de fila en mensajes de error
-- Acumular todos los errores antes de retornar
-- Sugerencias para errores comunes
+| Impacto | Esfuerzo | Riesgo | ROI |
+|---------|----------|--------|-----|
+| 🟡 Medio | 🟢 Bajo | 🟢 Bajo | ⭐⭐⭐ |
 
-**Implementacion Realizada:**
-- Se crearon tipos `ImportErrorDetail` y `IMPORT_VALIDATION_ERROR` en `src/errors/types.ts`.
-- Se actualizó `CsvImporter` para acumular errores de validación por fila y retornar `ImportValidationError` si no hay clippings validos.
-- Se agregaron sugerencias automáticas para errores comunes (formato de fecha, typos en `type`).
-- Se introdujo `importValidationError` factory en `src/errors/result.ts`.
-
----
-
-### 1.7 TypeDoc API Documentation
-
-**Instalacion:**
+**Instalación:**
 ```bash
 pnpm add -D typedoc typedoc-plugin-markdown
 ```
 
-**Configuracion (typedoc.json):**
+**Configuración (typedoc.json):**
 ```json
 {
   "entryPoints": ["src/index.ts"],
@@ -204,145 +129,80 @@ pnpm add -D typedoc typedoc-plugin-markdown
 }
 ```
 
-**Script:** Agregar a package.json:
+**Script en package.json:**
 ```json
 "docs:api": "typedoc"
 ```
 
----
-
-### 1.8 Automated Release Pipeline
-
-**Opcion A - Changesets (ya instalado):**
-```bash
-pnpm changeset        # Crear changeset
-pnpm version          # Actualizar versiones
-pnpm release          # Publicar
-```
-
-**GitHub Action (.github/workflows/release.yml):**
-```yaml
-name: Release
-on:
-  push:
-    branches: [main]
-jobs:
-  release:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v2
-      - run: pnpm install
-      - run: pnpm build
-      - run: pnpm changeset publish
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-```
+**Consecuencias:** Mejora DX para consumidores. Auto-generado = mantenimiento mínimo.
 
 ---
 
-### ~~1.9 Merged Output Mode~~ ✅ COMPLETADO
+### 1.4 Tests para generatePath
 
-**Implementación Realizada:**
+| Impacto | Esfuerzo | Riesgo | ROI |
+|---------|----------|--------|-----|
+| 🟡 Medio | 🟢 Bajo | 🟢 Bajo | ⭐⭐⭐ |
 
-Se añadieron opciones para control granular de notas en el output:
+**Ubicación:** `tests/unit/exporters/exporter-utils.test.ts`
+
+**Problema:** La función `generatePath` (implementada en 1.5 completado) no tiene tests.
 
 ```typescript
-export interface ProcessOptions {
-  mergedOutput?: boolean;        // default: false - eliminar notas vinculadas
-  removeUnlinkedNotes?: boolean; // default: false - también eliminar notas sin vincular
-}
+describe("generatePath", () => {
+  it("replaces placeholders with sanitized values", () => {
+    const data = { title: "1984", author: "George Orwell" };
+    expect(generatePath("{author}/{title}", data)).toBe("George Orwell/1984");
+  });
 
-// Ejemplo: eliminar solo notas vinculadas (preserva standalone notes)
-const result = processClippings(clippings, {
-  detectedLanguage: "en",
-  mergedOutput: true
-});
+  it("replaces missing fields with 'unknown'", () => {
+    const data = { title: "Book", author: "Author" };
+    expect(generatePath("{series}/{title}", data)).toBe("unknown/Book");
+  });
 
-// Ejemplo: eliminar TODAS las notas (vinculadas y no vinculadas)
-const result2 = processClippings(clippings, {
-  detectedLanguage: "en",
-  mergedOutput: true,
-  removeUnlinkedNotes: true
+  it("sanitizes special characters in values", () => {
+    const data = { title: "Test: A Book?", author: "Author" };
+    // Depende de implementación de sanitización
+    expect(generatePath("{title}", data)).toMatch(/Test/);
+  });
+
+  it("handles empty template", () => {
+    expect(generatePath("", { title: "Book", author: "Author" })).toBe("");
+  });
 });
-// result.notesConsumed = número total de notas eliminadas
 ```
 
-**Diferencia con `highlightsOnly`:**
-- `highlightsOnly: true` - Elimina TODOS los no-highlights (notas, bookmarks, clips)
-- `mergedOutput: true` - Solo elimina notas vinculadas; preserva notas sin vincular
-- `mergedOutput + removeUnlinkedNotes` - Elimina todas las notas pero preserva bookmarks/clips
-
-**Archivos modificados:**
-- `src/types/config.ts` - Añadidas opciones `mergedOutput` y `removeUnlinkedNotes`
-- `src/schemas/config.schema.ts` - Schema Zod actualizado
-- `src/core/processing/note-merger.ts` - Nueva función `removeLinkedNotes(options)`
-- `src/core/processor.ts` - Integrado como Step 5.5, añadido `notesConsumed` a `ProcessResult`
+**Consecuencias:** Previene regresiones. Documenta comportamiento esperado.
 
 ---
 
 ## 2. Baja Prioridad
 
-### 2.1 ~~Renombrar `process` a `processClippings`~~ ✅ COMPLETADO
+### 2.1 Refactorizar Archivos Largos
 
-**Ubicacion:** `src/core/processor.ts`, `src/index.ts`
+| Impacto | Esfuerzo | Riesgo | ROI |
+|---------|----------|--------|-----|
+| 🟢 Bajo | 🟡 Medio | 🟡 Medio | ⭐ |
 
-**Implementacion Realizada:**
-- Se renombró la funcion principal a `processClippings`.
-- Se eliminó el alias `process` para evitar ambigüedad (breaking change intencional).
-- Se actualizó `parser.ts` y todos los tests para usar el nuevo nombre.
+**Archivos pendientes (líneas actuales):**
 
----
+| Archivo | Líneas | Acción Propuesta |
+|---------|--------|------------------|
+| `registry.ts` | 597 | Ver sección 3.1 (Plugin Registry Split) |
+| `presets.ts` | 518 | Separar en `presets/markdown.ts`, `presets/joplin.ts`, etc. |
+| `joplin.exporter.ts` | 510 | Extraer `JoplinNotebookBuilder`, `JoplinTagManager` |
 
-### 2.2 Refactorizar Archivos Largos
+**Nota:** `html.exporter.ts` ya tiene CSS externalizado en `html.styles.ts` ✅
 
-| Archivo | Lineas | Accion |
-|---------|--------|--------|
-| `joplin.exporter.ts` | ~550 | Extraer `JoplinNotebookBuilder`, `JoplinTagManager` |
-| `html.exporter.ts` | ~547 | Mover CSS a `html-styles.ts` |
-| `registry.ts` | ~474 | Extraer `PluginValidator` |
-| `presets.ts` | ~473 | Separar en `presets/*.ts` por categoria |
+**Consecuencias:** Mejora mantenibilidad a costa de riesgo durante refactor.
 
 ---
 
-### ~~2.3 TemplateEngine Cache~~ ✅ COMPLETADO
+### 2.2 Browser Entry Point
 
-**Ubicacion:** `src/templates/engine.ts`
-
-**Implementacion Realizada:**
-```typescript
-export class TemplateEngineFactory {
-  private static instances = new Map<string, TemplateEngine>();
-
-  static getEngine(config: TemplatePreset | CustomTemplates = "default"): TemplateEngine {
-    let key: string;
-    if (typeof config === "string") {
-      key = `preset:${config}`;  // Prefijo para presets (evita colisiones)
-    } else {
-      key = `custom:${JSON.stringify(config)}`;  // Prefijo para custom templates
-    }
-
-    if (!this.instances.has(key)) {
-      // Resuelve preset a CustomTemplates si es necesario
-      this.instances.set(key, new TemplateEngine(templates));
-    }
-    return this.instances.get(key)!;
-  }
-
-  static clearCache(): void {
-    this.instances.clear();
-  }
-}
-```
-
-**Mejoras sobre la propuesta original:**
-- Usa prefijos `preset:` y `custom:` para evitar colisiones de keys
-- Resuelve presets mediante `getTemplatePreset()` antes de crear instancia
-- Parámetro por defecto `"default"` para uso simplificado
-
----
-
-### 2.4 Browser Entry Point
+| Impacto | Esfuerzo | Riesgo | ROI |
+|---------|----------|--------|-----|
+| 🟡 Medio | 🟡 Medio | 🟡 Medio | ⭐⭐ |
 
 **Agregar a package.json:**
 ```json
@@ -358,65 +218,44 @@ export class TemplateEngineFactory {
 }
 ```
 
-**Crear `src/browser.ts`:** Re-exportar todo excepto `parseFile` y dependencias de `node:fs`.
+**Crear `src/browser.ts`:**
+```typescript
+// Re-exportar todo excepto dependencias de node:fs
+export * from "./index.js";
+// Excluir: parseFile, NodeFilesystem
+```
+
+**Consecuencias:** Habilita uso en web apps. Requiere mantener dos entry points.
 
 ---
 
-### 2.5 Monorepo Structure (Futuro)
+### 2.3 Monorepo Structure (Futuro)
+
+| Impacto | Esfuerzo | Riesgo | ROI |
+|---------|----------|--------|-----|
+| 🟢 Bajo | 🔴 Alto | 🔴 Alto | ⭐ |
 
 ```
 kindle-tools-ts/
 ├── packages/
-│   ├── core/       # Logica pura, sin deps de Node
+│   ├── core/       # Lógica pura, sin deps de Node
 │   ├── node/       # Node.js adapters (fs)
 │   └── shared/     # Tipos compartidos
 ├── pnpm-workspace.yaml
 └── turbo.json
 ```
 
----
-
-### 2.6 Unified Archiver Interface ✅ COMPLETADO
-
-**Ubicacion:** Crear `src/utils/archive/archiver.ts`
-
-```typescript
-export interface Archiver {
-  addFile(path: string, content: string | Uint8Array): void;
-  addDirectory(path: string): void;
-  finalize(): Promise<Uint8Array>;
-}
-
-export class ZipArchiver implements Archiver { /* ... */ }
-export class TarArchiver implements Archiver { /* ... */ }
-```
+**Consecuencias:** Breaking change significativo. Solo justificado con demanda real de uso browser.
 
 ---
 
-### 2.7 ~~Structured Logging Expansion~~ ✅ COMPLETADO
+### 2.4 Performance Benchmarking
 
-**Ubicacion:** `src/errors/logger.ts`
+| Impacto | Esfuerzo | Riesgo | ROI |
+|---------|----------|--------|-----|
+| 🟢 Bajo | 🟢 Bajo | 🟢 Bajo | ⭐⭐ |
 
-**Implementacion Realizada:**
-- Se actualizó la interfaz `Logger` con metodos `debug` y `info`.
-- Se implementaron los metodos en `defaultLogger` (console) y `nullLogger`.
-- Se crearon helpers `logDebug` y `logInfo` en `src/errors/logger.ts`.
-- Se añadió soporte para `DEBUG` env var y filtrado por `NODE_ENV`.
-
-```typescript
-export interface Logger {
-  debug: (msg: string, ctx?: object) => void;
-  info: (msg: string, ctx?: object) => void;
-  warn: (entry: ErrorLogEntry) => void;
-  error: (entry: ErrorLogEntry) => void;
-}
-```
-
----
-
-### 2.8 Performance Benchmarking
-
-**Ubicacion:** Crear `tests/bench/parser.bench.ts`
+**Ubicación:** `tests/bench/parser.bench.ts`
 
 ```typescript
 import { bench, describe } from 'vitest';
@@ -436,9 +275,15 @@ describe('Parser Performance', () => {
 
 **Script:** `"bench": "vitest bench"`
 
+**Consecuencias:** Detecta regresiones de rendimiento. Útil antes de releases.
+
 ---
 
-### 2.9 VitePress Documentation Site
+### 2.5 VitePress Documentation Site
+
+| Impacto | Esfuerzo | Riesgo | ROI |
+|---------|----------|--------|-----|
+| 🟡 Medio | 🟡 Medio | 🟢 Bajo | ⭐⭐ |
 
 ```bash
 pnpm add -D vitepress
@@ -456,11 +301,17 @@ docs/
     └── joplin-setup.md
 ```
 
+**Consecuencias:** Mejora adopción. Requiere mantenimiento de contenido.
+
 ---
 
-### 2.10 Architecture Decision Records
+### 2.6 Architecture Decision Records
 
-**Ubicacion:** `docs/adr/`
+| Impacto | Esfuerzo | Riesgo | ROI |
+|---------|----------|--------|-----|
+| 🟢 Bajo | 🟢 Bajo | 🟢 Bajo | ⭐⭐ |
+
+**Ubicación:** `docs/adr/`
 
 ```
 docs/adr/
@@ -487,9 +338,15 @@ What was decided?
 What are the results?
 ```
 
+**Consecuencias:** Documenta decisiones para nuevos contribuidores.
+
 ---
 
-### 2.11 Consolidar Test Fixtures
+### 2.7 Consolidar Test Fixtures
+
+| Impacto | Esfuerzo | Riesgo | ROI |
+|---------|----------|--------|-----|
+| 🟢 Bajo | 🟢 Bajo | 🟢 Bajo | ⭐⭐ |
 
 **Estructura propuesta:**
 ```
@@ -504,103 +361,55 @@ tests/fixtures/
     └── standard.output.json
 ```
 
+**Consecuencias:** Reduce duplicación. Facilita añadir casos de prueba.
+
 ---
 
-### 2.12 Plugin Instance Reset ✅ COMPLETADO
+## 3. Para Estudio
 
-**Ubicacion:** `src/plugins/registry.ts`
+### 3.1 Plugin Registry Split
 
-```typescript
-class PluginRegistry {
-  resetPluginInstance(name: string): void {
-    const plugin = this.exporters.get(name) || this.importers.get(name);
-    if (plugin) {
-      plugin._instance = undefined;
-    }
-  }
-}
+| Impacto | Esfuerzo | Riesgo | ROI |
+|---------|----------|--------|-----|
+| 🟡 Medio | 🟡 Medio | 🟡 Medio | ⭐⭐ |
+
+**Ubicación:** `src/plugins/registry.ts` (597 líneas)
+
+**Problema:** Viola SRP mezclando validación, estado, eventos y factory.
+
+**Solución propuesta:**
+```
+src/plugins/
+├── validation/
+│   ├── schema.ts      # validateImporterPlugin, validateExporterPlugin
+│   └── runtime.ts     # validateImporterInstance, validateExporterInstance
+├── store.ts           # Gestión del Map interno
+└── registry.ts        # Fachada coordinadora (~150 líneas)
 ```
 
----
-
-### 2.13 Plugin Runtime Validation ✅ COMPLETADO
-
-**Ubicacion:** `src/plugins/adapters.ts`
-
-```typescript
-function validateExporterInstance(instance: unknown): instance is Exporter {
-  return (
-    typeof instance === 'object' &&
-    instance !== null &&
-    typeof (instance as Exporter).export === 'function'
-  );
-}
-
-// Uso
-const instance = plugin.create();
-if (!validateExporterInstance(instance)) {
-  throw new AppException({
-    code: 'PLUGIN_INVALID_INSTANCE',
-    message: `Plugin ${plugin.name} did not return a valid Exporter`
-  });
-}
-```
+**Consecuencias:** Mejor testabilidad y mantenibilidad. Riesgo durante refactor.
 
 ---
 
-### 2.14 Minor Code Improvements ✅ COMPLETADO
+### 3.2 Web Crypto API para Browsers
 
-| Issue | Ubicacion | Solucion |
-|-------|-----------|----------|
-| Magic numbers en `identity.ts` | `src/domain/core/identity.ts` | Mover a `constants.ts` |
-| Return types implicitos | `src/templates/helpers.ts` | Agregar tipos explicitos |
-| Externalize HTML Styles | `html.exporter.ts` | Mover CSS a archivo separado |
-| Abstract grouping logic | `BaseExporter` | Crear helper `exportGroupedFiles(clippings, renderFn)` |
-| `isolatedDeclarations` | `tsconfig.json` | Habilitar para builds paralelos de `.d.ts` (TS 5.5+) |
+| Impacto | Esfuerzo | Riesgo | ROI |
+|---------|----------|--------|-----|
+| 🟡 Medio | 🟡 Medio | 🟡 Medio | ⭐⭐ |
 
----
+**Ubicación:** `src/utils/security/hashing.ts`
 
----
-
-## 3. Not Planned
-
-### Descartado Permanentemente
-
-- **PDF Export:** Requiere libreria de renderizado pesada
-- **Readwise Sync:** API propietaria
-- **Highlight Colors:** Kindle no exporta esta info
-- **Streaming Architecture:** Caso de uso muy raro (50MB+)
-- **CLI:** Eliminada. Usuarios pueden crear wrappers.
-
-### Baja Prioridad (sin plan concreto)
-
-- **Anki Export:** Ya existe como plugin de ejemplo
-- **Notion Integration:** API propietaria
-- **Kobo/Apple Books:** Requiere parsers especificos
-- **AI Enrichment:** Claude API para tags (fuera de scope)
-- **WASM Web App:** Demasiado complejo para el beneficio
-- **Mutation Testing (Stryker):** Costoso en CI
-- **E2E Testing (Playwright):** Solo para workbench
-
----
-
-## 4. Para estudio
-
-### Web Crypto API para Browsers
-
-**Ubicacion:** `src/utils/security/hashing.ts`
-
-**Propuesta:** Añadir soporte para SHA-256 real en navegadores usando Web Crypto API:
+**Propuesta:** SHA-256 real en navegadores:
 
 ```typescript
 export async function sha256Async(input: string): Promise<string> {
-  // 1. Intentar Node.js crypto (cached)
+  // 1. Node.js crypto
   const nodeCrypto = getNodeCrypto();
   if (nodeCrypto) {
     return nodeCrypto.createHash("sha256").update(input, "utf8").digest("hex");
   }
 
-  // 2. Web Crypto API (browsers modernos)
+  // 2. Web Crypto API
   if (typeof globalThis.crypto?.subtle !== "undefined") {
     const encoder = new TextEncoder();
     const data = encoder.encode(input);
@@ -610,281 +419,276 @@ export async function sha256Async(input: string): Promise<string> {
       .join("");
   }
 
-  // 3. Fallback a hash simple
+  // 3. Fallback
   return simpleHash(input);
 }
 ```
 
-**Beneficios:**
-- SHA-256 criptografico real en browsers
-- Compatible con todos los navegadores modernos
-- Fallback graceful a `simpleHash()`
-
-**Nota:** Requiere cambiar la firma a `async`, lo que puede requerir cambios en llamadas existentes.
-
-
-### Mejoras Adicionales en Contexto de Errores (Post-1.6)
-
-**Ubicacion:** `src/importers/`
-
-**Propuestas:**
-
-1.  **Estandarización en `JsonImporter`:**
-    - Migrar de validación global "Fail Fast" a validación item por item.
-    - Usar `importValidationError` para reporte granular en arrays de clippings.
-
-2.  **Sugerencias Inteligentes (`fastest-levenshtein`):**
-    - Usar la librería ya instalada para sugerencias dinámicas en enums (`type`, `language`).
-    - Reemplazar checks estáticos (`if val === 'hightlight'`) por distancia de Levenshtein.
-
-3.  **Límites de Seguridad de Memoria:**
-    - Implementar `MAX_VALIDATION_ERRORS = 100` en importers.
-    - Evitar OOM en archivos masivos con muchas filas corruptas.
-
-4.  **Recuperación Flexible de Fechas:**
-    - Intentar parsear formatos comunes (`DD/MM/YYYY`) antes de fallar.
+**Consecuencias:** Requiere cambio a async en toda la cadena. Solo útil con uso browser real.
 
 ---
 
-### Bug Fix: CSV Importer Type Validation
+### 3.3 Estandarizar JsonImporter
 
-**Ubicacion:** `src/importers/formats/csv.importer.ts`
+| Impacto | Esfuerzo | Riesgo | ROI |
+|---------|----------|--------|-----|
+| 🟡 Medio | 🟢 Bajo | 🟢 Bajo | ⭐⭐⭐ |
 
-**Problema:**
-El `z.string().optional()` permite cualquier string. El cast a `ClippingType` es inseguro y las sugerencias de typos no se activan.
+**Ubicación:** `src/importers/formats/json.importer.ts`
 
-**Solucion:**
-1. Crear array runtime de tipos válidos: `['highlight', 'note', 'bookmark', 'clip', 'article']`.
-2. Validar manualmente el campo `type` antes de crear el objeto `Clipping`.
-3. Reportar error y sugerencia si el valor no está en la lista.
+**Problema:** Usa "Fail Fast" mientras CSV acumula errores (inconsistencia).
 
----
+**Solución:**
+- Migrar a validación item-por-item
+- Usar `importValidationError` para reporte granular
+- Añadir sugerencias con `fastest-levenshtein` (ya instalado)
 
-### Mejoras Post-1.3: MultiFileExporter y Templates
-
-**Ubicacion:** `src/exporters/`, `src/templates/`
-
-**Propuestas:**
-
-1. **Hook de cleanup en MultiFileExporter:**
-   - Añadir método `exportCleanup()` que se llame tras `doExport()`
-   - JoplinExporter lo usaría para resetear `this.ctx = null`
-   - Beneficio: Liberación explícita de memoria, patrón más defensivo
-
-   ```typescript
-   // En MultiFileExporter
-   protected async exportCleanup(): Promise<void> {}
-
-   // En JoplinExporter
-   protected override async exportCleanup(): Promise<void> {
-     this.ctx = null;
-   }
-   ```
-
-2. **Mejorar heurística de `noteConsumedAsTags`:**
-   - Actual: `hasTags && hasNote` (puede dar falsos positivos)
-   - Alternativas:
-     - Comparar si `note` coincide exactamente con los tags
-     - Añadir flag explícito en el parser cuando detecta tags en notas
-     - Hacerlo configurable via `TemplateOptions`
-
-3. **Tipado fuerte para helper `opt`:**
-   - Crear tipo para opciones conocidas
-   - Mejorar autocompletado y validación en templates
-
-   ```typescript
-   type KnownTemplateOption = 'wikilinks' | 'useCallouts' | 'includeBookmarks';
-   ```
+**Consecuencias:** Consistencia con CsvImporter. Mejor UX en errores.
 
 ---
 
-### Mejoras Post-1.5: Dynamic Path Templating
+### 3.4 Límites de Seguridad de Memoria
 
-**Ubicacion:** `src/exporters/`, `src/schemas/`, `tests/`
+| Impacto | Esfuerzo | Riesgo | ROI |
+|---------|----------|--------|-----|
+| 🟡 Medio | 🟢 Bajo | 🟢 Bajo | ⭐⭐⭐ |
 
-**Propuestas:**
+**Ubicación:** `src/importers/`
 
-1. **Tests para `generatePath`:**
-   - Añadir tests unitarios en `tests/unit/exporters/exporter-utils.test.ts`
-   - Cubrir: templates básicos, placeholders faltantes, caracteres especiales, sanitización
-
-   ```typescript
-   describe("generatePath", () => {
-     it("replaces placeholders with sanitized values", () => {
-       const data = { title: "1984", author: "George Orwell" };
-       expect(generatePath("{author}/{title}", data)).toBe("George Orwell/1984");
-     });
-
-     it("replaces missing fields with 'unknown'", () => {
-       const data = { title: "Book", author: "Author" };
-       expect(generatePath("{series}/{title}", data)).toBe("unknown/Book");
-     });
-   });
-   ```
-
-2. **Integración con CLI (`--path-format`):**
-   - Añadir `pathFormat?: string` a `ExporterOptions` en `src/exporters/core/types.ts`
-   - Crear schema en `src/schemas/exporter.schema.ts`:
-     ```typescript
-     pathFormat: z.string()
-       .regex(/^[^<>:"|?*]+$/, "Invalid characters in path template")
-       .optional()
-     ```
-   - Modificar exporters multi-file para usar template custom cuando se proporcione
-
-3. **Extensibilidad de `PathData`:**
-   - Añadir índice para campos custom:
-     ```typescript
-     export interface PathData {
-       title: string;
-       author: string;
-       year?: string;
-       series?: string;
-       [key: string]: string | undefined; // campos adicionales
-     }
-     ```
-   - Permitir campos desde metadata del clipping (ej: `{language}`, `{source}`)
-
-4. **Validación de placeholders:**
-   - Añadir modo estricto opcional que advierta sobre placeholders no reconocidos
-   - Útil para detectar typos en templates custom (ej: `{autor}` en vez de `{author}`)
-
-   ```typescript
-   export function validatePathTemplate(
-     template: string,
-     knownFields: string[] = ["title", "author", "year", "series"]
-   ): string[] {
-     const warnings: string[] = [];
-     const placeholders = template.match(/{(\w+)}/g) || [];
-     for (const ph of placeholders) {
-       const field = ph.slice(1, -1);
-       if (!knownFields.includes(field)) {
-         warnings.push(`Unknown placeholder: ${ph}`);
-       }
-     }
-     return warnings;
-   }
-   ```
-
-
-
-### 4.1 Refactor: Pipeline Pattern
-
-**Ubicacion:** `src/core/processor.ts`
-
-**Problema:** `processClippings` es una "God Function" difícil de testear y extender.
-
-**Solucion:**
 ```typescript
-interface ProcessorStep {
-  name: string;
-  run(clippings: Clipping[], context: Context): Clipping[];
-}
+const MAX_VALIDATION_ERRORS = 100;
 
-class Pipeline {
-  use(step: ProcessorStep);
-  execute(input: Clipping[]): ProcessResult;
+// En el loop de validación:
+if (errors.length >= MAX_VALIDATION_ERRORS) {
+  errors.push({
+    row: -1,
+    field: "file",
+    message: `Stopped after ${MAX_VALIDATION_ERRORS} errors. File may be corrupted.`,
+  });
+  break;
 }
 ```
 
----
-
-### 4.2 Property-Based Testing
-
-**Ubicacion:** `tests/property/`
-
-**Propuesta:** Usar `fast-check` para verificar invariantes en el pipeline de procesamiento.
-- "Si highlightsOnly=true, output nunca contiene notas"
-- "Deduplicación nunca pierde datos únicos"
+**Consecuencias:** Previene OOM en archivos masivos corruptos.
 
 ---
 
-### 4.3 Lazy Template Compilation
+### 3.5 Hook de Cleanup en MultiFileExporter
 
-**Ubicacion:** `src/templates/engine.ts`, `src/templates/factory.ts`
+| Impacto | Esfuerzo | Riesgo | ROI |
+|---------|----------|--------|-----|
+| 🟢 Bajo | 🟢 Bajo | 🟢 Bajo | ⭐⭐ |
 
-**Propuesta:**
-Retrasar la compilación de templates Handlebars hasta el primer uso.
-- `TemplateEngineFactory` devuelve proxy o thunk.
-- Reduce tiempo de inicio si no se usan todos los templates.
+**Ubicación:** `src/exporters/shared/multi-file-exporter.ts`
 
----
+```typescript
+// En MultiFileExporter
+protected async exportCleanup(): Promise<void> {}
 
-### 4.4 Logging Improvements (Post-2.7)
+// En doExport(), al final:
+await this.exportCleanup();
 
-**Propuestas para maximizar el sistema de logging estructurado:**
+// En JoplinExporter
+protected override async exportCleanup(): Promise<void> {
+  this.ctx = null;
+}
+```
 
-1.  **Instrumentación Core (Media Prioridad):**
-    - Añadir `logInfo` y `logDebug` estratégicos en Importers, Processors y Exporters.
-    - Objetivo: Visibilidad del flujo de datos y filtrado de notas.
-
-2.  **Configuración en `kindletoolsrc` (Baja Prioridad):**
-    - Permitir configurar nivel y formato de logs en el JSON/YAML de config.
-    - Ejemplo: `{ "logging": { "level": "debug", "format": "json" } }`
-
-3.  **Utility `MeasureTime` (DX):**
-    - Helper para medir rendimiento usando el logger.
-    - `measure("parsing", () => ...)` -> logDebug con `durationMs`.
-
-4.  **Sanitización de Logs (Seguridad):**
-    - Regla: Contexto (`ctx`) solo debe tener metadatos (IDs), no contenido de usuario.
-    - Prevenir leak de contenido privado en logs de debug.
+**Consecuencias:** Liberación explícita de memoria. Patrón más defensivo.
 
 ---
 
-### Tests: Mejorar Cobertura en Importers
+### 3.6 Lazy Template Compilation
 
-**Ubicacion:** `tests/unit/importers/importers.test.ts`
+| Impacto | Esfuerzo | Riesgo | ROI |
+|---------|----------|--------|-----|
+| 🟢 Bajo | 🟡 Medio | 🟡 Medio | ⭐ |
 
-**Mejoras:**
-1. Agregar casos de prueba para el nuevo flujo de `IMPORT_VALIDATION_ERROR`.
-2. Verificar que las sugerencias de typos funcionan correctamente.
-3. Testear la acumulación de múltiples errores en una misma fila y en múltiples filas.
+**Ubicación:** `src/templates/engine.ts`
+
+**Propuesta:** Retrasar compilación Handlebars hasta primer uso usando Proxy.
+
+**Consecuencias:** Complejidad añadida. Solo útil si hay muchos templates no usados.
 
 ---
 
-### 4.4 Mejoras en Archiver Interface (Unified Archiver)
- 
- **Ubicacion:** `src/utils/archive/`
- 
- **Propuestas:**
- 
- 1. **Memory vs Streaming:**
-    - Actualmente `ZipArchiver.finalize()` genera todo en memoria (`Uint8Array`).
-    - Migrar a streams (`generateNodeStream`) para soportar exports masivos sin OOM.
- 
- 2. **Opciones de Compresion:**
-    - Añadir soporte para nival de compresion (`STORE` vs `DEFLATE`).
-    - Util para archivos ya comprimidos (imagenes, PDFs).
- 
- 3. **Implementacion Real de Tar:**
-    - Implementar un `TarArchiver` ligero (sin dependencias pesadas).
-    - Concatenar bloques con headers POSIX standard.
- 
- 4. **Metadatos de Archivos:**
-    - Permitir establecer fecha de modificacion explicita en `addFile`.
-    - Usar fecha del clipping o del export para consistencia.
- 
- ---
+### 3.7 Logging Improvements
 
-### 4.5 Post-Implementation Plugin System Improvements
+| Impacto | Esfuerzo | Riesgo | ROI |
+|---------|----------|--------|-----|
+| 🟡 Medio | 🟢 Bajo | 🟢 Bajo | ⭐⭐⭐ |
 
-**Estado:** Post-Implementación (Feedback y Mejoras Futuras)
+**Propuestas:**
 
-**Ubicacion:** `src/plugins/`
+1. **Instrumentación Core:**
+   ```typescript
+   // En importers
+   logDebug("Parsing CSV", { rows: rows.length });
 
-1.  **Optimización en `resetPluginInstance`:**
-    - Actualmente iteramos `this.importers.values()`, lo que puede visitar la misma instancia múltiples veces si tiene alias.
-    - **Mejora:** Usar `new Set(this.importers.values())` para iterar solo instancias únicas al resetear.
+   // En processor
+   logInfo("Processing complete", {
+     duplicatesRemoved,
+     mergedHighlights
+   });
+   ```
 
-2.  **Validación "Dry-Run" (Investigación):**
-    - `validateExporterInstance` solo chequea `typeof === 'function'`.
-    - Investigar si es posible (y seguro) hacer una llamada de prueba con datos dummy para validar que el plugin no explota inmediatamente.
+2. **Configuración en `kindletoolsrc`:**
+   ```json
+   { "logging": { "level": "debug", "format": "json" } }
+   ```
 
-3.  **Restricción de Sincronía en `create()`:**
-    - **Constraint:** El diseño actual asume que `plugin.create()` es síncrono para soportar getters como `extension`.
-    - **Futuro:** Si se necesitan plugins con inicialización pesada/asíncrona (WASM, DB), se requerirá refactorizar para soportar `await pluginRegistry.getExporter()`.
-    - **Regla actual:** Mantener `create()` ligero y mover trabajo pesado a `export()`/`import()`.
+3. **Utility `measureTime`:**
+   ```typescript
+   async function measureTime<T>(name: string, fn: () => Promise<T>): Promise<T> {
+     const start = performance.now();
+     const result = await fn();
+     logDebug(`${name} completed`, { durationMs: performance.now() - start });
+     return result;
+   }
+   ```
+
+4. **Sanitización:** Solo metadatos en logs, nunca contenido de usuario.
+
+---
+
+### 3.8 Mejoras en Archiver Interface
+
+| Impacto | Esfuerzo | Riesgo | ROI |
+|---------|----------|--------|-----|
+| 🟢 Bajo | 🟡 Medio | 🟡 Medio | ⭐ |
+
+**Ubicación:** `src/utils/archive/`
+
+1. **Streaming:** `generateNodeStream` para exports masivos
+2. **Compresión:** Soporte `STORE` vs `DEFLATE`
+3. **TarArchiver real:** Headers POSIX standard
+4. **Metadatos:** Fecha de modificación en `addFile`
+
+**Consecuencias:** Solo útil para exports muy grandes (>100MB).
+
+---
+
+### 3.9 Plugin System Improvements
+
+| Impacto | Esfuerzo | Riesgo | ROI |
+|---------|----------|--------|-----|
+| 🟢 Bajo | 🟢 Bajo | 🟢 Bajo | ⭐⭐ |
+
+**Ubicación:** `src/plugins/`
+
+1. **Optimización `resetPluginInstance`:**
+   ```typescript
+   const uniqueEntries = new Set(this.importers.values());
+   for (const entry of uniqueEntries) { /* ... */ }
+   ```
+
+2. **Documentar restricción:** `create()` debe ser síncrono y ligero.
+
+---
+
+### 3.10 Tests: Cobertura en Importers
+
+| Impacto | Esfuerzo | Riesgo | ROI |
+|---------|----------|--------|-----|
+| 🟡 Medio | 🟢 Bajo | 🟢 Bajo | ⭐⭐⭐ |
+
+**Ubicación:** `tests/unit/importers/importers.test.ts`
+
+**Casos faltantes:**
+1. `IMPORT_VALIDATION_ERROR` con múltiples errores
+2. Sugerencias de typos funcionando (`hightlight` → `highlight`)
+3. Acumulación de errores en múltiples filas
+4. Límite de errores (si se implementa 3.4)
+
+---
+
+### 3.11 Validación de Path Templates
+
+| Impacto | Esfuerzo | Riesgo | ROI |
+|---------|----------|--------|-----|
+| 🟢 Bajo | 🟢 Bajo | 🟢 Bajo | ⭐⭐ |
+
+**Ubicación:** `src/exporters/shared/exporter-utils.ts`
+
+```typescript
+export function validatePathTemplate(
+  template: string,
+  knownFields = ["title", "author", "year", "series"]
+): string[] {
+  const warnings: string[] = [];
+  const placeholders = template.match(/{(\w+)}/g) || [];
+  for (const ph of placeholders) {
+    const field = ph.slice(1, -1);
+    if (!knownFields.includes(field)) {
+      warnings.push(`Unknown placeholder: ${ph}`);
+    }
+  }
+  return warnings;
+}
+```
+
+**Consecuencias:** Detecta typos como `{autor}` vs `{author}`.
+
+---
+
+## 4. Not Planned
+
+### Descartado Permanentemente
+
+| Item | Razón |
+|------|-------|
+| PDF Export | Requiere librería de renderizado pesada |
+| Readwise Sync | API propietaria |
+| Highlight Colors | Kindle no exporta esta info |
+| Streaming Architecture | Caso de uso muy raro (50MB+) |
+| CLI | Eliminada. Usuarios pueden crear wrappers |
+| Pipeline Pattern en Processor | `processor.ts` (~200 ln) ya delega correctamente. Sería over-engineering |
+
+### Sin Plan Concreto
+
+- **Anki Export:** Ya existe como plugin de ejemplo
+- **Notion Integration:** API propietaria
+- **Kobo/Apple Books:** Requiere parsers específicos
+- **AI Enrichment:** Claude API para tags (fuera de scope)
+- **WASM Web App:** Complejidad vs beneficio bajo
+- **Mutation Testing (Stryker):** Costoso en CI
+- **E2E Testing (Playwright):** Solo para workbench
+
+---
+
+## 5. Completado
+
+Historial de mejoras implementadas.
+
+### Media Prioridad
+
+| Descripción | Detalles |
+|-------------|----------|
+| **Carga Dinámica Locales date-fns** | `LOCALE_LOADERS` con imports dinámicos + cache en `dates.ts` |
+| **Eliminar `any` en Detección Entorno** | Type guards en `hashing.ts` |
+| **Mejoras MultiFileExporter** | Stateless, `exportPreamble(clippings)`, templates Joplin |
+| **Dynamic Path Templating** | `generatePath()`, `PATH_TEMPLATES` en `exporter-utils.ts` |
+| **Contexto Errores Importers** | `ImportErrorDetail`, `importValidationError()` |
+| **Automated Release Pipeline** | `.github/workflows/release.yml` con changesets |
+| **Merged Output Mode** | `mergedOutput`, `removeUnlinkedNotes` en `ProcessOptions` |
+
+### Baja Prioridad
+
+| Descripción | Detalles |
+|-------------|----------|
+| **Renombrar process** | `processClippings()` |
+| **TemplateEngine Cache** | `TemplateEngineFactory` con prefijos `preset:`/`custom:` |
+| **Unified Archiver Interface** | `Archiver`, `ZipArchiver`, `TarArchiver` |
+| **Structured Logging** | `Logger` con `debug`, `info`, `warn`, `error` |
+| **Plugin Instance Reset** | `resetPluginInstance()` |
+| **Plugin Runtime Validation** | `validateExporterInstance()`, `validateImporterInstance()` |
+| **Minor Code Improvements** | Constants, tipos explícitos, `html.styles.ts`, `isolatedDeclarations` |
+
+### Property-Based Testing
+
+Ya existe en `tests/stress/parser.properties.test.ts` usando `fast-check`:
+- Invariante: Parser nunca crashea con input arbitrario
+- Oracle: Bloques válidos construidos se parsean correctamente
 
 ---
 
@@ -893,22 +697,35 @@ Retrasar la compilación de templates Handlebars hasta el primer uso.
 ### TypeScript Libraries 2025
 - [Building a TypeScript Library in 2025](https://dev.to/arshadyaseen/building-a-typescript-library-in-2025-2h0i)
 - [Tutorial: publishing ESM-based npm packages](https://2ality.com/2025/02/typescript-esm-packages.html)
-- [TypeScript in 2025 with ESM and CJS](https://lirantal.com/blog/typescript-in-2025-with-esm-and-cjs-npm-publishing)
 
 ### Error Handling
 - [neverthrow](https://github.com/supermacro/neverthrow)
-- [Error Handling Best Practices](https://github.com/supermacro/neverthrow/wiki/Error-Handling-Best-Practices)
 
 ### Testing
 - [Vitest Best Practices](https://www.projectrules.ai/rules/vitest)
 - [fast-check](https://github.com/dubzzz/fast-check)
-- [Vitest 4 adoption guide](https://blog.logrocket.com/vitest-adoption-guide/)
 
 ### Tooling
 - [Biome Configuration](https://biomejs.dev/guides/configure-biome/)
 
+---
+
+## Resumen de Prioridades
+
+| Prioridad | Total | ROI Alto (⭐⭐⭐) |
+|-----------|-------|------------------|
+| Media | 4 | 3 (1.1, 1.3, 1.4) |
+| Baja | 7 | 2 (2.4, 2.6) |
+| Para Estudio | 11 | 4 (3.3, 3.4, 3.7, 3.10) |
+
+### Orden de Ejecución Recomendado
+
+1. **Urgente:** 1.1 Bug Fix CSV Type Validation
+2. **Quick Wins (bajo esfuerzo, alto ROI):** 1.3, 1.4, 3.3, 3.4, 3.7, 3.10
+3. **Cuando haya tiempo:** 1.2, 2.1-2.7
+4. **Investigar primero:** 3.1, 3.2, 3.5-3.9, 3.11
 
 ---
 
-*Documento actualizado: 2026-01-14*
-*Mejoras pendientes: 22 | Media prioridad: 8 (3 completados) | Baja prioridad: 15*
+*Documento actualizado: 2026-01-15*
+*Mejoras pendientes: 22 | Media: 4 | Baja: 7 | Estudio: 11*
