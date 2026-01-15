@@ -410,35 +410,19 @@ export {
 
 ---
 
-### 2.11 Documentar Error Codes en README
+### 2.11 [COMPLETADO] Documentar Error Codes en README
+
+**Estado:** Completado el 2026-01-15.
 
 | Impacto | Esfuerzo | Riesgo | ROI |
 |---------|----------|--------|-----|
 | 🟡 Medio | 🟢 Bajo | 🟢 Bajo | ⭐⭐⭐ |
 
-**Ubicación:** `README.md`, sección "Error Handling"
+**Ubicación:** `README.md`, sección "Error Codes Reference"
 
 **Problema:** README menciona códigos de error pero no hay lista completa.
 
-**Solución:** Añadir tabla con todos los códigos:
-
-```markdown
-### Error Codes Reference
-
-| Domain | Code | Description |
-|--------|------|-------------|
-| Import | `IMPORT_PARSE_ERROR` | Failed to parse file content |
-| Import | `IMPORT_EMPTY_FILE` | File has no content |
-| Import | `IMPORT_INVALID_FORMAT` | Schema validation failed |
-| Import | `IMPORT_VALIDATION_ERROR` | Row-level validation errors |
-| Export | `EXPORT_UNKNOWN_FORMAT` | Unsupported export format |
-| Export | `EXPORT_WRITE_FAILED` | Failed to write output |
-| Export | `EXPORT_NO_CLIPPINGS` | No clippings to export |
-| Config | `CONFIG_NOT_FOUND` | Config file not found |
-| Config | `CONFIG_INVALID` | Invalid config structure |
-| Plugin | `PLUGIN_INIT_ERROR` | Plugin initialization failed |
-| Plugin | `PLUGIN_INVALID_INSTANCE` | Plugin returned invalid instance |
-```
+**Solución:** Tabla completa añadida.
 
 ---
 
@@ -567,14 +551,14 @@ Usar `fastest-levenshtein` para mapear columnas del CSV a las esperadas (`Title`
 | Prioridad | Total | ROI Alto (⭐⭐⭐) |
 |-----------|-------|------------------|
 | Media | 5 | 4 (1.1, 1.2, 1.4, 1.5) |
-| Baja | 10 | 4 (2.2, 2.3, 2.11, 2.12) |
-| Completado | 2 | 2 (2.4, 2.10) |
+| Baja | 9 | 3 (2.2, 2.3, 2.12) |
+| Completado | 3 | 3 (2.4, 2.10, 2.11) |
 | Estudio | 2 | 0 |
 
 ### Orden de Ejecución Recomendado
 
 1. **Urgente:** 1.1 Bug Fix CSV Type Validation
-2. **Quick Wins:** 1.2, 1.4, 1.5, 2.2, 2.3, 2.11
+2. **Quick Wins:** 1.2, 1.4, 1.5, 2.2, 2.3
 3. **Cuando haya tiempo:** 1.3, 2.1, 2.5-2.9, 2.12
 4. **Evaluar necesidad:** 3.1, 3.2
 
@@ -598,4 +582,4 @@ Usar `fastest-levenshtein` para mapear columnas del CSV a las esperadas (`Title`
 ---
 
 *Documento actualizado: 2026-01-15*
-*Mejoras pendientes: 17 | Media: 5 | Baja: 10 | Estudio: 2*
+*Mejoras pendientes: 16 | Media: 5 | Baja: 9 | Estudio: 2*

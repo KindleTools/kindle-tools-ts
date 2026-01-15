@@ -481,6 +481,25 @@ The `AppError` type union covers:
 - `VALIDATION_*`: schema or argument errors
 - `FS_*`: file system errors
 
+### Error Codes Reference
+
+| Domain | Code | Description |
+|--------|------|-------------|
+| Import | `IMPORT_PARSE_ERROR` | Failed to parse file content |
+| Import | `IMPORT_EMPTY_FILE` | File has no content |
+| Import | `IMPORT_INVALID_FORMAT` | Schema validation failed |
+| Import | `IMPORT_VALIDATION_ERROR` | Row-level validation errors |
+| Export | `EXPORT_UNKNOWN_FORMAT` | Unsupported export format |
+| Export | `EXPORT_WRITE_FAILED` | Failed to write output |
+| Export | `EXPORT_NO_CLIPPINGS` | No clippings to export |
+| Export | `EXPORT_TEMPLATE_ERROR` | Template compilation failed |
+| Config | `CONFIG_NOT_FOUND` | Config file not found |
+| Config | `CONFIG_INVALID` | Invalid config structure |
+| Config | `CONFIG_LOAD_ERROR` | Failed to load config |
+| Plugin | `PLUGIN_INIT_ERROR` | Plugin initialization failed |
+| Plugin | `PLUGIN_INVALID_INSTANCE` | Plugin returned invalid instance |
+| Plugin | `PLUGIN_NOT_FOUND` | Plugin not registered |
+
 ### Custom Logger
 
 By default, the library logs errors and warnings to `console`. You can inject your own logger to redirect logs to your preferred backend (Pino, Winston, Sentry, Datadog, etc.):
@@ -495,10 +514,20 @@ const pinoLogger = pino();
 setLogger({
   error: (entry) => pinoLogger.error(entry),
   warn: (entry) => pinoLogger.warn(entry),
+  info: (msg, ctx) => pinoLogger.info(ctx, msg),
+  debug: (msg, ctx) => pinoLogger.debug(ctx, msg),
 });
 
 // Later, reset to default console logger
 resetLogger();
+```
+
+You can also use the library's logger in your own code (e.g., in plugins) using the exported helpers:
+
+```typescript
+import { logDebug, logInfo, logWarning, logError } from 'kindle-tools-ts';
+
+logInfo("Starting custom operation", { operation: "my-plugin" });
 ```
 
 To silence all logs (useful for tests or production):
