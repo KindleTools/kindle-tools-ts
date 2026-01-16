@@ -26,8 +26,8 @@ describe("JsonImporter", () => {
 
       expect(result.isErr()).toBe(true);
       if (result.isErr()) {
-        expect(result.error.code).toBe("IMPORT_INVALID_FORMAT");
-        expect(result.error).toHaveProperty("issues");
+        expect(result.error.code).toBe("IMPORT_PARSE_ERROR");
+        expect(result.error.message).toContain("Invalid JSON structure");
       }
     });
 

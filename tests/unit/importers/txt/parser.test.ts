@@ -5,6 +5,7 @@
 import { describe, expect, it } from "vitest";
 import { parse, parseString } from "#importers/formats/txt/parser.js";
 import { SAMPLE_CLIPPINGS_EN, SAMPLE_CLIPPINGS_ES } from "../../../fixtures/sample-clippings.js";
+import { loadFixture } from "../../../helpers/fixtures.js";
 
 describe("parser", () => {
   describe("parseString", () => {
@@ -144,10 +145,7 @@ describe("parser", () => {
     });
 
     it("should handle malformed blocks gracefully", async () => {
-      const malformed = `Incomplete block
-==========
-Just one line
-==========`;
+      const malformed = loadFixture("edge-cases/malformed.txt");
 
       const result = await parseString(malformed);
 
@@ -170,11 +168,7 @@ Just one line
     });
 
     it("should handle extra whitespace in blocks", async () => {
-      const withExtraSpace = `The Great Gatsby (F. Scott Fitzgerald)
-- Your Highlight on page 5 | Location 100-105 | Added on Friday, January 1, 2024 10:30:45 AM
-
-   Some content with leading spaces
-==========`;
+      const withExtraSpace = loadFixture("edge-cases/extra-space.txt");
 
       const result = await parseString(withExtraSpace);
 

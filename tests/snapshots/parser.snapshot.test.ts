@@ -5,7 +5,7 @@ import { parse } from "../../src/importers/formats/txt/parser.js";
 
 describe("Parser Snapshot Tests", () => {
   it("should match standard file output snapshot", async () => {
-    const fixturePath = path.resolve(__dirname, "fixtures/standard.txt");
+    const fixturePath = path.resolve(__dirname, "../fixtures/clippings/standard.txt");
     const content = fs.readFileSync(fixturePath, "utf-8");
 
     const result = await parse(content);
@@ -22,7 +22,10 @@ describe("Parser Snapshot Tests", () => {
     // toMatchFileSnapshot compares the serialized result against a file content.
     // If the file doesn't exist, it creates it.
     // Ideally, we start with a JSON snapshot.
-    const snapshotPath = path.resolve(__dirname, "fixtures/standard.output.json");
+    const snapshotPath = path.resolve(
+      __dirname,
+      "../fixtures/expected-output/standard.output.json",
+    );
 
     await expect(`${JSON.stringify(normalizedResult, null, 2)}\n`).toMatchFileSnapshot(
       snapshotPath,

@@ -48,7 +48,7 @@ Plan para llevar el proyecto a **v1.0 estable** y cerrar el scope de features.
 
 ---
 
-### 1.2 Tests para generatePath
+### 1.2 [COMPLETADO]  Tests para generatePath
 
 | Impacto | Esfuerzo | Riesgo | ROI |
 |---------|----------|--------|-----|
@@ -71,6 +71,9 @@ describe("generatePath", () => {
   });
 });
 ```
+
+**Estado:** ✅ Completado (Tests verificados en `tests/unit/exporters/exporter-utils.test.ts`)
+
 
 ---
 
@@ -111,7 +114,7 @@ if (JSON.stringify(generated) !== JSON.stringify(existingSchema)) {
 
 Items útiles pero **no bloquean v1.0**.
 
-### 2.1 Consolidar Test Fixtures
+### 2.1 [COMPLETADO] Consolidar Test Fixtures
 
 | Impacto | Esfuerzo | Riesgo | ROI |
 |---------|----------|--------|-----|
@@ -131,13 +134,15 @@ Sugerir correcciones para headers con typos (`Titl` → `Title`) usando `fastest
 
 ---
 
-### 2.3 Tests: Cobertura Importers
+### 2.3 [COMPLETADO] Tests: Cobertura Importers
 
 | Impacto | Esfuerzo | Riesgo | ROI |
 |---------|----------|--------|-----|
 | 🟡 Medio | 🟢 Bajo | 🟢 Bajo | ⭐⭐ |
 
 Tests para: múltiples errores, sugerencias de typos, MAX_VALIDATION_ERRORS.
+
+**Estado:** ✅ Completado (Tests verificados en `tests/unit/importers/importers.test.ts`)
 
 ---
 
@@ -198,6 +203,9 @@ Solo si hay bugs reportados. El parser actual funciona.
 | Eliminar cosmiconfig | 2026-01-16 | ✅ |
 | CSV Type Validation (Zod enum) | 2026-01-15 | ✅ |
 | Logging en Importers | 2026-01-15 | ✅ logDebug en CSV/JSON/TXT |
+| Consolidar Test Fixtures | 2026-01-16 | ✅ |
+| Tests Generate Path | 2026-01-16 | ✅ |
+| Cobertura Importers | 2026-01-16 | ✅ |
 
 ---
 
@@ -216,7 +224,8 @@ Solo si hay bugs reportados. El parser actual funciona.
 
 **Pendiente:**
 - [ ] Eliminar plugins (1.1)
-- [ ] Tests generatePath (1.2)
+- [ ] Eliminar plugins (1.1)
+- [x] Tests generatePath (1.2)
 - [ ] Script schema (1.3)
 - [ ] README v1.0 (1.4)
 

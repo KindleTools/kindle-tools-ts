@@ -6,50 +6,17 @@
 
 import type { Clipping } from "#app-types/clipping.js";
 
+import { loadFixture } from "../helpers/fixtures.js";
+
 /**
  * Sample English clippings file content.
  */
-export const SAMPLE_CLIPPINGS_EN = `The Great Gatsby (F. Scott Fitzgerald)
-- Your Highlight on page 5 | Location 100-105 | Added on Friday, January 1, 2024 10:30:45 AM
-
-In my younger and more vulnerable years my father gave me some advice that I've been turning over in my mind ever since.
-==========
-The Great Gatsby (F. Scott Fitzgerald)
-- Your Note on page 5 | Location 100 | Added on Friday, January 1, 2024 10:31:00 AM
-
-This is my note about the opening line.
-==========
-1984 (George Orwell)
-- Your Highlight on page 15 | Location 200-210 | Added on Saturday, January 2, 2024 3:45:00 PM
-
-Big Brother is watching you.
-==========
-1984 (George Orwell)
-- Your Bookmark on page 15 | Location 200 | Added on Saturday, January 2, 2024 3:46:00 PM
-
-
-==========
-Clean Code (Robert C. Martin)
-- Your Highlight on page 42 | Location 500-520 | Added on Sunday, January 3, 2024 8:00:00 AM
-
-The first rule of functions is that they should be small. The second rule of functions is that they should be smaller than that.
-==========
-`;
+export const SAMPLE_CLIPPINGS_EN = loadFixture("sample-en.txt");
 
 /**
  * Sample Spanish clippings file content.
  */
-export const SAMPLE_CLIPPINGS_ES = `Don Quijote de la Mancha (Miguel de Cervantes)
-- Tu subrayado en la página 10 | Ubicación 150-160 | Añadido el lunes, 1 de enero de 2024 11:00:00
-
-En un lugar de la Mancha, de cuyo nombre no quiero acordarme
-==========
-Don Quijote de la Mancha (Miguel de Cervantes)
-- Tu nota en la página 10 | Ubicación 150 | Añadido el lunes, 1 de enero de 2024 11:01:00
-
-Inicio del libro
-==========
-`;
+export const SAMPLE_CLIPPINGS_ES = loadFixture("sample-es.txt");
 
 /**
  * Pre-built clipping objects for exporter tests.
