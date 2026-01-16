@@ -248,6 +248,30 @@ export function generatePath(template: string, data: PathData): string {
 }
 
 /**
+ * Validate a path template string.
+ *
+ * Checks if the template contains any unknown placeholders.
+ *
+ * @param template - The template string to validate
+ * @param knownFields - List of allowed placeholder names (default: title, author, year, series)
+ * @returns Array of warning messages for unknown placeholders
+ */
+export function validatePathTemplate(
+  template: string,
+  knownFields: string[] = ["title", "author", "year", "series"],
+): string[] {
+  const warnings: string[] = [];
+  const placeholders = template.match(/{(\w+)}/g) || [];
+  for (const ph of placeholders) {
+    const field = ph.slice(1, -1);
+    if (!knownFields.includes(field)) {
+      warnings.push(`Unknown placeholder: ${ph}`);
+    }
+  }
+  return warnings;
+}
+
+/**
  * Apply case transformation to a string.
  *
  * @param str - The string to transform

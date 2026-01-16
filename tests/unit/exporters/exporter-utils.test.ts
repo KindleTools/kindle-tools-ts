@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { sanitizeFilename } from "../../../src/exporters/shared/exporter-utils.js";
+import {
+  generatePath,
+  sanitizeFilename,
+  validatePathTemplate,
+} from "../../../src/exporters/shared/exporter-utils.js";
 
 describe("sanitizeFilename", () => {
   it("should remove invalid characters", () => {
@@ -98,5 +102,55 @@ describe("sanitizeFilename", () => {
   it("should respect maxLength parameter", () => {
     const longName = "a".repeat(200);
     expect(sanitizeFilename(longName, 50).length).toBe(50);
+  });
+});
+
+describe("generatePath", () => {
+  it("replaces placeholders with sanitized values", () => {
+    const data = {
+      title: "1984",
+      author: "George Orwell",
+      year: "1949",
+      series: "Classics",
+    };
+    expect(generatePath("{author}/{title}", data)).toBe("George Orwell/1984");
+  });
+
+  it("replaces missing fields with 'unknown'", () => {
+    const data = {
+      title: "Book",
+      author: "Author",
+      // year and series missing
+    };
+    expect(generatePath("{series}/{title}", data)).toBe("unknown/Book");
+  });
+
+  it("sanitizes replaced values", () => {
+    const data = {
+      title: "A/B: C",
+      author: "Start*",
+    };
+    // A/B: C -> A-B- C
+    // Start* -> Start-
+    expect(generatePath("{author}/{title}", data as any)).toBe("Start-/A-B- C");
+  });
+});
+
+describe("validatePathTemplate", () => {
+  it("returns empty array for valid template", () => {
+    expect(validatePathTemplate("{author}/{title}")).toEqual([]);
+    expect(validatePathTemplate("{year} - {series}")).toEqual([]);
+  });
+
+  it("detects unknown placeholders", () => {
+    const warnings = validatePathTemplate("{unknown}/{title}");
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toContain("Unknown placeholder: {unknown}");
+  });
+
+  it("supports custom known fields", () => {
+    const start = "{custom}/{other}";
+    expect(validatePathTemplate(start, ["custom", "other"])).toEqual([]);
+    expect(validatePathTemplate(start, ["custom"])).toHaveLength(1);
   });
 });
