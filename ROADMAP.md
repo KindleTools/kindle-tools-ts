@@ -30,25 +30,7 @@ Plan para llevar el proyecto a **v1.0 estable** y cerrar el scope de features.
 
 ## 1. Para v1.0 (Prioritario)
 
-### 1.1 Simplificar/Eliminar Sistema de Plugins
-
-| Impacto | Esfuerzo | Riesgo | ROI |
-|---------|----------|--------|-----|
-| 🔴 Alto | 🟡 Medio | 🟡 Medio | ⭐⭐⭐ |
-
-**Problema:** El sistema de plugins (~2,100 líneas) es over-engineering. Nadie crea plugins de terceros para librerías de este tipo.
-
-**Acción:**
-- Eliminar `src/plugins/` completamente
-- Remover subpath export `./plugins` de package.json
-- Mover ejemplo Anki a documentación o repo separado
-- Resultado: -2,100 líneas, API más simple, -1 subpath export
-
-**Justificación:** Ver [PLAN.md](PLAN.md) sección 4.
-
----
-
-### 1.2 Bug: Parser CRLF line endings
+### 1.1 Bug: Parser CRLF line endings
 
 | Impacto | Esfuerzo | Riesgo | ROI |
 |---------|----------|--------|-----|
@@ -62,13 +44,13 @@ Plan para llevar el proyecto a **v1.0 estable** y cerrar el scope de features.
 
 ---
 
-### 1.3 Actualizar README para v1.0
+### 1.2 Actualizar README para v1.0
 
 | Impacto | Esfuerzo | Riesgo | ROI |
 |---------|----------|--------|-----|
 | 🟡 Medio | 🟢 Bajo | 🟢 Bajo | ⭐⭐⭐ |
 
-- [ ] Eliminar referencias al sistema de plugins (tras 1.1)
+- [x] Eliminar referencias al sistema de plugins
 - [ ] Añadir: "v1.0 - Feature complete, accepting bug fixes only"
 
 ---
@@ -119,7 +101,6 @@ Usar Levenshtein para sugerir unificación de autores ("J.K. Rowling" vs "Rowlin
 | **Browser Entry Point separado** | El actual funciona en browser |
 | **Performance Benchmarking** | No hay problemas de rendimiento reportados |
 | **Refactorizar archivos largos** | Código funciona, refactor estético no justifica riesgo |
-| **Plugin Registry Split** | Irrelevante si eliminamos plugins |
 | **Monorepo Structure** | Complejidad no justificada |
 | **Path Modifiers** | Scope creep |
 | **Fuzzy Template Suggestions** | Nice-to-have, no esencial |
@@ -135,10 +116,10 @@ Usar Levenshtein para sugerir unificación de autores ("J.K. Rowling" vs "Rowlin
 | Highlight Colors | Kindle no exporta |
 | Streaming Architecture | Caso raro (50MB+) |
 | Web Crypto API async | Complejidad no justificada |
+| Plugin System | Eliminado - over-engineering |
 
 ### Sin Plan
 
-- Anki Export (ya existe como ejemplo, mover a docs tras eliminar plugins)
 - Notion/Kobo/Apple Books (APIs propietarias, fuera de scope)
 - measureTime utility (nice-to-have)
 
@@ -159,6 +140,7 @@ Usar Levenshtein para sugerir unificación de autores ("J.K. Rowling" vs "Rowlin
 | Cobertura Importers | 2026-01-16 | ✅ importers.test.ts |
 | Fuzzy CSV Headers | 2026-01-16 | ✅ csv-fuzzy-headers.test.ts |
 | Script validar schema.json | 2026-01-16 | ✅ CI workflow + scripts/validate-schema.ts |
+| **Eliminar sistema de plugins** | 2026-01-16 | ✅ -2,100 líneas, -84 tests |
 
 ---
 
@@ -166,20 +148,19 @@ Usar Levenshtein para sugerir unificación de autores ("J.K. Rowling" vs "Rowlin
 
 | Criterio | Estado |
 |----------|--------|
-| Tests automatizados | ✅ 829 tests (1 failing: CRLF) |
+| Tests automatizados | ✅ 745 tests (1 failing: CRLF) |
 | CI/CD | ✅ GitHub Actions |
 | SemVer | ✅ Changesets |
 | TypeScript strict | ✅ |
 | ESM + CJS | ✅ |
 | Security | ✅ Zod, CSV injection protection |
-| Documentación | ✅ README 900+ líneas |
+| Documentación | ✅ README 800+ líneas |
 | Error handling | ✅ neverthrow |
-| Dependencies | ✅ 6 runtime (reducido de 8) |
+| Dependencies | ✅ 6 runtime |
 
 **Pendiente:**
-- [ ] Eliminar plugins (1.1)
-- [ ] Fix CRLF parser (1.2)
-- [ ] README v1.0 (1.3)
+- [ ] Fix CRLF parser (1.1)
+- [ ] README v1.0 (1.2)
 
 ---
 
@@ -191,4 +172,4 @@ Usar Levenshtein para sugerir unificación de autores ("J.K. Rowling" vs "Rowlin
 
 ---
 
-*Actualizado: 2026-01-16 | Para v1.0: 3 items | Opcional: 3 items*
+*Actualizado: 2026-01-16 | Para v1.0: 2 items | Opcional: 3 items*

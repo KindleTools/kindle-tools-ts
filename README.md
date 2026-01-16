@@ -23,7 +23,6 @@ A robust TypeScript library to parse and process Amazon Kindle `My Clippings.txt
 - [🚀 Quick Start](#-quick-start)
 - [📚 API Reference](#-api-reference)
 - [📤 Export Formats](#-export-formats)
-- [🔌 Plugin System](#-plugin-system)
 - [🌍 Supported Languages](#-supported-languages)
 - [🌐 Browser Compatibility](#-browser-compatibility)
 - [🛠️ Workbench (Visual Testing)](#️-workbench-visual-testing)
@@ -71,7 +70,6 @@ A robust TypeScript library to parse and process Amazon Kindle `My Clippings.txt
 - 📚 **6 export formats** — JSON, CSV, Markdown, Obsidian, Joplin JEX, HTML
 - 📊 **Extended statistics** — Avg words/highlight, avg highlights/book, and more
 - 📘 **TypeScript-first** — Full type definitions with strict mode
-- 🔌 **Plugin system** — Extend with custom importers/exporters
 - 🪶 **Lightweight** — Minimal runtime dependencies (date-fns, zod, handlebars, jszip)
 - 🔒 **Non-destructive** — Always preserves original data (titleRaw, contentRaw) for user review
 - 🛡️ **Security hardened** — CSV export includes formula injection protection (OWASP compliant)
@@ -497,9 +495,6 @@ The `AppError` type union covers:
 | Config | `CONFIG_NOT_FOUND` | Config file not found |
 | Config | `CONFIG_INVALID` | Invalid config structure |
 | Config | `CONFIG_LOAD_ERROR` | Failed to load config |
-| Plugin | `PLUGIN_INIT_ERROR` | Plugin initialization failed |
-| Plugin | `PLUGIN_INVALID_INSTANCE` | Plugin returned invalid instance |
-| Plugin | `PLUGIN_NOT_FOUND` | Plugin not registered |
 
 ### Custom Logger
 
@@ -523,12 +518,12 @@ setLogger({
 resetLogger();
 ```
 
-You can also use the library's logger in your own code (e.g., in plugins) using the exported helpers:
+You can also use the library's logger in your own code using the exported helpers:
 
 ```typescript
 import { logDebug, logInfo, logWarning, logError } from 'kindle-tools-ts';
 
-logInfo("Starting custom operation", { operation: "my-plugin" });
+logInfo("Starting custom operation", { operation: "my-task" });
 ```
 
 To silence all logs (useful for tests or production):
@@ -792,77 +787,6 @@ const content = await file.text();
 const result = parseString(content);
 const exporter = new JsonExporter();
 const json = await exporter.export(result.clippings);
-```
-
----
-
-## 🔌 Plugin System
-
-KindleTools provides an extensible plugin architecture for adding custom importers and exporters.
-
-### Basic Plugin Registration
-
-```typescript
-import {
-  pluginRegistry,
-  type ExporterPlugin,
-  type ImporterPlugin,
-} from 'kindle-tools-ts/plugins';
-
-// Register a custom exporter
-const notionPlugin: ExporterPlugin = {
-  name: 'notion-exporter',
-  version: '1.0.0',
-  format: 'notion',
-  description: 'Export clippings to Notion',
-  create: () => new NotionExporter(),
-};
-
-pluginRegistry.registerExporter(notionPlugin);
-
-// Register a custom importer
-const koboPlugin: ImporterPlugin = {
-  name: 'kobo-importer',
-  version: '1.0.0',
-  extensions: ['.kobo', '.xml'],
-  description: 'Import Kobo annotations',
-  create: () => new KoboImporter(),
-};
-
-pluginRegistry.registerImporter(koboPlugin);
-```
-
-### Built-in Plugin Example: Anki Exporter
-
-A ready-to-use Anki exporter is included as an example:
-
-```typescript
-import { pluginRegistry, ankiExporterPlugin } from 'kindle-tools-ts/plugins';
-
-// Register the Anki exporter
-pluginRegistry.registerExporter(ankiExporterPlugin);
-
-// Use it
-const exporter = pluginRegistry.getExporter('anki');
-const result = await exporter.export(clippings, {
-  deckName: 'My Kindle Highlights',
-  cardStyle: 'basic', // 'basic' | 'cloze' | 'reversed'
-});
-```
-
-The Anki exporter creates TSV files compatible with Anki's import feature, converting your highlights into flashcards.
-
-### Lifecycle Hooks
-
-Transform data during import/export with hooks:
-
-```typescript
-import { hookRegistry } from 'kindle-tools-ts/plugins';
-
-// Filter out short highlights before export
-hookRegistry.register('beforeExport', async (clippings) => {
-  return clippings.filter(c => c.content.length > 20);
-});
 ```
 
 ---
