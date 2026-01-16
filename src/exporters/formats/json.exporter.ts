@@ -6,9 +6,9 @@
 
 import type { Clipping } from "#app-types/clipping.js";
 import { groupByBook } from "#domain/analytics/stats.js";
+import type { ExportResult } from "#exporters/core/types.js";
+import { BaseExporter } from "#exporters/shared/base-exporter.js";
 import type { ExporterOptionsParsed } from "#schemas/exporter.schema.js";
-import type { ExportResult } from "../core/types.js";
-import { BaseExporter } from "../shared/base-exporter.js";
 
 /**
  * Export clippings to JSON format.

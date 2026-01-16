@@ -18,8 +18,12 @@ import {
   importValidationError,
   logDebug,
 } from "#errors";
-import { BaseImporter } from "../shared/base-importer.js";
-import { generateImportId, MAX_VALIDATION_ERRORS, parseLocationString } from "../shared/index.js";
+import { BaseImporter } from "#importers/shared/base-importer.js";
+import {
+  generateImportId,
+  MAX_VALIDATION_ERRORS,
+  parseLocationString,
+} from "#importers/shared/index.js";
 
 /**
  * Schema for validating CSV row data.

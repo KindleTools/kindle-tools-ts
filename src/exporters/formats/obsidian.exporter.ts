@@ -11,9 +11,12 @@
  */
 
 import type { Clipping } from "#app-types/clipping.js";
+import type { ExportedFile } from "#exporters/core/types.js";
+import {
+  MultiFileExporter,
+  type MultiFileExporterOptions,
+} from "#exporters/shared/multi-file-exporter.js";
 import type { TemplateEngine, TemplateOptions, TemplatePreset } from "#templates/index.js";
-import type { ExportedFile } from "../core/types.js";
-import { MultiFileExporter, type MultiFileExporterOptions } from "../shared/multi-file-exporter.js";
 
 /**
  * Extended options for Obsidian export.

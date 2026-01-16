@@ -18,7 +18,7 @@ import {
   importSuccess,
   importUnknownError,
 } from "#errors";
-import type { Importer } from "../core/types.js";
+import type { Importer } from "#importers/core/types.js";
 
 /**
  * Abstract base class for importers.

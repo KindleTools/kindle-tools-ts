@@ -23,10 +23,15 @@ import {
   exportUnknownError,
   zodIssuesToValidationIssues,
 } from "#errors";
+import type {
+  AuthorCase,
+  Exporter,
+  ExporterOptions,
+  FolderStructure,
+} from "#exporters/core/types.js";
 import { type ExporterOptionsParsed, ExporterOptionsSchema } from "#schemas/exporter.schema.js";
 import { createArchiver } from "#utils/archive/factory.js";
 import { formatZodError } from "#utils/system/errors.js";
-import type { AuthorCase, Exporter, ExporterOptions, FolderStructure } from "../core/types.js";
 import {
   applyCase as applyCaseUtil,
   collectAllTags as collectAllTagsUtil,

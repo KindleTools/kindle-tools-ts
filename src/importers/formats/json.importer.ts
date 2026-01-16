@@ -10,13 +10,17 @@ import { closest } from "fastest-levenshtein";
 import type { Clipping, ClippingLocation, ClippingType } from "#app-types/clipping.js";
 import type { SupportedLanguage } from "#app-types/language.js";
 import { type ImportResult, importParseError, logDebug } from "#errors";
+import { BaseImporter } from "#importers/shared/base-importer.js";
+import {
+  generateImportId,
+  MAX_VALIDATION_ERRORS,
+  parseLocationString,
+} from "#importers/shared/index.js";
 import {
   type ClippingImport,
   ClippingImportSchema,
   ClippingTypeSchema,
-} from "../../schemas/clipping.schema.js";
-import { BaseImporter } from "../shared/base-importer.js";
-import { generateImportId, MAX_VALIDATION_ERRORS, parseLocationString } from "../shared/index.js";
+} from "#schemas/clipping.schema.js";
 
 /**
  * Parse a location value that could be a string or object.
@@ -182,8 +186,9 @@ export class JsonImporter extends BaseImporter {
     if (itemsToProcess.length === 0) {
       logDebug("JSON Import parsed 0 items to process", { operation: "import_json" });
       // If we couldn't find any items, checks if it was just empty or invalid format
-      const hasClippings = typeof rawJson === 'object' && rawJson !== null && "clippings" in rawJson;
-      const hasBooks = typeof rawJson === 'object' && rawJson !== null && "books" in rawJson;
+      const hasClippings =
+        typeof rawJson === "object" && rawJson !== null && "clippings" in rawJson;
+      const hasBooks = typeof rawJson === "object" && rawJson !== null && "books" in rawJson;
 
       if (!Array.isArray(rawJson) && !hasClippings && !hasBooks) {
         return importParseError(
@@ -215,7 +220,12 @@ export class JsonImporter extends BaseImporter {
           let message = `Item ${i}: ${issue.path.join(".")} - ${issue.message}`;
 
           // Add fuzzy suggestion for invalid type
-          if (issue.path.includes("type") && typeof item === "object" && item !== null && "type" in item) {
+          if (
+            issue.path.includes("type") &&
+            typeof item === "object" &&
+            item !== null &&
+            "type" in item
+          ) {
             const invalidType = (item as Record<string, unknown>)["type"];
             if (typeof invalidType === "string") {
               const validTypes = ClippingTypeSchema.options;

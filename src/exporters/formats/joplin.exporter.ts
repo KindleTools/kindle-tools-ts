@@ -17,12 +17,15 @@
 
 import type { Clipping } from "#app-types/clipping.js";
 import type { GeoLocation } from "#app-types/geo.js";
+import { PROCESSING_THRESHOLDS } from "#domain/core/constants.js";
 import { formatPage, getEffectivePage } from "#domain/core/locations.js";
+import type { ExportedFile } from "#exporters/core/types.js";
+import {
+  MultiFileExporter,
+  type MultiFileExporterOptions,
+} from "#exporters/shared/multi-file-exporter.js";
 import type { TemplateEngine, TemplatePreset } from "#templates/index.js";
 import { sha256Sync } from "#utils/security/hashing.js";
-import { PROCESSING_THRESHOLDS } from "../../domain/core/constants.js";
-import type { ExportedFile } from "../core/types.js";
-import { MultiFileExporter, type MultiFileExporterOptions } from "../shared/multi-file-exporter.js";
 
 // ============================================================================
 // Constants

@@ -8,7 +8,7 @@
  *
  * @packageDocumentation
  */
-import { LOCATION_CONSTANTS } from "../../config/defaults.js";
+import { LOCATION_CONSTANTS } from "#config/defaults.js";
 /**
  * Number of Kindle locations that approximately correspond to one page.
  * This is a generally accepted heuristic based on:

@@ -4,9 +4,9 @@
  * @packageDocumentation
  */
 
-import { CsvImporter } from "../formats/csv.importer.js";
-import { JsonImporter } from "../formats/json.importer.js";
-import { TxtImporter } from "../formats/txt.importer.js";
+import { CsvImporter } from "#importers/formats/csv.importer.js";
+import { JsonImporter } from "#importers/formats/json.importer.js";
+import { TxtImporter } from "#importers/formats/txt.importer.js";
 import type { Importer } from "./types.js";
 
 /**

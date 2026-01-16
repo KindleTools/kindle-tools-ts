@@ -7,7 +7,7 @@
  * @packageDocumentation
  */
 import * as fs from "node:fs/promises";
-import type { FileSystem } from "../filesystem.js";
+import type { FileSystem } from "#ports/filesystem.js";
 
 /**
  * Node.js FileSystem implementation using node:fs/promises.

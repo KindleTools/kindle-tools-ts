@@ -4,12 +4,12 @@
  * @packageDocumentation
  */
 
-import { CsvExporter } from "../formats/csv.exporter.js";
-import { HtmlExporter } from "../formats/html.exporter.js";
-import { JoplinExporter } from "../formats/joplin.exporter.js";
-import { JsonExporter } from "../formats/json.exporter.js";
-import { MarkdownExporter } from "../formats/markdown.exporter.js";
-import { ObsidianExporter } from "../formats/obsidian.exporter.js";
+import { CsvExporter } from "#exporters/formats/csv.exporter.js";
+import { HtmlExporter } from "#exporters/formats/html.exporter.js";
+import { JoplinExporter } from "#exporters/formats/joplin.exporter.js";
+import { JsonExporter } from "#exporters/formats/json.exporter.js";
+import { MarkdownExporter } from "#exporters/formats/markdown.exporter.js";
+import { ObsidianExporter } from "#exporters/formats/obsidian.exporter.js";
 import type { Exporter } from "./types.js";
 
 /**

@@ -8,6 +8,8 @@
  */
 
 import type { Clipping } from "#app-types/clipping.js";
+import { DEFAULTS } from "#config/defaults.js";
+import { SYSTEM_LIMITS } from "#core/limits.js";
 import {
   AppException,
   type ExportedFile,
@@ -15,10 +17,8 @@ import {
   exportSuccess,
   exportUnknownError,
 } from "#errors";
-import { DEFAULTS } from "../../config/defaults.js";
-import { SYSTEM_LIMITS } from "../../core/limits.js";
-import { sanitizeCSVField } from "../../utils/security/csv-sanitizer.js";
-import type { AuthorCase, FolderStructure } from "../core/types.js";
+import type { AuthorCase, FolderStructure } from "#exporters/core/types.js";
+import { sanitizeCSVField } from "#utils/security/csv-sanitizer.js";
 
 // =============================================================================
 // Path Templating Types

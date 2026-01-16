@@ -22,9 +22,9 @@ import {
   sanitizeContent,
   sanitizeTitle,
 } from "#domain/parsing/sanitizers.js";
+import { MAX_VALIDATION_ERRORS } from "#importers/shared/constants.js";
 import { countWords } from "#utils/text/counting.js";
 import { normalizeWhitespace, removeBOM } from "#utils/text/normalizers.js";
-import { MAX_VALIDATION_ERRORS } from "../../shared/constants.js";
 import { detectLanguage } from "./language-detector.js";
 import { cleanText } from "./text-cleaner.js";
 import { tokenize } from "./tokenizer.js";

@@ -1,6 +1,6 @@
 import { closest } from "fastest-levenshtein";
 import { type SafeParseReturnType, z } from "zod";
-import { type ParseOptions, ParseOptionsSchema } from "../schemas/config.schema.js";
+import { type ParseOptions, ParseOptionsSchema } from "#schemas/config.schema.js";
 
 /**
  * Validate configuration object with fuzzy suggestions for unknown keys.

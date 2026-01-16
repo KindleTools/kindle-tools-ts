@@ -14,13 +14,13 @@
 
 import type { Clipping } from "#app-types/clipping.js";
 import { groupByBook } from "#domain/analytics/stats.js";
+import type { ExportedFile, ExportResult } from "#exporters/core/types.js";
 import type { ExporterOptionsParsed } from "#schemas/exporter.schema.js";
 import {
   type TemplateEngine,
   TemplateEngineFactory,
   type TemplatePreset,
 } from "#templates/index.js";
-import type { ExportedFile, ExportResult } from "../core/types.js";
 import { BaseExporter } from "./base-exporter.js";
 
 /**

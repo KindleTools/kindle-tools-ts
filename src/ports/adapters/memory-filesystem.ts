@@ -18,7 +18,7 @@
  *
  * @packageDocumentation
  */
-import type { FileSystem } from "../filesystem.js";
+import type { FileSystem } from "#ports/filesystem.js";
 
 /**
  * In-memory FileSystem implementation.

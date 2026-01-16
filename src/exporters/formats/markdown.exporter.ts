@@ -11,9 +11,12 @@
 
 import type { Clipping } from "#app-types/clipping.js";
 import { groupByBook } from "#domain/analytics/stats.js";
+import type { ExportedFile, ExportResult } from "#exporters/core/types.js";
+import {
+  MultiFileExporter,
+  type MultiFileExporterOptions,
+} from "#exporters/shared/multi-file-exporter.js";
 import { TemplateEngine, type TemplatePreset } from "#templates/index.js";
-import type { ExportedFile, ExportResult } from "../core/types.js";
-import { MultiFileExporter, type MultiFileExporterOptions } from "../shared/multi-file-exporter.js";
 
 /**
  * Extended options for Markdown export.

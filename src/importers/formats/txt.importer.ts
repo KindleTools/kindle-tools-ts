@@ -8,9 +8,9 @@
  */
 
 import { logDebug } from "#errors";
+import type { ImportResult } from "#importers/core/types.js";
+import { BaseImporter } from "#importers/shared/base-importer.js";
 import { ClippingImportSchema } from "#schemas/clipping.schema.js";
-import type { ImportResult } from "../core/types.js";
-import { BaseImporter } from "../shared/base-importer.js";
 import { parseString } from "./txt/parser.js";
 
 /**
