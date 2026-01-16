@@ -1,165 +1,54 @@
 # KindleToolsTS - Roadmap
 
-Mejoras pendientes organizadas por prioridad con valoración de impacto, esfuerzo y riesgo.
+Plan para llevar el proyecto a **v1.0 estable** y cerrar el scope de features.
 
-**Estado del proyecto:** Librería TypeScript pura + Visual Workbench. Clean Architecture / DDD.
+**Filosofía:** Terminar el proyecto, no expandirlo indefinidamente. Ver [PLAN.md](PLAN.md).
 
-> **Arquitectura documentada en:** [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+> **Arquitectura documentada en:** [ARCHITECTURE.md](ARCHITECTURE.md)
 
 ---
 
-## Leyenda de Valoración
+## Leyenda
 
-| Criterio | Descripción |
-|----------|-------------|
-| **Impacto** | Beneficio para usuarios/DX (🔴 Alto, 🟡 Medio, 🟢 Bajo) |
-| **Esfuerzo** | Tiempo/complejidad de implementación (🟢 Bajo, 🟡 Medio, 🔴 Alto) |
-| **Riesgo** | Probabilidad de breaking changes o bugs (🟢 Bajo, 🟡 Medio, 🔴 Alto) |
-| **ROI** | Relación Impacto/Esfuerzo (⭐⭐⭐ Excelente, ⭐⭐ Bueno, ⭐ Bajo) |
+| Símbolo | Significado |
+|---------|-------------|
+| 🔴 | Alto |
+| 🟡 | Medio |
+| 🟢 | Bajo |
+| ⭐⭐⭐ | ROI Excelente |
 
 ---
 
 ## Índice
 
-1. [Media Prioridad](#1-media-prioridad)
-2. [Baja Prioridad](#2-baja-prioridad)
-3. [Para Estudio](#3-para-estudio)
-4. [Not Planned](#4-not-planned)
+1. [Para v1.0 (Prioritario)](#1-para-v10-prioritario)
+2. [Opcional](#2-opcional)
+3. [Not Planned](#3-not-planned)
+4. [Completado](#4-completado)
 
 ---
 
-## 1. Media Prioridad
+## 1. Para v1.0 (Prioritario)
 
-### 1.1 [COMPLETADO] Bug Fix: CSV Importer Type Validation
-
-**Estado:** Completado el 2026-01-15.
+### 1.1 Simplificar/Eliminar Sistema de Plugins
 
 | Impacto | Esfuerzo | Riesgo | ROI |
 |---------|----------|--------|-----|
-| 🔴 Alto | 🟢 Bajo | 🟢 Bajo | ⭐⭐⭐ |
+| 🔴 Alto | 🟡 Medio | 🟡 Medio | ⭐⭐⭐ |
 
-**Ubicación:** `src/importers/formats/csv.importer.ts:217`
+**Problema:** El sistema de plugins (~1,200 líneas) es over-engineering. Nadie crea plugins de terceros para librerías de este tipo.
 
-**Problema:**
-El cast `as ClippingType` es inseguro. Permite valores inválidos que causarán errores downstream.
+**Acción:**
+- Eliminar `src/plugins/` completamente
+- Remover subpath export `./plugins` de package.json
+- Mover ejemplo Anki a documentación o repo separado
+- Resultado: -1,200 líneas, API más simple, -1 subpath export
 
-```typescript
-// ACTUAL - Inseguro
-const type = (data.type || "highlight") as ClippingType;
-
-// SOLUCIÓN
-import { closest } from "fastest-levenshtein";
-
-const VALID_TYPES = ["highlight", "note", "bookmark", "clip", "article"] as const;
-const rawType = data.type?.toLowerCase() || "highlight";
-
-if (!VALID_TYPES.includes(rawType as typeof VALID_TYPES[number])) {
-  errors.push({
-    row: rowIdx + 1,
-    field: "type",
-    message: `Invalid type: "${rawType}"`,
-    suggestion: `Did you mean "${closest(rawType, [...VALID_TYPES])}"?`,
-  });
-  continue;
-}
-const type = rawType as ClippingType;
-```
-
-**Consecuencias de NO hacerlo:** Datos corruptos en exports, errores silenciosos en runtime.
+**Justificación:** Ver [PLAN.md](PLAN.md) sección 4.
 
 ---
 
-### 1.2 [COMPLETADO] Límites de Seguridad de Memoria
-
-**Estado:** Completado el 2026-01-15.
-
-| Impacto | Esfuerzo | Riesgo | ROI |
-|---------|----------|--------|-----|
-| 🟡 Medio | 🟢 Bajo | 🟢 Bajo | ⭐⭐⭐ |
-
-**Ubicación:** `src/importers/formats/csv.importer.ts`, `src/importers/formats/json.importer.ts`, `src/importers/formats/txt/parser.ts`
-
-**Problema:** Sin límite, un archivo corrupto con miles de errores puede causar OOM.
-Se ha implementado un límite de `MAX_VALIDATION_ERRORS = 100` en CSV, JSON y TXT.
-
-```typescript
-const MAX_VALIDATION_ERRORS = 100;
-
-// En el loop de validación:
-if (errors.length >= MAX_VALIDATION_ERRORS) {
-  errors.push({
-    row: -1,
-    field: "file",
-    message: `Stopped after ${MAX_VALIDATION_ERRORS} errors. File may be corrupted.`,
-  });
-  break;
-}
-```
-
-**Consecuencias:** Previene OOM en archivos masivos corruptos.
-
----
-
-### 1.3 Mejorar Parser CSV
-
-| Impacto | Esfuerzo | Riesgo | ROI |
-|---------|----------|--------|-----|
-| 🟡 Medio | 🟡 Medio | 🟡 Medio | ⭐⭐ |
-
-**Ubicación:** `src/importers/formats/csv.importer.ts`
-
-**Estado actual:** Parser manual funciona pero es frágil ante edge cases.
-
-**Opciones:**
-
-**Opción A - Migrar a papaparse (~50KB):**
-```typescript
-import Papa from 'papaparse';
-
-const result = Papa.parse(content, {
-  header: true,
-  skipEmptyLines: true,
-  transformHeader: (h) => h.trim().toLowerCase(),
-});
-```
-
-**Opción B - Mejorar parser actual:**
-- Validación de conteo de campos por fila
-- Mejor manejo de encoding (UTF-16, etc.)
-- Tests exhaustivos de edge cases
-
----
-
-### 1.4 TypeDoc API Documentation
-
-| Impacto | Esfuerzo | Riesgo | ROI |
-|---------|----------|--------|-----|
-| 🟡 Medio | 🟢 Bajo | 🟢 Bajo | ⭐⭐⭐ |
-
-**Instalación:**
-```bash
-pnpm add -D typedoc typedoc-plugin-markdown
-```
-
-**Configuración (typedoc.json):**
-```json
-{
-  "entryPoints": ["src/index.ts"],
-  "out": "docs/api",
-  "plugin": ["typedoc-plugin-markdown"],
-  "excludePrivate": true,
-  "excludeInternal": true
-}
-```
-
-**Script en package.json:**
-```json
-"docs:api": "typedoc"
-```
-
----
-
-### 1.5 Tests para generatePath y validatePathTemplate
+### 1.2 Tests para generatePath
 
 | Impacto | Esfuerzo | Riesgo | ROI |
 |---------|----------|--------|-----|
@@ -169,422 +58,176 @@ pnpm add -D typedoc typedoc-plugin-markdown
 
 ```typescript
 describe("generatePath", () => {
-  it("replaces placeholders with sanitized values", () => {
-    const data = { title: "1984", author: "George Orwell" };
-    expect(generatePath("{author}/{title}", data)).toBe("George Orwell/1984");
+  it("replaces placeholders", () => {
+    expect(generatePath("{author}/{title}", { title: "1984", author: "Orwell" }))
+      .toBe("Orwell/1984");
   });
-
-  it("replaces missing fields with 'unknown'", () => {
-    const data = { title: "Book", author: "Author" };
-    expect(generatePath("{series}/{title}", data)).toBe("unknown/Book");
+  it("uses 'unknown' for missing fields", () => {
+    expect(generatePath("{series}/{title}", { title: "Book" }))
+      .toBe("unknown/Book");
   });
-});
-
-// También añadir validatePathTemplate
-export function validatePathTemplate(
-  template: string,
-  knownFields = ["title", "author", "year", "series"]
-): string[] {
-  const warnings: string[] = [];
-  const placeholders = template.match(/{(\w+)}/g) || [];
-  for (const ph of placeholders) {
-    const field = ph.slice(1, -1);
-    if (!knownFields.includes(field)) {
-      warnings.push(`Unknown placeholder: ${ph}`);
-    }
-  }
-  return warnings;
-}
-```
-
----
-
-## 2. Baja Prioridad
-
-### 2.1 Refactorizar Archivos Largos
-
-| Impacto | Esfuerzo | Riesgo | ROI |
-|---------|----------|--------|-----|
-| 🟢 Bajo | 🟡 Medio | 🟡 Medio | ⭐ |
-
-**Archivos pendientes (líneas actuales):**
-
-| Archivo | Líneas | Acción Propuesta |
-|---------|--------|------------------|
-| `registry.ts` | 597 | Extraer validación a módulos separados |
-| `presets.ts` | 518 | Separar en `presets/markdown.ts`, `presets/joplin.ts`, etc. |
-| `joplin.exporter.ts` | 510 | Extraer `JoplinNotebookBuilder`, `JoplinTagManager` |
-
----
-
-### 2.2 [COMPLETADO] Estandarizar JsonImporter
-
-**Estado:** Completado el 2026-01-15.
-
-| Impacto | Esfuerzo | Riesgo | ROI |
-|---------|----------|--------|-----|
-| 🟡 Medio | 🟢 Bajo | 🟢 Bajo | ⭐⭐⭐ |
-
-**Ubicación:** `src/importers/formats/json.importer.ts`
-
-**Problema:** Usa "Fail Fast" mientras CSV acumula errores (inconsistencia).
-
-**Solución:**
-- Migrar a validación item-por-item
-- Usar `importValidationError` para reporte granular
-- Añadir sugerencias con `fastest-levenshtein` (ya instalado)
-
----
-
-### 2.3 Tests: Cobertura en Importers
-
-| Impacto | Esfuerzo | Riesgo | ROI |
-|---------|----------|--------|-----|
-| 🟡 Medio | 🟢 Bajo | 🟢 Bajo | ⭐⭐⭐ |
-
-**Ubicación:** `tests/unit/importers/importers.test.ts`
-
-**Casos faltantes:**
-1. `IMPORT_VALIDATION_ERROR` con múltiples errores
-2. Sugerencias de typos funcionando (`hightlight` → `highlight`)
-3. Acumulación de errores en múltiples filas
-4. Límite de errores (si se implementa 1.2)
-
----
-
-### 2.4 [COMPLETADO] Logging Improvements
-
-**Estado:** Completado el 2026-01-15.
-
-| Impacto | Esfuerzo | Riesgo | ROI |
-|---------|----------|--------|-----|
-| 🟡 Medio | 🟢 Bajo | 🟢 Bajo | ⭐⭐⭐ |
-
-**Propuestas:**
-
-1. **Instrumentación Core:**
-   ```typescript
-   // En importers
-   logDebug("Parsing CSV", { rows: rows.length });
-
-   // En processor
-   logInfo("Processing complete", { duplicatesRemoved, mergedHighlights });
-   ```
-
-2. **Utility `measureTime`:**
-   ```typescript
-   async function measureTime<T>(name: string, fn: () => Promise<T>): Promise<T> {
-     const start = performance.now();
-     const result = await fn();
-     logDebug(`${name} completed`, { durationMs: performance.now() - start });
-     return result;
-   }
-   ```
-
-3. **Sanitización:** Solo metadatos en logs, nunca contenido de usuario.
-
----
-
-### 2.5 Browser Entry Point
-
-| Impacto | Esfuerzo | Riesgo | ROI |
-|---------|----------|--------|-----|
-| 🟡 Medio | 🟡 Medio | 🟡 Medio | ⭐⭐ |
-
-**Agregar a package.json:**
-```json
-{
-  "browser": "./dist/browser.js",
-  "exports": {
-    ".": {
-      "browser": "./dist/browser.js",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
-    }
-  }
-}
-```
-
----
-
-### 2.6 Performance Benchmarking
-
-| Impacto | Esfuerzo | Riesgo | ROI |
-|---------|----------|--------|-----|
-| 🟢 Bajo | 🟢 Bajo | 🟢 Bajo | ⭐⭐ |
-
-**Ubicación:** `tests/bench/parser.bench.ts`
-
-```typescript
-import { bench, describe } from 'vitest';
-
-describe('Parser Performance', () => {
-  bench('parse 10,000 clippings', () => {
-    parse(generateLargeFile(10000));
+  it("sanitizes special characters", () => {
+    expect(generatePath("{title}", { title: "A/B:C" })).toMatch(/A.B.C/);
   });
 });
 ```
 
 ---
 
-### 2.7 VitePress Documentation Site
-
-| Impacto | Esfuerzo | Riesgo | ROI |
-|---------|----------|--------|-----|
-| 🟡 Medio | 🟡 Medio | 🟢 Bajo | ⭐⭐ |
-
-**Estructura:**
-```
-docs/
-├── .vitepress/config.ts
-├── guide/
-│   ├── getting-started.md
-│   └── api-usage.md
-└── recipes/
-    ├── obsidian-workflow.md
-    └── joplin-setup.md
-```
-
----
-
-### 2.8 Architecture Decision Records
+### 1.3 Script validar schema.json en CI
 
 | Impacto | Esfuerzo | Riesgo | ROI |
 |---------|----------|--------|-----|
 | 🟢 Bajo | 🟢 Bajo | 🟢 Bajo | ⭐⭐ |
 
-**Ubicación:** `docs/adr/`
+**Problema:** `schema.json` puede desincronizarse de schemas Zod.
 
-```
-docs/adr/
-├── 0001-use-native-node-subpath-imports.md
-├── 0002-dual-esm-cjs-publishing.md
-├── 0003-clean-architecture-structure.md
-└── 0004-neverthrow-for-error-handling.md
-```
-
----
-
-### 2.9 Consolidar Test Fixtures
-
-| Impacto | Esfuerzo | Riesgo | ROI |
-|---------|----------|--------|-----|
-| 🟢 Bajo | 🟢 Bajo | 🟢 Bajo | ⭐⭐ |
-
-**Estructura propuesta:**
-```
-tests/fixtures/
-├── clippings/
-│   ├── standard.txt
-│   └── edge-cases.txt
-└── expected-output/
-    └── standard.output.json
-```
-
----
-
-### 2.10 [COMPLETADO] Exportar Helpers de Logging
-
-**Estado:** Completado el 2026-01-15.
-
-| Impacto | Esfuerzo | Riesgo | ROI |
-|---------|----------|--------|-----|
-| 🟢 Bajo | 🟢 Bajo | 🟢 Bajo | ⭐⭐⭐ |
-
-**Ubicación:** `src/index.ts`
-
-**Problema:** `logDebug` y `logInfo` existen en `logger.ts` pero no están exportados en el API público. Usuarios avanzados que quieran instrumentar su código no pueden usarlos.
-
-**Solución:**
-```typescript
-// En src/index.ts, añadir a los exports de Logger API:
-export {
-  getLogger,
-  logDebug,    // ← añadir
-  logError,
-  logInfo,     // ← añadir
-  logWarning,
-  nullLogger,
-  resetLogger,
-  setLogger,
-} from "./errors/logger.js";
-```
-
----
-
-### 2.11 [COMPLETADO] Documentar Error Codes en README
-
-**Estado:** Completado el 2026-01-15.
-
-| Impacto | Esfuerzo | Riesgo | ROI |
-|---------|----------|--------|-----|
-| 🟡 Medio | 🟢 Bajo | 🟢 Bajo | ⭐⭐⭐ |
-
-**Ubicación:** `README.md`, sección "Error Codes Reference"
-
-**Problema:** README menciona códigos de error pero no hay lista completa.
-
-**Solución:** Tabla completa añadida.
-
----
-
-### 2.12 Script para Validar schema.json
-
-| Impacto | Esfuerzo | Riesgo | ROI |
-|---------|----------|--------|-----|
-| 🟢 Bajo | 🟢 Bajo | 🟢 Bajo | ⭐⭐ |
-
-**Ubicación:** `scripts/validate-schema.ts`
-
-**Problema:** `schema.json` se genera manualmente y podría desincronizarse con los schemas Zod.
-
-**Solución:**
 ```typescript
 // scripts/validate-schema.ts
-import { zodToJsonSchema } from "zod-to-json-schema";
-import { ConfigFileSchema } from "../src/schemas/config.schema.js";
-import existingSchema from "../schema.json";
-
 const generated = zodToJsonSchema(ConfigFileSchema);
-
-// Comparar y fallar si difieren
 if (JSON.stringify(generated) !== JSON.stringify(existingSchema)) {
-  console.error("schema.json is out of sync! Run `pnpm generate:schema`");
+  console.error("schema.json out of sync!");
   process.exit(1);
 }
 ```
 
-**Script en package.json:**
-```json
-"check:schema": "tsx scripts/validate-schema.ts"
-```
-
-**Añadir a CI:** Incluir en workflow de CI para detectar desincronización.
+**Añadir:** `"check:schema": "tsx scripts/validate-schema.ts"` a package.json.
 
 ---
 
-## 3. Para Estudio
-
-### 3.1 Plugin Registry Split
-
-| Impacto | Esfuerzo | Riesgo | ROI |
-|---------|----------|--------|-----|
-| 🟡 Medio | 🟡 Medio | 🟡 Medio | ⭐⭐ |
-
-**Ubicación:** `src/plugins/registry.ts` (597 líneas)
-
-**Problema:** Viola SRP mezclando validación, estado, eventos y factory.
-
-**Solución propuesta:**
-```
-src/plugins/
-├── validation/
-│   ├── schema.ts      # validateImporterPlugin, validateExporterPlugin
-│   └── runtime.ts     # validateImporterInstance, validateExporterInstance
-├── store.ts           # Gestión del Map interno
-└── registry.ts        # Fachada coordinadora (~150 líneas)
-```
-
-**Nota:** Refactor complejo con riesgo de bugs. Evaluar si el beneficio justifica el esfuerzo.
-
----
-
-### 3.2 Monorepo Structure (Futuro)
-
-| Impacto | Esfuerzo | Riesgo | ROI |
-|---------|----------|--------|-----|
-| 🟢 Bajo | 🔴 Alto | 🔴 Alto | ⭐ |
-
-```
-kindle-tools-ts/
-├── packages/
-│   ├── core/       # Lógica pura, sin deps de Node
-│   ├── node/       # Node.js adapters (fs)
-│   └── shared/     # Tipos compartidos
-```
-
-**Nota:** Solo justificado con demanda real de uso browser separado.
-
----
-
-### 3.3 Fuzzy CSV Headers
+### 1.4 Actualizar README para v1.0
 
 | Impacto | Esfuerzo | Riesgo | ROI |
 |---------|----------|--------|-----|
 | 🟡 Medio | 🟢 Bajo | 🟢 Bajo | ⭐⭐⭐ |
 
-**Problema:** Errores en nombres de columnas (`Titl` vs `Title`) hacen que se ignoren datos silenciosamente.
-
-**Solución propuesta:**
-Usar `fastest-levenshtein` para mapear columnas del CSV a las esperadas (`Title`, `Author`, etc.) si la distancia es pequeña.
+- [x] Eliminar referencias a cosmiconfig
+- [ ] Eliminar referencias al sistema de plugins (tras 1.1)
+- [ ] Añadir: "v1.0 - Feature complete, accepting bug fixes only"
 
 ---
 
-## 4. Not Planned
+## 2. Opcional
+
+Items útiles pero **no bloquean v1.0**.
+
+### 2.1 Consolidar Test Fixtures
+
+| Impacto | Esfuerzo | Riesgo | ROI |
+|---------|----------|--------|-----|
+| 🟢 Bajo | 🟢 Bajo | 🟢 Bajo | ⭐⭐ |
+
+Mover fixtures duplicados a `tests/fixtures/`.
+
+---
+
+### 2.2 Fuzzy CSV Headers
+
+| Impacto | Esfuerzo | Riesgo | ROI |
+|---------|----------|--------|-----|
+| 🟡 Medio | 🟢 Bajo | 🟢 Bajo | ⭐⭐⭐ |
+
+Sugerir correcciones para headers con typos (`Titl` → `Title`) usando `fastest-levenshtein`.
+
+---
+
+### 2.3 Tests: Cobertura Importers
+
+| Impacto | Esfuerzo | Riesgo | ROI |
+|---------|----------|--------|-----|
+| 🟡 Medio | 🟢 Bajo | 🟢 Bajo | ⭐⭐ |
+
+Tests para: múltiples errores, sugerencias de typos, MAX_VALIDATION_ERRORS.
+
+---
+
+### 2.4 Mejorar Parser CSV
+
+| Impacto | Esfuerzo | Riesgo | ROI |
+|---------|----------|--------|-----|
+| 🟡 Medio | 🟡 Medio | 🟡 Medio | ⭐⭐ |
+
+Solo si hay bugs reportados. El parser actual funciona.
+
+---
+
+## 3. Not Planned
+
+### Descartado (según PLAN.md)
+
+| Item | Razón |
+|------|-------|
+| **TypeDoc API Documentation** | README de 900+ líneas es suficiente |
+| **VitePress Documentation Site** | Over-engineering |
+| **Architecture Decision Records** | ARCHITECTURE.md basta |
+| **Browser Entry Point separado** | El actual funciona en browser |
+| **Performance Benchmarking** | No hay problemas de rendimiento reportados |
+| **Refactorizar archivos largos** | Código funciona, refactor estético no justifica riesgo |
+| **Plugin Registry Split** | Irrelevante si eliminamos plugins |
+| **Monorepo Structure** | Complejidad no justificada |
+| **Path Modifiers** | Scope creep |
+| **Fuzzy Template Suggestions** | Nice-to-have, no esencial |
+| **Proactive Path Validation** | El usuario puede validar antes |
 
 ### Descartado Permanentemente
 
 | Item | Razón |
 |------|-------|
-| PDF Export | Requiere librería de renderizado pesada |
+| PDF Export | Requiere librería pesada |
 | Readwise Sync | API propietaria |
-| Highlight Colors | Kindle no exporta esta info |
-| Streaming Architecture | Caso de uso muy raro (50MB+) |
-| CLI | Eliminada. Usuarios pueden crear wrappers |
-| Pipeline Pattern en Processor | `processor.ts` (~200 ln) ya delega correctamente |
-| Web Crypto API | Requiere async en toda la cadena, complejidad no justificada |
-| Lazy Template Compilation | Bajo impacto, complejidad añadida |
-| Mejoras Archiver (streaming, tar real) | Solo útil para exports >100MB |
+| Highlight Colors | Kindle no exporta |
+| Streaming Architecture | Caso raro (50MB+) |
+| CLI | Usuarios crean wrappers |
+| Web Crypto API async | Complejidad no justificada |
 
-### Sin Plan Concreto
+### Sin Plan
 
-- **Anki Export:** Ya existe como plugin de ejemplo
-- **Notion Integration:** API propietaria
-- **Kobo/Apple Books:** Requiere parsers específicos
-- **AI Enrichment:** Claude API para tags (fuera de scope)
-- **WASM Web App:** Complejidad vs beneficio bajo
-- **Mutation Testing (Stryker):** Costoso en CI
-- **E2E Testing (Playwright):** Solo para workbench
-- **Refactorizar con `measureTime`:** Unificar medición de tiempos en `TxtImporter` y `Processor`.
-- **Estandarizar Metadatos:** Unificar `meta` (fileSize, duration) en todos los Importers.
-- **Instrumentar Exporters:** Añadir logs de inicio/fin a `BaseExporter`.
+- Anki Export (ya existe como ejemplo)
+- Notion/Kobo/Apple Books (APIs propietarias, fuera de scope)
+- measureTime utility (nice-to-have)
 
 ---
 
-## Resumen de Prioridades
+## 4. Completado
 
-| Prioridad | Total | ROI Alto (⭐⭐⭐) |
-|-----------|-------|------------------|
-| Media | 5 | 4 (1.1, 1.2, 1.4, 1.5) |
-| Baja | 9 | 3 (2.2, 2.3, 2.12) |
-| Completado | 3 | 3 (2.4, 2.10, 2.11) |
-| Estudio | 2 | 0 |
+| Item | Fecha | Verificado |
+|------|-------|------------|
+| MAX_VALIDATION_ERRORS en importers | 2026-01-15 | ✅ CSV, JSON, TXT |
+| Exportar logDebug/logInfo | 2026-01-15 | ✅ src/index.ts |
+| Error Codes en README | 2026-01-15 | ✅ |
+| Eliminar cosmiconfig | 2026-01-16 | ✅ |
+| CSV Type Validation (Zod enum) | 2026-01-15 | ✅ |
+| Logging en Importers | 2026-01-15 | ✅ logDebug en CSV/JSON/TXT |
 
-### Orden de Ejecución Recomendado
+---
 
-1. **Urgente:** 1.1 Bug Fix CSV Type Validation
-2. **Quick Wins:** 1.2, 1.4, 1.5, 2.2, 2.3
-3. **Cuando haya tiempo:** 1.3, 2.1, 2.5-2.9, 2.12
-4. **Evaluar necesidad:** 3.1, 3.2
+## Criterios v1.0
+
+| Criterio | Estado |
+|----------|--------|
+| Tests automatizados | ✅ 808 tests |
+| CI/CD | ✅ GitHub Actions |
+| SemVer | ✅ Changesets |
+| TypeScript strict | ✅ |
+| ESM + CJS | ✅ |
+| Security | ✅ Zod, CSV injection protection |
+| Documentación | ✅ README 900+ líneas |
+| Error handling | ✅ neverthrow |
+
+**Pendiente:**
+- [ ] Eliminar plugins (1.1)
+- [ ] Tests generatePath (1.2)
+- [ ] Script schema (1.3)
+- [ ] README v1.0 (1.4)
 
 ---
 
 ## Referencias
 
-### TypeScript Libraries 2025
-- [Building a TypeScript Library in 2025](https://dev.to/arshadyaseen/building-a-typescript-library-in-2025-2h0i)
-
-### Error Handling
-- [neverthrow](https://github.com/supermacro/neverthrow)
-
-### Testing
-- [Vitest Best Practices](https://www.projectrules.ai/rules/vitest)
-- [fast-check](https://github.com/dubzzz/fast-check)
-
-### Tooling
-- [Biome Configuration](https://biomejs.dev/guides/configure-biome/)
+- [Snyk: npm Package Best Practices](https://snyk.io/blog/best-practices-create-modern-npm-package/)
+- [Node.js Best Practices](https://github.com/goldbergyoni/nodebestpractices)
+- [npm-module-checklist](https://github.com/bahmutov/npm-module-checklist)
 
 ---
 
-*Documento actualizado: 2026-01-15*
-*Mejoras pendientes: 16 | Media: 5 | Baja: 9 | Estudio: 2*
+*Actualizado: 2026-01-16 | Para v1.0: 4 items | Opcional: 4 items*
