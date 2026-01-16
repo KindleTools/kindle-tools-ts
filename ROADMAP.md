@@ -36,77 +36,38 @@ Plan para llevar el proyecto a **v1.0 estable** y cerrar el scope de features.
 |---------|----------|--------|-----|
 | 🔴 Alto | 🟡 Medio | 🟡 Medio | ⭐⭐⭐ |
 
-**Problema:** El sistema de plugins (~1,200 líneas) es over-engineering. Nadie crea plugins de terceros para librerías de este tipo.
+**Problema:** El sistema de plugins (~2,100 líneas) es over-engineering. Nadie crea plugins de terceros para librerías de este tipo.
 
 **Acción:**
 - Eliminar `src/plugins/` completamente
 - Remover subpath export `./plugins` de package.json
 - Mover ejemplo Anki a documentación o repo separado
-- Resultado: -1,200 líneas, API más simple, -1 subpath export
+- Resultado: -2,100 líneas, API más simple, -1 subpath export
 
 **Justificación:** Ver [PLAN.md](PLAN.md) sección 4.
 
 ---
 
-### 1.2 [COMPLETADO]  Tests para generatePath
+### 1.2 Bug: Parser CRLF line endings
 
 | Impacto | Esfuerzo | Riesgo | ROI |
 |---------|----------|--------|-----|
 | 🟡 Medio | 🟢 Bajo | 🟢 Bajo | ⭐⭐⭐ |
 
-**Ubicación:** `tests/unit/exporters/exporter-utils.test.ts`
+**Bug:** Test `should handle varying line endings` falla - el parser no maneja correctamente CRLF (`\r\n`).
 
-```typescript
-describe("generatePath", () => {
-  it("replaces placeholders", () => {
-    expect(generatePath("{author}/{title}", { title: "1984", author: "Orwell" }))
-      .toBe("Orwell/1984");
-  });
-  it("uses 'unknown' for missing fields", () => {
-    expect(generatePath("{series}/{title}", { title: "Book" }))
-      .toBe("unknown/Book");
-  });
-  it("sanitizes special characters", () => {
-    expect(generatePath("{title}", { title: "A/B:C" })).toMatch(/A.B.C/);
-  });
-});
-```
+**Ubicación:** `tests/unit/importers/txt/parser.test.ts:156`
 
-**Estado:** ✅ Completado (Tests verificados en `tests/unit/exporters/exporter-utils.test.ts`)
-
+**Acción:** Revisar normalización de line endings en el tokenizer/parser.
 
 ---
 
-### 1.3 [COMPLETADO] Script validar schema.json en CI
-
-| Impacto | Esfuerzo | Riesgo | ROI |
-|---------|----------|--------|-----|
-| 🟢 Bajo | 🟢 Bajo | 🟢 Bajo | ⭐⭐ |
-
-**Problema:** `schema.json` puede desincronizarse de schemas Zod.
-
-```typescript
-// scripts/validate-schema.ts
-const generated = zodToJsonSchema(ConfigFileSchema);
-if (JSON.stringify(generated) !== JSON.stringify(existingSchema)) {
-  console.error("schema.json out of sync!");
-  process.exit(1);
-}
-```
-
-**Añadir:** `"check:schema": "tsx scripts/validate-schema.ts"` a package.json.
-
-**Estado:** ✅ Completado (Script `scripts/validate-schema.ts` añadido a CI)
-
----
-
-### 1.4 Actualizar README para v1.0
+### 1.3 Actualizar README para v1.0
 
 | Impacto | Esfuerzo | Riesgo | ROI |
 |---------|----------|--------|-----|
 | 🟡 Medio | 🟢 Bajo | 🟢 Bajo | ⭐⭐⭐ |
 
-- [x] Eliminar referencias a cosmiconfig
 - [ ] Eliminar referencias al sistema de plugins (tras 1.1)
 - [ ] Añadir: "v1.0 - Feature complete, accepting bug fixes only"
 
@@ -116,42 +77,7 @@ if (JSON.stringify(generated) !== JSON.stringify(existingSchema)) {
 
 Items útiles pero **no bloquean v1.0**.
 
-### 2.1 [COMPLETADO] Consolidar Test Fixtures
-
-| Impacto | Esfuerzo | Riesgo | ROI |
-|---------|----------|--------|-----|
-| 🟢 Bajo | 🟢 Bajo | 🟢 Bajo | ⭐⭐ |
-
-Mover fixtures duplicados a `tests/fixtures/`.
-
----
-
-### 2.2 [COMPLETADO] Fuzzy CSV Headers
-
-| Impacto | Esfuerzo | Riesgo | ROI |
-|---------|----------|--------|-----|
-| 🟡 Medio | 🟢 Bajo | 🟢 Bajo | ⭐⭐⭐ |
-
-Sugerir correcciones para headers con typos (`Titl` → `Title`) usando `fastest-levenshtein`.
-
-**Estado:** ✅ Completado (Tests verificados en `tests/unit/importers/csv-fuzzy-headers.test.ts`)
-
----
-
-### 2.3 [COMPLETADO] Tests: Cobertura Importers
-
-| Impacto | Esfuerzo | Riesgo | ROI |
-|---------|----------|--------|-----|
-| 🟡 Medio | 🟢 Bajo | 🟢 Bajo | ⭐⭐ |
-
-Tests para: múltiples errores, sugerencias de typos, MAX_VALIDATION_ERRORS.
-
-**Estado:** ✅ Completado (Tests verificados en `tests/unit/importers/importers.test.ts`)
-
----
-
-### 2.4 Mejorar Parser CSV
-
+### 2.1 Mejorar Parser CSV
 
 | Impacto | Esfuerzo | Riesgo | ROI |
 |---------|----------|--------|-----|
@@ -161,7 +87,7 @@ Solo si hay bugs reportados. El parser actual funciona.
 
 ---
 
-### 2.5 Config Validation Fuzzy Suggestions
+### 2.2 Config Validation Fuzzy Suggestions
 
 | Impacto | Esfuerzo | Riesgo | ROI |
 |---------|----------|--------|-----|
@@ -171,23 +97,13 @@ Validar keys de configuración con suggested fixes (`extracTags` -> `extractTags
 
 ---
 
-### 2.6 Author Normalization
+### 2.3 Author Normalization
 
 | Impacto | Esfuerzo | Riesgo | ROI |
 |---------|----------|--------|-----|
 | 🟡 Medio | 🟡 Medio | 🟢 Bajo | ⭐⭐ |
 
 Usar Levenshtein para sugerir unificación de autores ("J.K. Rowling" vs "Rowling, J.K.").
-
----
-
-### 2.7 CLI Suggestions
-
-| Impacto | Esfuerzo | Riesgo | ROI |
-|---------|----------|--------|-----|
-| 🟢 Bajo | 🟢 Bajo | 🟢 Bajo | ⭐⭐ |
-
-Sugerir comandos/flags similares en caso de typo en CLI.
 
 ---
 
@@ -208,6 +124,7 @@ Sugerir comandos/flags similares en caso de typo en CLI.
 | **Path Modifiers** | Scope creep |
 | **Fuzzy Template Suggestions** | Nice-to-have, no esencial |
 | **Proactive Path Validation** | El usuario puede validar antes |
+| **CLI / CLI Suggestions** | Usuarios crean wrappers, fuera de scope |
 
 ### Descartado Permanentemente
 
@@ -217,12 +134,11 @@ Sugerir comandos/flags similares en caso de typo en CLI.
 | Readwise Sync | API propietaria |
 | Highlight Colors | Kindle no exporta |
 | Streaming Architecture | Caso raro (50MB+) |
-| CLI | Usuarios crean wrappers |
 | Web Crypto API async | Complejidad no justificada |
 
 ### Sin Plan
 
-- Anki Export (ya existe como ejemplo)
+- Anki Export (ya existe como ejemplo, mover a docs tras eliminar plugins)
 - Notion/Kobo/Apple Books (APIs propietarias, fuera de scope)
 - measureTime utility (nice-to-have)
 
@@ -238,11 +154,11 @@ Sugerir comandos/flags similares en caso de typo en CLI.
 | Eliminar cosmiconfig | 2026-01-16 | ✅ |
 | CSV Type Validation (Zod enum) | 2026-01-15 | ✅ |
 | Logging en Importers | 2026-01-15 | ✅ logDebug en CSV/JSON/TXT |
-| Consolidar Test Fixtures | 2026-01-16 | ✅ |
-| Tests Generate Path | 2026-01-16 | ✅ |
-| Cobertura Importers | 2026-01-16 | ✅ |
-| Fuzzy CSV Headers | 2026-01-16 | ✅ CsvImporter |
-| Script validar schema.json | 2026-01-16 | ✅ scripts/validate-schema.ts |
+| Consolidar Test Fixtures | 2026-01-16 | ✅ tests/fixtures/ |
+| Tests Generate Path | 2026-01-16 | ✅ exporter-utils.test.ts |
+| Cobertura Importers | 2026-01-16 | ✅ importers.test.ts |
+| Fuzzy CSV Headers | 2026-01-16 | ✅ csv-fuzzy-headers.test.ts |
+| Script validar schema.json | 2026-01-16 | ✅ CI workflow + scripts/validate-schema.ts |
 
 ---
 
@@ -250,7 +166,7 @@ Sugerir comandos/flags similares en caso de typo en CLI.
 
 | Criterio | Estado |
 |----------|--------|
-| Tests automatizados | ✅ 808 tests |
+| Tests automatizados | ✅ 829 tests (1 failing: CRLF) |
 | CI/CD | ✅ GitHub Actions |
 | SemVer | ✅ Changesets |
 | TypeScript strict | ✅ |
@@ -258,13 +174,12 @@ Sugerir comandos/flags similares en caso de typo en CLI.
 | Security | ✅ Zod, CSV injection protection |
 | Documentación | ✅ README 900+ líneas |
 | Error handling | ✅ neverthrow |
+| Dependencies | ✅ 6 runtime (reducido de 8) |
 
 **Pendiente:**
 - [ ] Eliminar plugins (1.1)
-- [ ] Eliminar plugins (1.1)
-- [x] Tests generatePath (1.2)
-- [ ] Script schema (1.3)
-- [ ] README v1.0 (1.4)
+- [ ] Fix CRLF parser (1.2)
+- [ ] README v1.0 (1.3)
 
 ---
 
@@ -276,4 +191,4 @@ Sugerir comandos/flags similares en caso de typo en CLI.
 
 ---
 
-*Actualizado: 2026-01-16 | Para v1.0: 3 items | Opcional: 7 items*
+*Actualizado: 2026-01-16 | Para v1.0: 3 items | Opcional: 3 items*

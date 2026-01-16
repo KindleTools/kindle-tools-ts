@@ -14,7 +14,7 @@ Este documento analiza el estado actual de **KindleToolsTS** para determinar qu�
 |---------|-------|-------------|
 | Archivos TypeScript | 108 | Alto para una librería npm |
 | Líneas de código (src/) | ~15,500 | Considerable |
-| Dependencias runtime | 8 | Razonable |
+| Dependencias runtime | 6 | Reducido (era 8) |
 | Formatos de export | 6 | Completo |
 | Idiomas soportados | 11 | Muy completo |
 | Archivos de test | 49 | Buena cobertura |
@@ -103,27 +103,25 @@ He analizado los paquetes npm existentes para parsing de Kindle clippings:
 
 ## 4. Dependencias: Análisis
 
-### Runtime Dependencies (8)
+### Runtime Dependencies (6) - Actualizado
 
-| Dependencia | Tamaño | ¿Necesaria? | Alternativa |
-|-------------|--------|-------------|-------------|
+| Dependencia | Tamaño | ¿Necesaria? | Estado |
+|-------------|--------|-------------|--------|
 | **zod** | ~50KB | ✅ Sí | Core para validación |
 | **date-fns** | ~80KB (con locales) | ✅ Sí | Necesario para 11 idiomas |
-| **handlebars** | ~80KB | ⚠️ Evaluar | ¿String templates bastarían? |
-| **jszip** | ~90KB | ⚠️ Solo Joplin | Mover a plugin |
-| **neverthrow** | ~5KB | ⚠️ Gusto personal | Podría ser internal |
-| **cosmiconfig** | ~20KB | ❌ Excesivo | Config manual |
-| **@iarna/toml** | ~30KB | ❌ ¿Quién usa TOML? | Eliminar |
-| **fastest-levenshtein** | ~2KB | ✅ Útil | Mantener |
+| **handlebars** | ~80KB | ✅ Sí | Motor de templates |
+| **jszip** | ~90KB | ✅ Sí | Joplin export |
+| **neverthrow** | ~5KB | ✅ Sí | Result types |
+| **fastest-levenshtein** | ~2KB | ✅ Sí | Fuzzy matching |
+| ~~**cosmiconfig**~~ | ~~20KB~~ | ❌ Eliminado | ✅ Completado 2026-01-16 |
+| ~~**@iarna/toml**~~ | ~~30KB~~ | ❌ Eliminado | ✅ Completado 2026-01-16 |
 
-### Potencial de Reducción
+### Reducción Lograda
 
-Si eliminamos/simplificamos:
-- cosmiconfig + @iarna/toml: -50KB
-- jszip (movido a plugin): -90KB
-- handlebars (templates simples): -80KB
+✅ **Completado:**
+- cosmiconfig + @iarna/toml: **-50KB eliminados**
 
-**Reducción potencial: ~220KB** (de ~335KB actuales = **65% menos**)
+**Resultado:** De 8 → 6 dependencias runtime
 
 ---
 
@@ -234,20 +232,20 @@ Para poder decir "el proyecto está terminado":
    - Deduplicación y merge funcionan
    - 5 exporters principales funcionan
 
-2. **Calidad**: Parcial
-   - [ ] Fix del bug CSV Type Validation
-   - [ ] Tests para generatePath
-   - [ ] Límites de memoria en importers
+2. **Calidad**: ✅ Completado
+   - [x] Fix del bug CSV Type Validation (Zod enum)
+   - [x] Tests para generatePath
+   - [x] Límites de memoria en importers (MAX_VALIDATION_ERRORS)
 
 3. **Documentación**: ✅ Ya está
    - README completo
    - Ejemplos de uso
    - API documentada inline
 
-4. **Simplificación**:
-   - [ ] Eliminar cosmiconfig (config via objeto)
-   - [ ] Eliminar @iarna/toml
-   - [ ] Simplificar o eliminar sistema de plugins
+4. **Simplificación**: Parcial
+   - [x] Eliminar cosmiconfig (config via objeto)
+   - [x] Eliminar @iarna/toml
+   - [ ] Simplificar o eliminar sistema de plugins (~2,100 líneas pendiente)
 
 ### Post-v1.0
 
@@ -289,16 +287,16 @@ Es **cerrar**. Declarar que está terminado y resistir la tentación de "mejorar
 
 ## 10. Resumen Ejecutivo
 
-| Aspecto | Estado Actual | Recomendación |
-|---------|---------------|---------------|
-| **Arquitectura** | Buena | Mantener |
-| **Core (parser, processor)** | Completo | Mantener |
-| **Exporters** | 6 formatos | Mantener los 5-6 |
-| **Plugins** | Over-engineered | Eliminar o simplificar drásticamente |
-| **Templates** | Complejo | Reducir presets de 7 a 3 |
-| **Config** | Over-engineered | Simplificar a objeto JS |
-| **Dependencias** | 8 | Reducir a 4-5 |
-| **Scope** | Creciendo | Congelar |
+| Aspecto | Estado Actual | Recomendación | Estado |
+|---------|---------------|---------------|--------|
+| **Arquitectura** | Buena | Mantener | ✅ |
+| **Core (parser, processor)** | Completo | Mantener | ✅ |
+| **Exporters** | 6 formatos | Mantener los 5-6 | ✅ |
+| **Plugins** | Over-engineered | Eliminar | ⏳ Pendiente |
+| **Templates** | Complejo | Mantener (ya funciona) | ✅ |
+| **Config** | ~~Over-engineered~~ | ~~Simplificar~~ | ✅ Completado |
+| **Dependencias** | 6 (era 8) | Mantener | ✅ |
+| **Scope** | Congelado | Feature freeze | ✅ |
 
 ### El verdadero problema
 
@@ -359,13 +357,13 @@ El código está **escrito, testeado y funcionando**. El "exceso de arquitectura
 
 **Poda selectiva, no demolición:**
 
-| Acción | Esfuerzo | Beneficio |
-|--------|----------|-----------|
-| Eliminar plugins | Medio | Alto (simplifica API, -1200 líneas) |
-| Eliminar cosmiconfig + TOML | Bajo | Medio (-2 deps, -400 líneas) |
-| ~~Aplanar arquitectura~~ | Alto | Bajo (riesgo > beneficio) |
-| ~~Eliminar ports~~ | Medio | Bajo (rompe testing) |
-| ~~Eliminar importers~~ | Bajo | Bajo (ya funcionan) |
+| Acción | Esfuerzo | Beneficio | Estado |
+|--------|----------|-----------|--------|
+| Eliminar plugins | Medio | Alto (simplifica API, -2100 líneas) | ⏳ Pendiente |
+| Eliminar cosmiconfig + TOML | Bajo | Medio (-2 deps, -400 líneas) | ✅ Completado |
+| ~~Aplanar arquitectura~~ | Alto | Bajo (riesgo > beneficio) | ❌ Descartado |
+| ~~Eliminar ports~~ | Medio | Bajo (rompe testing) | ❌ Descartado |
+| ~~Eliminar importers~~ | Bajo | Bajo (ya funcionan) | ❌ Descartado |
 
 ### Diferencia Clave
 
@@ -377,4 +375,5 @@ El objetivo es **terminar el proyecto**, no crear otro proyecto de refactoring q
 ---
 
 *Documento generado: 2026-01-15*
+*Última actualización: 2026-01-16*
 *Autor: Análisis asistido por Claude Opus 4.5*
