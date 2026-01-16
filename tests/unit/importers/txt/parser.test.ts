@@ -154,7 +154,7 @@ describe("parser", () => {
     });
 
     it("should handle varying line endings", async () => {
-      const withCrlf = SAMPLE_CLIPPINGS_EN.replace(/\n/g, "\r\n");
+      const withCrlf = SAMPLE_CLIPPINGS_EN.replace(/\r?\n/g, "\r\n");
       const result = await parseString(withCrlf);
 
       expect(result.clippings.length).toBe(5);

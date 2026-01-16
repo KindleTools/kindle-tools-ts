@@ -89,6 +89,18 @@ Usar Levenshtein para sugerir unificación de autores ("J.K. Rowling" vs "Rowlin
 
 ---
 
+### 2.4 Refactor Txt Parser
+
+| Impacto | Esfuerzo | Riesgo | ROI |
+|---------|----------|--------|-----|
+| 🟡 Medio | 🟢 Bajo | 🟢 Bajo | ⭐⭐ |
+
+- **Tokenizer Robustness**: Usar `\n={10,}\n` como separador para evitar falsos positivos con contenido de usuario.
+- **Redundant Normalization**: Centralizar normalización de line endings (actualmente en `parser.ts` y `tokenizer.ts`).
+- **Normalize Unicode**: Respetar `normalizeUnicode: false` correctamente en el tokenizer.
+
+---
+
 ## 3. Not Planned
 
 ### Descartado (según PLAN.md)
@@ -172,4 +184,4 @@ Usar Levenshtein para sugerir unificación de autores ("J.K. Rowling" vs "Rowlin
 
 ---
 
-*Actualizado: 2026-01-16 | Para v1.0: 2 items | Opcional: 3 items*
+*Actualizado: 2026-01-16 | Para v1.0: 2 items | Opcional: 4 items*
