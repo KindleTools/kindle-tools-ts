@@ -139,8 +139,8 @@ Usar Levenshtein para sugerir unificación de autores ("J.K. Rowling" vs "Rowlin
 | Tests Generate Path | 2026-01-16 | ✅ exporter-utils.test.ts |
 | Cobertura Importers | 2026-01-16 | ✅ importers.test.ts |
 | Fuzzy CSV Headers | 2026-01-16 | ✅ csv-fuzzy-headers.test.ts |
-| Script validar schema.json | 2026-01-16 | ✅ CI workflow + scripts/validate-schema.ts |
 | **Eliminar sistema de plugins** | 2026-01-16 | ✅ -2,100 líneas, -84 tests |
+| **Eliminar ConfigFile/defineConfig** | 2026-01-16 | ✅ -170 líneas, API simplificada |
 
 ---
 

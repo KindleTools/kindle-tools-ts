@@ -31,9 +31,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Validate schema.json
-        run: pnpm check:schema
-
       - name: Run linter
         run: pnpm lint
 

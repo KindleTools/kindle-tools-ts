@@ -62,8 +62,7 @@
     "dist",
     "README.md",
     "LICENSE",
-    "CHANGELOG.md",
-    "schema.json"
+    "CHANGELOG.md"
   ],
   "scripts": {
     "build": "tsup",
@@ -88,9 +87,7 @@
     "release": "pnpm build && changeset publish",
     "clean": "rimraf dist coverage .turbo",
     "ci": "turbo run build test lint check check:exports",
-    "generate:schema": "tsx scripts/generate-schema.ts",
-    "check:schema": "tsx scripts/validate-schema.ts",
-    "prepublishOnly": "pnpm build && pnpm run generate:schema"
+    "prepublishOnly": "pnpm build"
   },
   "keywords": [
     "kindle",

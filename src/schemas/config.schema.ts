@@ -1,8 +1,7 @@
 /**
  * Zod validation schemas for configuration types.
  *
- * These schemas provide runtime validation for CLI options,
- * config files (.kindletoolsrc), and API inputs.
+ * These schemas provide runtime validation for API inputs.
  *
  * @example
  * ```typescript
@@ -208,117 +207,6 @@ export type ParseOptionsInput = z.input<typeof ParseOptionsSchema>;
 export type ParseOptions = z.output<typeof ParseOptionsSchema>;
 
 // =============================================================================
-// Config File Schema (.kindletoolsrc)
-// =============================================================================
-
-/**
- * Folder structure options for config file.
- */
-export const ConfigFolderStructureSchema = z.enum(
-  ["flat", "by-author", "by-book", "by-author-book"],
-  {
-    message: "Folder structure must be: flat, by-author, by-book, or by-author-book",
-  },
-);
-
-/**
- * Config file schema for .kindletoolsrc files.
- * Config file schema for .kindletoolsrc files.
- * Combines parsing options with export-specific settings.
- *
- * @example
- * ```json
- * // .kindletoolsrc
- * {
- *   "format": "obsidian",
- *   "output": "./exports",
- *   "folderStructure": "by-author",
- *   "authorCase": "uppercase",
- *   "groupByBook": true,
- *   "extractTags": true,
- *   "tagCase": "lowercase",
- *   "parse": {
- *     "removeDuplicates": true,
- *     "mergeOverlapping": true
- *   }
- * }
- * ```
- */
-export const ConfigFileSchema = z
-  .object({
-    // Export format
-    format: z
-      .string()
-      .optional()
-      .describe("Default export format: json, csv, md, obsidian, joplin, html"),
-
-    // Output path
-    output: z.string().optional().describe("Default output file or directory path"),
-
-    // Folder structure for multi-file exports
-    folderStructure: ConfigFolderStructureSchema.optional().describe(
-      "Folder structure for multi-file exports",
-    ),
-
-    // Case transformations
-    authorCase: TagCaseSchema.optional().describe(
-      "Case transformation for author folder names: original, uppercase, lowercase",
-    ),
-
-    // Grouping
-    groupByBook: z.coerce.boolean().optional().describe("Group clippings by book in output"),
-
-    // Tags
-    includeTags: z.coerce.boolean().optional().describe("Include tags in export"),
-
-    // Pretty printing
-    pretty: z.coerce.boolean().optional().describe("Pretty-print JSON output"),
-
-    // Metadata
-    title: z.string().optional().describe("Custom title for exports"),
-    creator: z.string().optional().describe("Creator name for metadata"),
-
-    // Nested parse options (allows grouping parse-specific settings)
-    parse: z
-      .object({
-        removeDuplicates: z.coerce.boolean().optional(),
-        mergeNotes: z.coerce.boolean().optional(),
-        mergeOverlapping: z.coerce.boolean().optional(),
-        extractTags: z.coerce.boolean().optional(),
-        tagCase: TagCaseSchema.optional(),
-        highlightsOnly: z.coerce.boolean().optional(),
-        mergedOutput: z.coerce.boolean().optional(),
-        removeUnlinkedNotes: z.coerce.boolean().optional(),
-        normalizeUnicode: z.coerce.boolean().optional(),
-        cleanContent: z.coerce.boolean().optional(),
-        cleanTitles: z.coerce.boolean().optional(),
-        excludeTypes: z.array(ClippingTypeFilterSchema).optional(),
-        excludeBooks: z.array(z.string()).optional(),
-        onlyBooks: z.array(z.string()).optional(),
-        minContentLength: z.coerce.number().min(0).optional(),
-        dateLocale: z.string().optional(),
-        geoLocation: GeoLocationSchema.optional(),
-        strict: z.coerce.boolean().optional(),
-      })
-      .optional()
-      .describe("Parsing options override"),
-
-    // Include all ParseOptions fields at root level for backwards compatibility
-    ...ParseOptionsSchema.shape,
-  })
-  .strict();
-
-/**
- * Inferred input type for config file.
- */
-export type ConfigFileInput = z.input<typeof ConfigFileSchema>;
-
-/**
- * Inferred output type for config file.
- */
-export type ConfigFile = z.output<typeof ConfigFileSchema>;
-
-// =============================================================================
 // Helper Functions
 // =============================================================================
 
@@ -356,20 +244,4 @@ export function parseParseOptions(input: unknown): ParseOptions {
  */
 export function safeParseParseOptions(input: unknown) {
   return ParseOptionsSchema.safeParse(input);
-}
-
-/**
- * Validate and parse config file content.
- * Throws on invalid input.
- */
-export function parseConfigFile(input: unknown): ConfigFile {
-  return ConfigFileSchema.parse(input);
-}
-
-/**
- * Safely validate config file content.
- * Never throws.
- */
-export function safeParseConfigFile(input: unknown) {
-  return ConfigFileSchema.safeParse(input);
 }

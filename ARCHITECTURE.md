@@ -459,7 +459,7 @@ All external data is validated at system boundaries using **Zod** schemas.
 ```
 src/schemas/
 ├── clipping.schema.ts   # ClippingImportSchema, ClippingStrictSchema
-├── config.schema.ts     # ConfigFileSchema, ParseOptionsSchema
+├── config.schema.ts     # ParseOptionsSchema
 ├── exporter.schema.ts   # ExporterOptionsSchema
 ├── cli.schema.ts        # CLI argument validation
 └── index.ts             # Re-exports

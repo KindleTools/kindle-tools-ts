@@ -146,15 +146,13 @@ throw new AppException({
 Configuration is passed directly as options to exporters and processors:
 
 ```typescript
-import { defineConfig, ObsidianExporter } from 'kindle-tools-ts';
-
-const config = defineConfig({
-  format: "obsidian",
-  folderStructure: "by-author",
-});
+import { ObsidianExporter } from 'kindle-tools-ts';
 
 const exporter = new ObsidianExporter();
-await exporter.export(clippings, config);
+await exporter.export(clippings, {
+  folderStructure: "by-author",
+  extractTags: true,
+});
 ```
 
 ### 5. Template Engine (Handlebars)

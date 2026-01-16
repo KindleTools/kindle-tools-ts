@@ -149,34 +149,24 @@ Sanitized: '=SUM(A1:A10)
 
 ## ⚙️ Configuration
 
-Configuration is passed directly as options to the exporter or processor functions. Use `defineConfig` for type inference and autocompletion.
-
-### TypeScript/JavaScript Configuration
+Configuration is passed directly as options objects to exporter and processor functions. TypeScript provides full autocomplete support.
 
 ```typescript
-import { defineConfig, ObsidianExporter } from 'kindle-tools-ts';
+import { ObsidianExporter, parseString } from 'kindle-tools-ts';
 
-const config = defineConfig({
-  format: "obsidian",
-  folderStructure: "by-author",
+// Parse options
+const result = await parseString(content, {
+  language: "es",
   extractTags: true,
-  // Full autocomplete support!
+  tagCase: "lowercase",
 });
 
+// Export options
 const exporter = new ObsidianExporter();
-const result = await exporter.export(clippings, config);
-```
-
-### JSON Schema for Validation
-
-You can use the included JSON Schema for validation in your own configuration files:
-
-```json
-{
-  "$schema": "./node_modules/kindle-tools-ts/schema.json",
-  "format": "joplin",
-  "extractTags": true
-}
+await exporter.export(result.clippings, {
+  folderStructure: "by-author",
+  includeStats: true,
+});
 ```
 
 ---

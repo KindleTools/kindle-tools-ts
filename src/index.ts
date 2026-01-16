@@ -17,8 +17,8 @@
 // Main API Exports
 // =============================================================================
 
-// Config helpers and constants
-export { DEFAULTS, defineConfig, LOCATION_CONSTANTS } from "./config/index.js";
+// Config constants
+export { DEFAULTS, LOCATION_CONSTANTS } from "./config/index.js";
 export type { ProcessResult } from "./core/processor.js";
 export { processClippings } from "./core/processor.js";
 export type {
@@ -77,19 +77,13 @@ export {
 // New Zod-inferred types from config schemas
 export type {
   ClippingTypeFilter,
-  ConfigFile,
-  ConfigFileInput,
   GeoLocation,
   ParseOptionsInput,
 } from "./schemas/config.schema.js";
 export {
-  ConfigFileSchema,
-  ConfigFolderStructureSchema,
   GeoLocationSchema,
   ParseOptionsSchema,
-  parseConfigFile,
   parseParseOptions,
-  safeParseConfigFile,
   safeParseParseOptions,
   TagCaseSchema,
 } from "./schemas/config.schema.js";

@@ -1,9 +1,0 @@
-{
-  "$ref": "#/definitions/kindleToolConfig",
-  "definitions": {
-    "kindleToolConfig": {
-      "$ref": "#/definitions/kindleToolConfig"
-    }
-  },
-  "$schema": "http://json-schema.org/draft-07/schema#"
-}

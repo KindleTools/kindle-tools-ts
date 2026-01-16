@@ -16,12 +16,9 @@ import {
   SuspiciousReasonSchema,
 } from "#schemas/clipping.schema.js";
 import {
-  ConfigFileSchema,
   GeoLocationSchema,
   ParseOptionsSchema,
-  parseConfigFile,
   parseParseOptions,
-  safeParseConfigFile,
   safeParseParseOptions,
   TagCaseSchema,
 } from "#schemas/config.schema.js";
@@ -421,65 +418,6 @@ describe("Config Schemas", () => {
       if (!result.success) {
         expect(result.error).toBeDefined();
       }
-    });
-  });
-
-  describe("ConfigFileSchema", () => {
-    it("should accept valid config file", () => {
-      const config = {
-        format: "obsidian",
-        folderStructure: "by-author",
-        language: "en",
-        extractTags: true,
-        tagCase: "lowercase",
-      };
-      const result = ConfigFileSchema.parse(config);
-      expect(result.format).toBe("obsidian");
-      expect(result.folderStructure).toBe("by-author");
-    });
-
-    it("should accept empty config", () => {
-      const result = ConfigFileSchema.parse({});
-      expect(result.language).toBe("auto"); // default from ParseOptionsSchema
-    });
-
-    it("should reject invalid folderStructure", () => {
-      expect(() => ConfigFileSchema.parse({ folderStructure: "invalid" })).toThrow();
-    });
-
-    it("should accept by-author-book folderStructure", () => {
-      const result = ConfigFileSchema.parse({ folderStructure: "by-author-book" });
-      expect(result.folderStructure).toBe("by-author-book");
-    });
-  });
-
-  describe("parseConfigFile helper", () => {
-    it("should parse valid config file", () => {
-      const result = parseConfigFile({
-        format: "joplin",
-        extractTags: true,
-      });
-      expect(result.format).toBe("joplin");
-      expect(result.extractTags).toBe(true);
-    });
-
-    it("should throw on invalid config", () => {
-      expect(() => parseConfigFile({ folderStructure: "bad" })).toThrow();
-    });
-  });
-
-  describe("safeParseConfigFile helper", () => {
-    it("should return success for valid config", () => {
-      const result = safeParseConfigFile({ format: "html" });
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.format).toBe("html");
-      }
-    });
-
-    it("should return error for invalid config", () => {
-      const result = safeParseConfigFile({ folderStructure: "wrong" });
-      expect(result.success).toBe(false);
     });
   });
 });
