@@ -30,7 +30,7 @@ Plan para llevar el proyecto a **v1.0 estable** y cerrar el scope de features.
 
 ## 1. Para v1.0 (Prioritario)
 
-### 1.1 Bug: Parser CRLF line endings
+### 1.1 [COMPLETADO] Bug: Parser CRLF line endings
 
 | Impacto | Esfuerzo | Riesgo | ROI |
 |---------|----------|--------|-----|
@@ -59,7 +59,7 @@ Plan para llevar el proyecto a **v1.0 estable** y cerrar el scope de features.
 
 Items útiles pero **no bloquean v1.0**.
 
-### 2.1 Mejorar Parser CSV
+### 2.1 [COMPLETADO] Mejorar Parser CSV
 
 | Impacto | Esfuerzo | Riesgo | ROI |
 |---------|----------|--------|-----|
@@ -69,7 +69,7 @@ Solo si hay bugs reportados. El parser actual funciona.
 
 ---
 
-### 2.2 Config Validation Fuzzy Suggestions
+### 2.2 [IMPLEMENTADO] Config Validation Fuzzy Suggestions
 
 | Impacto | Esfuerzo | Riesgo | ROI |
 |---------|----------|--------|-----|
@@ -79,7 +79,7 @@ Validar keys de configuración con suggested fixes (`extracTags` -> `extractTags
 
 ---
 
-### 2.3 Author Normalization
+### 2.3 [IMPLEMENTADO] Author Normalization
 
 | Impacto | Esfuerzo | Riesgo | ROI |
 |---------|----------|--------|-----|
@@ -98,6 +98,27 @@ Usar Levenshtein para sugerir unificación de autores ("J.K. Rowling" vs "Rowlin
 - **Tokenizer Robustness**: Usar `\n={10,}\n` como separador para evitar falsos positivos con contenido de usuario.
 - **Redundant Normalization**: Centralizar normalización de line endings (actualmente en `parser.ts` y `tokenizer.ts`).
 - **Normalize Unicode**: Respetar `normalizeUnicode: false` correctamente en el tokenizer.
+
+---
+
+### 2.5 Integrate Fuzzy Suggestions & Author Normalizer
+
+| Impacto | Esfuerzo | Riesgo | ROI |
+|---------|----------|--------|-----|
+| 🟡 Medio | 🟢 Bajo | 🟢 Bajo | ⭐⭐ |
+
+- **Integrar el validador**: Usar `validateConfig` en la carga del JSON para mostrar las sugerencias en CLI.
+- **Pipeline de Autores**: Añadir flag `--normalize-authors` en BaseImporter para usar `AuthorNormalizer`.
+
+---
+
+### 2.6 Optimize Author Normalization
+
+| Impacto | Esfuerzo | Riesgo | ROI |
+|---------|----------|--------|-----|
+| 🟢 Bajo | 🟡 Medio | 🟢 Bajo | ⭐⭐ |
+
+- **Optimización**: Usar Canonical Signatures con Maps para deduplicación masiva `O(n)` en lugar de comparar pares `O(n^2)`.
 
 ---
 

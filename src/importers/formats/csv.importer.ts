@@ -7,6 +7,7 @@
  */
 
 import { distance } from "fastest-levenshtein";
+import Papa from "papaparse";
 import { z } from "zod";
 import type { Clipping, ClippingType } from "#app-types/clipping.js";
 import {
@@ -49,62 +50,6 @@ const CsvRowSchema = z.object({
 });
 
 type CsvRow = z.infer<typeof CsvRowSchema>;
-
-/**
- * Parse CSV content, handling quoted fields with embedded commas and newlines.
- */
-function parseCSV(content: string): string[][] {
-  const rows: string[][] = [];
-  let currentRow: string[] = [];
-  let currentField = "";
-  let inQuotes = false;
-
-  // Remove BOM if present
-  const cleanContent = content.charCodeAt(0) === 0xfeff ? content.slice(1) : content;
-
-  for (let i = 0; i < cleanContent.length; i++) {
-    const char = cleanContent[i];
-    const nextChar = cleanContent[i + 1];
-
-    if (inQuotes) {
-      if (char === '"') {
-        if (nextChar === '"') {
-          // Escaped quote
-          currentField += '"';
-          i++;
-        } else {
-          // End of quoted field
-          inQuotes = false;
-        }
-      } else {
-        currentField += char;
-      }
-    } else {
-      if (char === '"') {
-        inQuotes = true;
-      } else if (char === ",") {
-        currentRow.push(currentField);
-        currentField = "";
-      } else if (char === "\r") {
-      } else if (char === "\n") {
-        currentRow.push(currentField);
-        rows.push(currentRow);
-        currentRow = [];
-        currentField = "";
-      } else {
-        currentField += char;
-      }
-    }
-  }
-
-  // Handle last field/row
-  if (currentField || currentRow.length > 0) {
-    currentRow.push(currentField);
-    rows.push(currentRow);
-  }
-
-  return rows;
-}
 
 /**
  * Get suggestion for validation error using Levenshtein distance.
@@ -160,7 +105,32 @@ export class CsvImporter extends BaseImporter {
 
     const warnings: string[] = [];
     const errors: ImportErrorDetail[] = [];
-    const rows = parseCSV(content);
+
+    const parseResult = Papa.parse<string[]>(content, {
+      header: false,
+      skipEmptyLines: true,
+    });
+
+    // Log helpful metadata (detected delimiter, etc.)
+    logDebug("CSV Import metadata", {
+      operation: "import_csv",
+      data: {
+        delimiter: parseResult.meta.delimiter,
+        linebreak: parseResult.meta.linebreak,
+        truncated: parseResult.meta.truncated,
+        aborted: parseResult.meta.aborted,
+      },
+    });
+
+    if (parseResult.errors.length > 0) {
+      // Log parsing errors as debug info
+      logDebug("CSV Import Papaparse errors", {
+        operation: "import_csv",
+        data: { errors: parseResult.errors },
+      });
+    }
+
+    const rows = parseResult.data;
 
     if (rows.length < 2) {
       logDebug("CSV Import failed: no data rows", {
