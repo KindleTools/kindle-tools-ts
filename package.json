@@ -101,6 +101,7 @@
     "clean": "rimraf dist coverage .turbo",
     "ci": "turbo run build test lint check check:exports",
     "generate:schema": "tsx scripts/generate-schema.ts",
+    "check:schema": "tsx scripts/validate-schema.ts",
     "prepublishOnly": "pnpm build && pnpm run generate:schema"
   },
   "keywords": [

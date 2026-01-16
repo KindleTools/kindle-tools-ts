@@ -77,7 +77,7 @@ describe("generatePath", () => {
 
 ---
 
-### 1.3 Script validar schema.json en CI
+### 1.3 [COMPLETADO] Script validar schema.json en CI
 
 | Impacto | Esfuerzo | Riesgo | ROI |
 |---------|----------|--------|-----|
@@ -95,6 +95,8 @@ if (JSON.stringify(generated) !== JSON.stringify(existingSchema)) {
 ```
 
 **Añadir:** `"check:schema": "tsx scripts/validate-schema.ts"` a package.json.
+
+**Estado:** ✅ Completado (Script `scripts/validate-schema.ts` añadido a CI)
 
 ---
 
@@ -240,6 +242,7 @@ Sugerir comandos/flags similares en caso de typo en CLI.
 | Tests Generate Path | 2026-01-16 | ✅ |
 | Cobertura Importers | 2026-01-16 | ✅ |
 | Fuzzy CSV Headers | 2026-01-16 | ✅ CsvImporter |
+| Script validar schema.json | 2026-01-16 | ✅ scripts/validate-schema.ts |
 
 ---
 
@@ -273,4 +276,4 @@ Sugerir comandos/flags similares en caso de typo en CLI.
 
 ---
 
-*Actualizado: 2026-01-16 | Para v1.0: 4 items | Opcional: 7 items*
+*Actualizado: 2026-01-16 | Para v1.0: 3 items | Opcional: 7 items*
