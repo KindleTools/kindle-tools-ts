@@ -119,7 +119,7 @@ describe("importers", () => {
     });
 
     it("should fail when no clippings found", async () => {
-      const json = JSON.stringify({});
+      const json = JSON.stringify({ clippings: [] });
 
       const result = await importer.import(json);
 
@@ -210,6 +210,67 @@ describe("importers", () => {
       expect(clippings[0]?.author).toBe("Unknown");
       expect(clippings[0]?.type).toBe("highlight");
       expect(clippings[0]?.wordCount).toBe(2); // "Some quote"
+    });
+
+    it("should handle partial success with warnings", async () => {
+      const json = JSON.stringify({
+        clippings: [
+          { content: "Valid clipping" },
+          { content: 123 }, // Invalid content type
+          { title: "Another valid" },
+        ],
+      });
+
+      const result = await importer.import(json);
+
+      expect(result.isOk()).toBe(true);
+      if (!result.isOk()) return;
+      const { clippings, warnings } = result.value;
+
+      expect(clippings).toHaveLength(2);
+      expect(warnings).toHaveLength(1);
+      expect(warnings[0]).toContain("Item 1");
+    });
+
+    it("should respect MAX_VALIDATION_ERRORS", async () => {
+      // Create a large number of invalid items
+      const invalidItems = Array(150).fill({ content: 123 });
+      const json = JSON.stringify({ clippings: invalidItems });
+
+      const result = await importer.import(json);
+
+      // It should return error because enabled 0 valid items
+      if (result.isErr()) {
+        const warnings = (result.error as any).warnings;
+        expect(warnings).toBeDefined();
+        // The implementation stops adding warnings after MAX_VALIDATION_ERRORS (100)
+        // so we expect 100 specific warnings + 1 "Stopped" warning = 101
+        expect(warnings.length).toBeLessThanOrEqual(101);
+      } else {
+        expect(result.value.warnings.length).toBeLessThanOrEqual(101);
+      }
+    });
+
+    it("should provide fuzzy suggestions for typos in type", async () => {
+      const json = JSON.stringify({
+        clippings: [
+          {
+            content: "Test",
+            type: "hightlight", // Typo
+          },
+        ],
+      });
+
+      const result = await importer.import(json);
+
+      // Because only 1 item and it is invalid -> 0 valid clippings -> Error
+      expect(result.isErr()).toBe(true);
+      if (!result.isErr()) return;
+
+      const warnings = (result.error as any).warnings;
+      expect(warnings).toBeDefined();
+      expect(warnings).toHaveLength(1);
+      expect(warnings[0]).toContain('Did you mean "highlight"?');
     });
   });
 

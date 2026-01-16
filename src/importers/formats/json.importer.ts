@@ -6,10 +6,15 @@
  * @packageDocumentation
  */
 
+import { closest } from "fastest-levenshtein";
 import type { Clipping, ClippingLocation, ClippingType } from "#app-types/clipping.js";
 import type { SupportedLanguage } from "#app-types/language.js";
-import { type ImportResult, importInvalidFormat, importParseError, logDebug } from "#errors";
-import { type ClippingImport, ClippingsExportSchema } from "../../schemas/clipping.schema.js";
+import { type ImportResult, importParseError, logDebug } from "#errors";
+import {
+  type ClippingImport,
+  ClippingImportSchema,
+  ClippingTypeSchema,
+} from "../../schemas/clipping.schema.js";
 import { BaseImporter } from "../shared/base-importer.js";
 import { generateImportId, MAX_VALIDATION_ERRORS, parseLocationString } from "../shared/index.js";
 
@@ -136,94 +141,100 @@ export class JsonImporter extends BaseImporter {
       return importParseError(`Invalid JSON syntax: ${e}`);
     }
 
-    const parsedData = ClippingsExportSchema.safeParse(rawJson);
+    // Determine the array of items to process
+    let itemsToProcess: unknown[] = [];
 
-    if (!parsedData.success) {
-      // Map Zod errors to readable warnings
-      const issues = parsedData.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`);
+    // Helper to add warning respecting limit
+    const addWarning = (msg: string) => {
+      if (warnings.length < MAX_VALIDATION_ERRORS) {
+        warnings.push(msg);
+      } else if (warnings.length === MAX_VALIDATION_ERRORS) {
+        warnings.push(`Stopped after ${MAX_VALIDATION_ERRORS} warnings. File may be corrupted.`);
+      }
+    };
 
-      const details = parsedData.error.issues.map((i) => ({
-        path: i.path.filter((p): p is string | number => typeof p !== "symbol"),
-        message: i.message,
-        code: String(i.code),
-      }));
-
-      logDebug("JSON Import failed: schema validation error", {
-        operation: "import_json",
-        data: { issueCount: issues.length },
-      });
-
-      return importInvalidFormat("JSON content does not match expected schema", {
-        issues: details,
-        warnings: issues,
-      });
+    if (Array.isArray(rawJson)) {
+      itemsToProcess = rawJson;
+    } else if (typeof rawJson === "object" && rawJson !== null) {
+      // Loose check for object format
+      const obj = rawJson as Record<string, unknown>;
+      if (Array.isArray(obj["clippings"])) {
+        itemsToProcess = obj["clippings"];
+      } else if (typeof obj["books"] === "object" && obj["books"] !== null) {
+        // Flatten books object
+        const books = obj["books"] as Record<string, unknown>;
+        for (const [bookTitle, bookClippings] of Object.entries(books)) {
+          if (Array.isArray(bookClippings)) {
+            // Enrich with book title if missing
+            const enriched = bookClippings.map((c) => {
+              if (typeof c === "object" && c !== null) {
+                const clippingObj = c as Record<string, unknown>;
+                return { ...clippingObj, title: clippingObj["title"] ?? bookTitle };
+              }
+              return c;
+            });
+            itemsToProcess.push(...enriched);
+          }
+        }
+      }
     }
 
-    const data = parsedData.data;
+    if (itemsToProcess.length === 0) {
+      logDebug("JSON Import parsed 0 items to process", { operation: "import_json" });
+      // If we couldn't find any items, checks if it was just empty or invalid format
+      const hasClippings = typeof rawJson === 'object' && rawJson !== null && "clippings" in rawJson;
+      const hasBooks = typeof rawJson === 'object' && rawJson !== null && "books" in rawJson;
 
-    // Handle array format (Legacy/Alternative)
-    if (Array.isArray(data)) {
-      for (const [i, jsonClipping] of data.entries()) {
-        if (warnings.length >= MAX_VALIDATION_ERRORS) {
-          warnings.push(`Stopped after ${MAX_VALIDATION_ERRORS} warnings. File may be corrupted.`);
-          break;
-        }
+      if (!Array.isArray(rawJson) && !hasClippings && !hasBooks) {
+        return importParseError(
+          "Invalid JSON structure. Expected array or object with 'clippings'/'books'.",
+        );
+      }
+    }
+
+    let validCount = 0;
+
+    for (const [i, item] of itemsToProcess.entries()) {
+      // Check limit before processing
+      if (warnings.length > MAX_VALIDATION_ERRORS) {
+        break; // Stop processing entirely if we crossed the threshold
+      }
+
+      const result = ClippingImportSchema.safeParse(item);
+
+      if (result.success) {
         try {
-          clippings.push(jsonToClipping(jsonClipping, i));
+          clippings.push(jsonToClipping(result.data, validCount++));
         } catch (e) {
-          warnings.push(`Failed to process clipping at index ${i}: ${e}`);
+          addWarning(`Failed to convert clipping at index ${i}: ${e}`);
         }
-      }
-    } else {
-      // Handle Object format
+      } else {
+        // Validation failed
+        const issues = result.error.issues;
+        for (const issue of issues) {
+          let message = `Item ${i}: ${issue.path.join(".")} - ${issue.message}`;
 
-      // 1. Flat clippings
-      if (data.clippings) {
-        for (const [i, jsonClipping] of data.clippings.entries()) {
-          if (warnings.length >= MAX_VALIDATION_ERRORS) {
-            warnings.push(
-              `Stopped after ${MAX_VALIDATION_ERRORS} warnings. File may be corrupted.`,
-            );
-            break;
-          }
-          try {
-            clippings.push(jsonToClipping(jsonClipping, i));
-          } catch (e) {
-            warnings.push(`Failed to process clipping at index ${i}: ${e}`);
-          }
-        }
-      }
-
-      // 2. Grouped by book
-      if (data.books) {
-        let globalIndex = clippings.length;
-        for (const [bookTitle, bookClippings] of Object.entries(data.books)) {
-          if (Array.isArray(bookClippings)) {
-            for (const jsonClipping of bookClippings) {
-              if (warnings.length >= MAX_VALIDATION_ERRORS) {
-                warnings.push(
-                  `Stopped after ${MAX_VALIDATION_ERRORS} warnings. File may be corrupted.`,
-                );
-                break;
-              }
-              try {
-                const enriched = { ...jsonClipping };
-                if (!enriched.title) {
-                  enriched.title = bookTitle;
-                }
-                clippings.push(jsonToClipping(enriched, globalIndex++));
-              } catch (e) {
-                warnings.push(`Failed to process clipping from book "${bookTitle}": ${e}`);
-              }
+          // Add fuzzy suggestion for invalid type
+          if (issue.path.includes("type") && typeof item === "object" && item !== null && "type" in item) {
+            const invalidType = (item as Record<string, unknown>)["type"];
+            if (typeof invalidType === "string") {
+              const validTypes = ClippingTypeSchema.options;
+              const suggestion = closest(invalidType, [...validTypes]);
+              message += `. Did you mean "${suggestion}"?`;
             }
           }
+
+          addWarning(message);
         }
       }
+    }
+
+    if (clippings.length === 0 && warnings.length > 0) {
+      return importParseError("No valid clippings found in JSON file", { warnings });
     }
 
     if (clippings.length === 0) {
-      warnings.push("No clippings found in JSON file");
-      logDebug("JSON Import parsed 0 clippings", { operation: "import_json" });
+      addWarning("No clippings found in JSON file");
       return importParseError("No clippings found in JSON file", { warnings });
     }
 

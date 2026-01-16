@@ -217,7 +217,9 @@ export function validatePathTemplate(
 
 ---
 
-### 2.2 Estandarizar JsonImporter
+### 2.2 [COMPLETADO] Estandarizar JsonImporter
+
+**Estado:** Completado el 2026-01-15.
 
 | Impacto | Esfuerzo | Riesgo | ROI |
 |---------|----------|--------|-----|
