@@ -2,11 +2,11 @@ import * as fs from "fs";
 import * as path from "path";
 import { describe, expect, it } from "vitest";
 import { parse } from "../../src/importers/formats/txt/parser.js";
+import { loadFixture } from "../helpers/fixtures.js";
 
 describe("Parser Snapshot Tests", () => {
   it("should match standard file output snapshot", async () => {
-    const fixturePath = path.resolve(__dirname, "../fixtures/clippings/standard.txt");
-    const content = fs.readFileSync(fixturePath, "utf-8");
+    const content = loadFixture("standard.txt");
 
     const result = await parse(content);
 
