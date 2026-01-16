@@ -122,6 +122,17 @@ Usar Levenshtein para sugerir unificación de autores ("J.K. Rowling" vs "Rowlin
 
 ---
 
+### 2.7 Fuzzy TXT Parsing
+
+| Impacto | Esfuerzo | Riesgo | ROI |
+|---------|----------|--------|-----|
+| 🟡 Medio | 🟡 Medio | 🟢 Bajo | ⭐⭐⭐ |
+
+- **Resiliencia**: Usar Levenshtein para detectar keywords (`Your Highlight`, `Added on`) incluso con typos o corrupción (OCR).
+- **Auto-corrección Idioma**: Confirmar idioma basado en fuzzy matching de cabeceras.
+
+---
+
 ## 3. Not Planned
 
 ### Descartado (según PLAN.md)
