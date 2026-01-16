@@ -24,6 +24,19 @@ pnpm install
 - `pnpm lint`: Run Biome linter
 - `pnpm format`: Format code with Biome
 
+### Code Style & Imports
+
+We use a **Hybrid Import Approach** to maintain cleanliness and ease of refactoring:
+
+1.  **Local Imports (Siblings/Children)**: Use relative paths (`./`) for files in the same directory or subdirectories.
+    - ✅ `import { Helper } from "./helper.js";`
+    - ✅ `import { Child } from "./child/index.js";`
+2.  **Distant Imports (Parents/Modules)**: Use subpath aliases (`#`) defined in `package.json`.
+    - ✅ `import { Utils } from "#utils/index.js";`
+    - ❌ `import { Utils } from "../../utils/index.js";`
+
+A script `scripts/standardize-imports.ts` is available to help migrate legacy code.
+
 ## Pull Requests
 
 1. Fork the repo and create your branch from `main`.

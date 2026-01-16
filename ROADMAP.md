@@ -133,6 +133,18 @@ Usar Levenshtein para sugerir unificación de autores ("J.K. Rowling" vs "Rowlin
 
 ---
 
+### 2.8 Technical Improvements & Maintenance
+
+| Impacto | Esfuerzo | Riesgo | ROI |
+|---------|----------|--------|-----|
+| 🟢 Bajo | 🟡 Medio | 🟢 Bajo | ⭐⭐ |
+
+- **A. Automate Import Rules**: Configurar ESLint (`no-restricted-imports`) para prohibir `../` y forzar el uso de alias cuando corresponda.
+- **B. Simplify package.json**: Evaluar unificar alias (`#src/*` -> `./src/*`) para reducir mantenimiento de `imports` granular.
+- **C. Monitor Barrel Files**: Vigilar `index.ts` extensos para evitar dependencias circulares y problemas de tree-shaking (aunque `sideEffects: false` ayuda).
+
+---
+
 ## 3. Not Planned
 
 ### Descartado (según PLAN.md)
