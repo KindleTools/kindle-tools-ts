@@ -124,13 +124,15 @@ Mover fixtures duplicados a `tests/fixtures/`.
 
 ---
 
-### 2.2 Fuzzy CSV Headers
+### 2.2 [COMPLETADO] Fuzzy CSV Headers
 
 | Impacto | Esfuerzo | Riesgo | ROI |
 |---------|----------|--------|-----|
 | 🟡 Medio | 🟢 Bajo | 🟢 Bajo | ⭐⭐⭐ |
 
 Sugerir correcciones para headers con typos (`Titl` → `Title`) usando `fastest-levenshtein`.
+
+**Estado:** ✅ Completado (Tests verificados en `tests/unit/importers/csv-fuzzy-headers.test.ts`)
 
 ---
 
@@ -148,11 +150,42 @@ Tests para: múltiples errores, sugerencias de typos, MAX_VALIDATION_ERRORS.
 
 ### 2.4 Mejorar Parser CSV
 
+
 | Impacto | Esfuerzo | Riesgo | ROI |
 |---------|----------|--------|-----|
 | 🟡 Medio | 🟡 Medio | 🟡 Medio | ⭐⭐ |
 
 Solo si hay bugs reportados. El parser actual funciona.
+
+---
+
+### 2.5 Config Validation Fuzzy Suggestions
+
+| Impacto | Esfuerzo | Riesgo | ROI |
+|---------|----------|--------|-----|
+| 🟡 Medio | 🟢 Bajo | 🟢 Bajo | ⭐⭐⭐ |
+
+Validar keys de configuración con suggested fixes (`extracTags` -> `extractTags`).
+
+---
+
+### 2.6 Author Normalization
+
+| Impacto | Esfuerzo | Riesgo | ROI |
+|---------|----------|--------|-----|
+| 🟡 Medio | 🟡 Medio | 🟢 Bajo | ⭐⭐ |
+
+Usar Levenshtein para sugerir unificación de autores ("J.K. Rowling" vs "Rowling, J.K.").
+
+---
+
+### 2.7 CLI Suggestions
+
+| Impacto | Esfuerzo | Riesgo | ROI |
+|---------|----------|--------|-----|
+| 🟢 Bajo | 🟢 Bajo | 🟢 Bajo | ⭐⭐ |
+
+Sugerir comandos/flags similares en caso de typo en CLI.
 
 ---
 
@@ -206,6 +239,7 @@ Solo si hay bugs reportados. El parser actual funciona.
 | Consolidar Test Fixtures | 2026-01-16 | ✅ |
 | Tests Generate Path | 2026-01-16 | ✅ |
 | Cobertura Importers | 2026-01-16 | ✅ |
+| Fuzzy CSV Headers | 2026-01-16 | ✅ CsvImporter |
 
 ---
 
@@ -239,4 +273,4 @@ Solo si hay bugs reportados. El parser actual funciona.
 
 ---
 
-*Actualizado: 2026-01-16 | Para v1.0: 4 items | Opcional: 4 items*
+*Actualizado: 2026-01-16 | Para v1.0: 4 items | Opcional: 7 items*

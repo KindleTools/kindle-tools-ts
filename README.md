@@ -395,6 +395,7 @@ interface ExporterOptions {
 | `JoplinExporter` | JEX | Importable Joplin archive with 3-level notebook hierarchy |
 | `HtmlExporter` | HTML | Standalone page with dark mode & search |
 
+
 ### Importers
 
 Importers allow you to re-process previously exported files. This enables workflows where you export to JSON, edit the file, and then convert to another format.
@@ -420,7 +421,7 @@ const csvResult = await csvImporter.import(csvContent);
 | Importer | Format | Description |
 |----------|--------|-------------|
 | `JsonImporter` | JSON | Imports flat or grouped-by-book JSON exports |
-| `CsvImporter` | CSV | Imports CSV exports with standard columns |
+| `CsvImporter` | CSV | Imports CSV exports. Tolerates fuzzy headers (e.g. `Titl` -> `Title`) |
 
 ### Utility Functions
 

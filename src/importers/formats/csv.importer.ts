@@ -176,7 +176,50 @@ export class CsvImporter extends BaseImporter {
       return importInvalidFormat("CSV file has no header row");
     }
 
-    const headers = headerRow.map((h) => h.toLowerCase().trim());
+    const ExpectedHeaders = [
+      "id",
+      "title",
+      "author",
+      "type",
+      "page",
+      "location",
+      "date",
+      "content",
+      "wordcount",
+      "tags",
+    ];
+
+    const headers = headerRow.map((h) => {
+      const normalized = h.toLowerCase().trim();
+      if (!normalized) return "";
+
+      // Exact match
+      if (ExpectedHeaders.includes(normalized)) {
+        return normalized;
+      }
+
+      // Fuzzy match
+      let bestMatch = "";
+      let minDistance = Infinity;
+
+      for (const expected of ExpectedHeaders) {
+        const d = distance(normalized, expected);
+        if (d < minDistance) {
+          minDistance = d;
+          bestMatch = expected;
+        }
+      }
+
+      // Threshold: 2 is safe for most typos (Titl->Title, Authr->Author)
+      if (minDistance <= 2) {
+        const msg = `Fuzzy matched header '${normalized}' to '${bestMatch}' (dist: ${minDistance})`;
+        logDebug(msg);
+        warnings.push(msg); // Warn the user so they know
+        return bestMatch;
+      }
+
+      return normalized;
+    });
 
     // Map column names to indices
     const colIndex: Record<string, number> = {};
