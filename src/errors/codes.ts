@@ -84,14 +84,6 @@ export const FileSystemErrorCodes = {
 } as const;
 
 /**
- * Plugin-related error codes.
- */
-export const PluginErrorCodes = {
-  /** Failed to initialize plugin */
-  INIT_ERROR: "PLUGIN_INIT_ERROR",
-} as const;
-
-/**
  * All error codes combined.
  */
 export const ErrorCode = {
@@ -100,7 +92,6 @@ export const ErrorCode = {
   ...ConfigErrorCodes,
   ...ValidationErrorCodes,
   ...FileSystemErrorCodes,
-  ...PluginErrorCodes,
   /** Unknown error (catch-all) */
   UNKNOWN: "UNKNOWN",
 } as const;
@@ -123,9 +114,6 @@ export type ValidationErrorCode = (typeof ValidationErrorCodes)[keyof typeof Val
 
 /** Type for filesystem error codes */
 export type FileSystemErrorCode = (typeof FileSystemErrorCodes)[keyof typeof FileSystemErrorCodes];
-
-/** Type for plugin error codes */
-export type PluginErrorCode = (typeof PluginErrorCodes)[keyof typeof PluginErrorCodes];
 
 /** Type for all error codes */
 export type ErrorCodeType = (typeof ErrorCode)[keyof typeof ErrorCode];
@@ -155,8 +143,4 @@ export function isValidationError(code: string): code is ValidationErrorCode {
 
 export function isFileSystemError(code: string): code is FileSystemErrorCode {
   return code.startsWith("FS_");
-}
-
-export function isPluginError(code: string): code is PluginErrorCode {
-  return code.startsWith("PLUGIN_");
 }

@@ -43,29 +43,7 @@ Plan para llevar el proyecto a **v1.0 estable** y cerrar el scope de features.
 
 ## 2. Opcional
 
-Items de limpieza identificados en análisis exhaustivo. **No bloquean v1.0**.
-
-### 2.1 Eliminar residuos del sistema de plugins
-
-| Impacto | Esfuerzo | Riesgo | ROI |
-|---------|----------|--------|-----|
-| 🟢 Bajo | 🟢 Bajo | 🟢 Bajo | ⭐⭐ |
-
-Código de errores del plugin system que quedó huérfano:
-
-- `PluginErrorCodes`, `PluginErrorCode`, `isPluginError()` en `errors/codes.ts`
-- `PluginError` type en `errors/types.ts`
-- `PluginError` en la union `AppError`
-
-### 2.2 Eliminar validateConfig (código CLI)
-
-| Impacto | Esfuerzo | Riesgo | ROI |
-|---------|----------|--------|-----|
-| 🟢 Bajo | 🟢 Bajo | 🟢 Bajo | ⭐⭐ |
-
-**Ubicación:** `src/config/validator.ts`, `tests/unit/config/validator.test.ts`
-
-Función que ofrece sugerencias fuzzy para configuración incorrecta. Era útil para CLI, pero en librería el usuario tiene TypeScript/IDE. No se exporta en la API pública.
+*No hay items pendientes.*
 
 ---
 
@@ -130,6 +108,8 @@ Función que ofrece sugerencias fuzzy para configuración incorrecta. Era útil 
 | **Eliminar LegacyExportResult** | 2026-01-17 | ✅ tipo deprecado eliminado |
 | **Eliminar ExporterTagCaseSchema** | 2026-01-17 | ✅ alias no usado eliminado |
 | **Eliminar deprecated constants** | 2026-01-17 | ✅ re-exports de rules.js |
+| **Eliminar residuos plugins (errores)** | 2026-01-17 | ✅ PluginError, PluginErrorCodes |
+| **Eliminar validateConfig** | 2026-01-17 | ✅ código CLI huérfano |
 
 ---
 
@@ -137,7 +117,7 @@ Función que ofrece sugerencias fuzzy para configuración incorrecta. Era útil 
 
 | Criterio | Estado |
 |----------|--------|
-| Tests automatizados | ✅ 821 tests |
+| Tests automatizados | ✅ 818 tests |
 | CI/CD | ✅ GitHub Actions |
 | SemVer | ✅ Changesets |
 | TypeScript strict | ✅ |
@@ -160,4 +140,4 @@ Función que ofrece sugerencias fuzzy para configuración incorrecta. Era útil 
 
 ---
 
-*Actualizado: 2026-01-17 | Para v1.0: 1 item | Opcional: 2 items (limpieza)*
+*Actualizado: 2026-01-17 | Para v1.0: 1 item | Opcional: 0 items*

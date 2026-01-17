@@ -447,24 +447,24 @@ El sistema de plugins fue eliminado pero quedaron residuos en el sistema de erro
 
 **Razón**: Los types en `types/*.ts` son la fuente de verdad para TypeScript. Los schemas Zod infieren tipos para validación runtime. Ambos tienen propósitos diferentes.
 
-### Plan de Limpieza Final
+### Plan de Limpieza Final - ✅ COMPLETADO
 
-**Prioridad Alta (Código muerto del plugin system):**
+**Prioridad Alta (Código muerto del plugin system):** ✅
 
-1. Eliminar `PluginErrorCodes`, `PluginErrorCode`, `isPluginError()` de `codes.ts`
-2. Eliminar `PluginError` type de `types.ts`
-3. Quitar `PluginError` de la union `AppError`
-4. Limpiar exports en `errors/index.ts`
+1. ✅ Eliminar `PluginErrorCodes`, `PluginErrorCode`, `isPluginError()` de `codes.ts`
+2. ✅ Eliminar `PluginError` type de `types.ts`
+3. ✅ Quitar `PluginError` de la union `AppError`
+4. ✅ Exports ya estaban limpios en `errors/index.ts`
 
-**Prioridad Media (Código CLI huérfano):**
+**Prioridad Media (Código CLI huérfano):** ✅
 
-5. Eliminar `src/config/validator.ts`
-6. Eliminar `tests/unit/config/validator.test.ts`
+5. ✅ Eliminar `src/config/validator.ts`
+6. ✅ Eliminar `tests/unit/config/validator.test.ts`
 
-**Impacto estimado:**
-- ~40 líneas de código eliminadas
-- ~35 líneas de tests eliminadas
-- API de errores más limpia
+**Resultado:**
+- ~50 líneas de código eliminadas
+- 3 tests eliminados (de validator.test.ts)
+- 818 tests passing
 
 ---
 
