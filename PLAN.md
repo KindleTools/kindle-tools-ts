@@ -405,6 +405,69 @@ El objetivo es **terminar el proyecto**, no crear otro proyecto de refactoring q
 
 ---
 
+## 13. Análisis Exhaustivo Final (2026-01-17)
+
+### Código Muerto del Sistema de Plugins
+
+El sistema de plugins fue eliminado pero quedaron residuos en el sistema de errores:
+
+| Item | Ubicación | Acción |
+|------|-----------|--------|
+| `PluginErrorCodes` | `src/errors/codes.ts:89-92` | Eliminar |
+| `PluginErrorCode` type | `src/errors/codes.ts:128` | Eliminar |
+| `isPluginError()` | `src/errors/codes.ts:160-162` | Eliminar |
+| `PluginError` type | `src/errors/types.ts:244-253` | Eliminar |
+| `PluginError` en `AppError` | `src/errors/types.ts:284` | Quitar de union |
+| `PluginErrorCode` export | `src/errors/index.ts:45` | Eliminar |
+
+### validateConfig - Código de CLI Huérfano
+
+| Item | Ubicación | Razón |
+|------|-----------|-------|
+| `validateConfig()` | `src/config/validator.ts` | No se exporta en API pública |
+| Tests | `tests/unit/config/validator.test.ts` | Tests de código no usado |
+
+**Nota**: La función ofrece sugerencias fuzzy ("Did you mean...?") para claves de configuración incorrectas. Esto era útil para CLI, pero en una librería el usuario ya tiene TypeScript/IDE para esto.
+
+### Falsos Positivos - NO Eliminar
+
+| Item | Razón para mantener |
+|------|---------------------|
+| `DRM_LIMIT_MESSAGES` | Se usa en `sanitizers.ts:161` |
+| `VALIDATION_ARGS` | Se usa en `exporter-utils.ts:391,398,409` |
+| `isFileSystemError()` | API pública para usuarios |
+| `fastest-levenshtein` | Usado en csv/json importers y author-normalizer |
+
+### Duplicación de Tipos - Análisis
+
+| Tipo | Runtime (`types/*.ts`) | Schema (`schemas/*.ts`) | Decisión |
+|------|------------------------|-------------------------|----------|
+| `ClippingType` | `types/clipping.ts:4` | `clipping.schema.ts:41,48` | Mantener ambos (runtime + Zod) |
+| `SupportedLanguage` | `types/language.ts:6` | `clipping.schema.ts:59-67` | Mantener ambos |
+
+**Razón**: Los types en `types/*.ts` son la fuente de verdad para TypeScript. Los schemas Zod infieren tipos para validación runtime. Ambos tienen propósitos diferentes.
+
+### Plan de Limpieza Final
+
+**Prioridad Alta (Código muerto del plugin system):**
+
+1. Eliminar `PluginErrorCodes`, `PluginErrorCode`, `isPluginError()` de `codes.ts`
+2. Eliminar `PluginError` type de `types.ts`
+3. Quitar `PluginError` de la union `AppError`
+4. Limpiar exports en `errors/index.ts`
+
+**Prioridad Media (Código CLI huérfano):**
+
+5. Eliminar `src/config/validator.ts`
+6. Eliminar `tests/unit/config/validator.test.ts`
+
+**Impacto estimado:**
+- ~40 líneas de código eliminadas
+- ~35 líneas de tests eliminadas
+- API de errores más limpia
+
+---
+
 *Documento generado: 2026-01-15*
 *Última actualización: 2026-01-17*
 *Autor: Análisis asistido por Claude Opus 4.5*

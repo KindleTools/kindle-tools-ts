@@ -43,7 +43,29 @@ Plan para llevar el proyecto a **v1.0 estable** y cerrar el scope de features.
 
 ## 2. Opcional
 
-*No hay items pendientes.*
+Items de limpieza identificados en análisis exhaustivo. **No bloquean v1.0**.
+
+### 2.1 Eliminar residuos del sistema de plugins
+
+| Impacto | Esfuerzo | Riesgo | ROI |
+|---------|----------|--------|-----|
+| 🟢 Bajo | 🟢 Bajo | 🟢 Bajo | ⭐⭐ |
+
+Código de errores del plugin system que quedó huérfano:
+
+- `PluginErrorCodes`, `PluginErrorCode`, `isPluginError()` en `errors/codes.ts`
+- `PluginError` type en `errors/types.ts`
+- `PluginError` en la union `AppError`
+
+### 2.2 Eliminar validateConfig (código CLI)
+
+| Impacto | Esfuerzo | Riesgo | ROI |
+|---------|----------|--------|-----|
+| 🟢 Bajo | 🟢 Bajo | 🟢 Bajo | ⭐⭐ |
+
+**Ubicación:** `src/config/validator.ts`, `tests/unit/config/validator.test.ts`
+
+Función que ofrece sugerencias fuzzy para configuración incorrecta. Era útil para CLI, pero en librería el usuario tiene TypeScript/IDE. No se exporta en la API pública.
 
 ---
 
@@ -138,4 +160,4 @@ Plan para llevar el proyecto a **v1.0 estable** y cerrar el scope de features.
 
 ---
 
-*Actualizado: 2026-01-17 | Para v1.0: 1 item | Opcional: 0 items*
+*Actualizado: 2026-01-17 | Para v1.0: 1 item | Opcional: 2 items (limpieza)*
