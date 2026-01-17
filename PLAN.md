@@ -25,7 +25,6 @@ El proyecto sigue Clean Architecture / DDD con capas bien definidas:
 - **Domain**: Lógica pura de negocio
 - **Core**: Orquestación (processor)
 - **Importers/Exporters**: Adaptadores
-- **Plugins**: Sistema extensible
 - **Templates**: Motor Handlebars
 - **Schemas**: Validación Zod
 
@@ -242,10 +241,11 @@ Para poder decir "el proyecto está terminado":
    - Ejemplos de uso
    - API documentada inline
 
-4. **Simplificación**: Parcial
+4. **Simplificación**: ✅ Completado
    - [x] Eliminar cosmiconfig (config via objeto)
    - [x] Eliminar @iarna/toml
-   - [ ] Simplificar o eliminar sistema de plugins (~2,100 líneas pendiente)
+   - [x] Eliminar sistema de plugins (-2,100 líneas)
+   - [x] Eliminar ConfigFile/defineConfig (-170 líneas)
 
 ### Post-v1.0
 
@@ -292,7 +292,7 @@ Es **cerrar**. Declarar que está terminado y resistir la tentación de "mejorar
 | **Arquitectura** | Buena | Mantener | ✅ |
 | **Core (parser, processor)** | Completo | Mantener | ✅ |
 | **Exporters** | 6 formatos | Mantener los 5-6 | ✅ |
-| **Plugins** | Over-engineered | Eliminar | ⏳ Pendiente |
+| **Plugins** | ~~Over-engineered~~ | ~~Eliminar~~ | ✅ Eliminado |
 | **Templates** | Complejo | Mantener (ya funciona) | ✅ |
 | **Config** | ~~Over-engineered~~ | ~~Simplificar~~ | ✅ Completado |
 | **Dependencias** | 6 (era 8) | Mantener | ✅ |
@@ -359,8 +359,9 @@ El código está **escrito, testeado y funcionando**. El "exceso de arquitectura
 
 | Acción | Esfuerzo | Beneficio | Estado |
 |--------|----------|-----------|--------|
-| Eliminar plugins | Medio | Alto (simplifica API, -2100 líneas) | ⏳ Pendiente |
+| Eliminar plugins | Medio | Alto (simplifica API, -2100 líneas) | ✅ Completado |
 | Eliminar cosmiconfig + TOML | Bajo | Medio (-2 deps, -400 líneas) | ✅ Completado |
+| Eliminar ConfigFile/defineConfig | Bajo | Medio (-170 líneas, API clara) | ✅ Completado |
 | ~~Aplanar arquitectura~~ | Alto | Bajo (riesgo > beneficio) | ❌ Descartado |
 | ~~Eliminar ports~~ | Medio | Bajo (rompe testing) | ❌ Descartado |
 | ~~Eliminar importers~~ | Bajo | Bajo (ya funcionan) | ❌ Descartado |
@@ -374,6 +375,37 @@ El objetivo es **terminar el proyecto**, no crear otro proyecto de refactoring q
 
 ---
 
+## 12. Oportunidades de Limpieza Identificadas (2026-01-17)
+
+### Código Muerto / Duplicado
+
+| Item | Ubicación | Esfuerzo | Prioridad |
+|------|-----------|----------|-----------|
+| **LegacyExportResult** | `src/exporters/core/types.ts:159-167` | Bajo | Media |
+| Tipo deprecado sin uso interno. Verificar si hay consumidores externos antes de eliminar. |
+| **Aliases redundantes de schema** | `src/schemas/exporter.schema.ts:31-52` | Bajo | Baja |
+| `FolderStructureSchema`, `AuthorCaseSchema`, `ExporterTagCaseSchema` son re-exports del mismo schema base. |
+| **Deprecated constants** | `src/domain/core/constants.ts:1-26` | Muy bajo | Baja |
+| Re-exports deprecados desde `../rules.js`. |
+
+### Duplicación de Tipos
+
+| Item | Ubicación | Problema |
+|------|-----------|----------|
+| **ParseOptions interface vs Zod type** | `types/config.ts` vs `schemas/config.schema.ts` | Dos definiciones paralelas |
+
+**Recomendación**: Mantener solo la versión Zod como fuente de verdad. La interface manual es redundante.
+
+### No Actuar (Código Complejo pero Funcional)
+
+| Item | Razón para mantener |
+|------|---------------------|
+| **Utils namespace** (`src/index.ts:115-125`) | Funciona, no causa problemas |
+| **Funciones de escape esparcidas** | Ya están testeadas, consolidar es riesgo sin beneficio |
+| **generatePath/generateFilePath** | Similar pero con interfaces diferentes para casos de uso distintos |
+
+---
+
 *Documento generado: 2026-01-15*
-*Última actualización: 2026-01-16*
+*Última actualización: 2026-01-17*
 *Autor: Análisis asistido por Claude Opus 4.5*

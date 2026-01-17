@@ -30,7 +30,7 @@ Plan para llevar el proyecto a **v1.0 estable** y cerrar el scope de features.
 
 ## 1. Para v1.0 (Prioritario)
 
-### 1.1 [COMPLETADO] Bug: Parser CRLF line endings
+### 1.1 Bug: Parser CRLF line endings
 
 | Impacto | Esfuerzo | Riesgo | ROI |
 |---------|----------|--------|-----|
@@ -57,91 +57,41 @@ Plan para llevar el proyecto a **v1.0 estable** y cerrar el scope de features.
 
 ## 2. Opcional
 
-Items útiles pero **no bloquean v1.0**.
+Items útiles pero **no bloquean v1.0**. Filosofía: solo limpieza de bajo riesgo.
 
-### 2.1 [COMPLETADO] Mejorar Parser CSV
+### 2.1 Eliminar LegacyExportResult
 
 | Impacto | Esfuerzo | Riesgo | ROI |
 |---------|----------|--------|-----|
-| 🟡 Medio | 🟡 Medio | 🟡 Medio | ⭐⭐ |
+| 🟢 Bajo | 🟢 Bajo | 🟢 Bajo | ⭐⭐ |
 
-Solo si hay bugs reportados. El parser actual funciona.
+**Ubicación:** `src/exporters/core/types.ts:159-167`
+
+Tipo deprecado sin uso interno. Verificar si hay consumidores externos antes de eliminar.
 
 ---
 
-### 2.2 [IMPLEMENTADO] Config Validation Fuzzy Suggestions
+### 2.2 Limpiar aliases redundantes de schema
 
 | Impacto | Esfuerzo | Riesgo | ROI |
 |---------|----------|--------|-----|
-| 🟡 Medio | 🟢 Bajo | 🟢 Bajo | ⭐⭐⭐ |
+| 🟢 Bajo | 🟢 Bajo | 🟢 Bajo | ⭐⭐ |
 
-Validar keys de configuración con suggested fixes (`extracTags` -> `extractTags`).
+**Ubicación:** `src/schemas/exporter.schema.ts:31-52`
+
+`FolderStructureSchema`, `AuthorCaseSchema`, `ExporterTagCaseSchema` son re-exports del mismo schema base.
 
 ---
 
-### 2.3 [IMPLEMENTADO] Author Normalization
+### 2.3 Eliminar deprecated constants
 
 | Impacto | Esfuerzo | Riesgo | ROI |
 |---------|----------|--------|-----|
-| 🟡 Medio | 🟡 Medio | 🟢 Bajo | ⭐⭐ |
+| 🟢 Bajo | 🟢 Bajo | 🟢 Bajo | ⭐⭐ |
 
-Usar Levenshtein para sugerir unificación de autores ("J.K. Rowling" vs "Rowling, J.K.").
+**Ubicación:** `src/domain/core/constants.ts:1-26`
 
----
-
-### 2.4 Refactor Txt Parser
-
-| Impacto | Esfuerzo | Riesgo | ROI |
-|---------|----------|--------|-----|
-| 🟡 Medio | 🟢 Bajo | 🟢 Bajo | ⭐⭐ |
-
-- **Tokenizer Robustness**: Usar `\n={10,}\n` como separador para evitar falsos positivos con contenido de usuario.
-- **Redundant Normalization**: Centralizar normalización de line endings (actualmente en `parser.ts` y `tokenizer.ts`).
-- **Normalize Unicode**: Respetar `normalizeUnicode: false` correctamente en el tokenizer.
-
----
-
-### 2.5 Integrate Fuzzy Suggestions & Author Normalizer
-
-| Impacto | Esfuerzo | Riesgo | ROI |
-|---------|----------|--------|-----|
-| 🟡 Medio | 🟢 Bajo | 🟢 Bajo | ⭐⭐ |
-
-- **Integrar el validador**: Usar `validateConfig` en la carga del JSON para mostrar las sugerencias en CLI.
-- **Pipeline de Autores**: Añadir flag `--normalize-authors` en BaseImporter para usar `AuthorNormalizer`.
-
----
-
-### 2.6 Optimize Author Normalization
-
-| Impacto | Esfuerzo | Riesgo | ROI |
-|---------|----------|--------|-----|
-| 🟢 Bajo | 🟡 Medio | 🟢 Bajo | ⭐⭐ |
-
-- **Optimización**: Usar Canonical Signatures con Maps para deduplicación masiva `O(n)` en lugar de comparar pares `O(n^2)`.
-
----
-
-### 2.7 Fuzzy TXT Parsing
-
-| Impacto | Esfuerzo | Riesgo | ROI |
-|---------|----------|--------|-----|
-| 🟡 Medio | 🟡 Medio | 🟢 Bajo | ⭐⭐⭐ |
-
-- **Resiliencia**: Usar Levenshtein para detectar keywords (`Your Highlight`, `Added on`) incluso con typos o corrupción (OCR).
-- **Auto-corrección Idioma**: Confirmar idioma basado en fuzzy matching de cabeceras.
-
----
-
-### 2.8 Technical Improvements & Maintenance
-
-| Impacto | Esfuerzo | Riesgo | ROI |
-|---------|----------|--------|-----|
-| 🟢 Bajo | 🟡 Medio | 🟢 Bajo | ⭐⭐ |
-
-- **A. Automate Import Rules**: Configurar ESLint (`no-restricted-imports`) para prohibir `../` y forzar el uso de alias cuando corresponda.
-- **B. Simplify package.json**: Evaluar unificar alias (`#src/*` -> `./src/*`) para reducir mantenimiento de `imports` granular.
-- **C. Monitor Barrel Files**: Vigilar `index.ts` extensos para evitar dependencias circulares y problemas de tree-shaking (aunque `sideEffects: false` ayuda).
+Re-exports deprecados desde `../rules.js`.
 
 ---
 
@@ -162,6 +112,11 @@ Usar Levenshtein para sugerir unificación de autores ("J.K. Rowling" vs "Rowlin
 | **Fuzzy Template Suggestions** | Nice-to-have, no esencial |
 | **Proactive Path Validation** | El usuario puede validar antes |
 | **CLI / CLI Suggestions** | Usuarios crean wrappers, fuera de scope |
+| **Fuzzy TXT Parsing** | Over-engineering, el parser funciona |
+| **Author Normalization O(n)** | Optimización prematura |
+| **Universal Compatibility Layer** | Ya funciona en browser |
+| **Workbench Refactoring** | Está en tests/, no afecta bundle |
+| **Dependency Injection Expansion** | Over-engineering |
 
 ### Descartado Permanentemente
 
@@ -204,7 +159,7 @@ Usar Levenshtein para sugerir unificación de autores ("J.K. Rowling" vs "Rowlin
 
 | Criterio | Estado |
 |----------|--------|
-| Tests automatizados | ✅ 745 tests (1 failing: CRLF) |
+| Tests automatizados | ✅ 736 tests (1 failing: CRLF) |
 | CI/CD | ✅ GitHub Actions |
 | SemVer | ✅ Changesets |
 | TypeScript strict | ✅ |
@@ -228,4 +183,4 @@ Usar Levenshtein para sugerir unificación de autores ("J.K. Rowling" vs "Rowlin
 
 ---
 
-*Actualizado: 2026-01-16 | Para v1.0: 2 items | Opcional: 4 items*
+*Actualizado: 2026-01-17 | Para v1.0: 2 items | Opcional: 3 items (limpieza)*
