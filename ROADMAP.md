@@ -30,21 +30,7 @@ Plan para llevar el proyecto a **v1.0 estable** y cerrar el scope de features.
 
 ## 1. Para v1.0 (Prioritario)
 
-### 1.1 Bug: Parser CRLF line endings
-
-| Impacto | Esfuerzo | Riesgo | ROI |
-|---------|----------|--------|-----|
-| 🟡 Medio | 🟢 Bajo | 🟢 Bajo | ⭐⭐⭐ |
-
-**Bug:** Test `should handle varying line endings` falla - el parser no maneja correctamente CRLF (`\r\n`).
-
-**Ubicación:** `tests/unit/importers/txt/parser.test.ts:156`
-
-**Acción:** Revisar normalización de line endings en el tokenizer/parser.
-
----
-
-### 1.2 Actualizar README para v1.0
+### 1.1 Actualizar README para v1.0
 
 | Impacto | Esfuerzo | Riesgo | ROI |
 |---------|----------|--------|-----|
@@ -57,41 +43,7 @@ Plan para llevar el proyecto a **v1.0 estable** y cerrar el scope de features.
 
 ## 2. Opcional
 
-Items útiles pero **no bloquean v1.0**. Filosofía: solo limpieza de bajo riesgo.
-
-### 2.1 Eliminar LegacyExportResult
-
-| Impacto | Esfuerzo | Riesgo | ROI |
-|---------|----------|--------|-----|
-| 🟢 Bajo | 🟢 Bajo | 🟢 Bajo | ⭐⭐ |
-
-**Ubicación:** `src/exporters/core/types.ts:159-167`
-
-Tipo deprecado sin uso interno. Verificar si hay consumidores externos antes de eliminar.
-
----
-
-### 2.2 Limpiar aliases redundantes de schema
-
-| Impacto | Esfuerzo | Riesgo | ROI |
-|---------|----------|--------|-----|
-| 🟢 Bajo | 🟢 Bajo | 🟢 Bajo | ⭐⭐ |
-
-**Ubicación:** `src/schemas/exporter.schema.ts:31-52`
-
-`FolderStructureSchema`, `AuthorCaseSchema`, `ExporterTagCaseSchema` son re-exports del mismo schema base.
-
----
-
-### 2.3 Eliminar deprecated constants
-
-| Impacto | Esfuerzo | Riesgo | ROI |
-|---------|----------|--------|-----|
-| 🟢 Bajo | 🟢 Bajo | 🟢 Bajo | ⭐⭐ |
-
-**Ubicación:** `src/domain/core/constants.ts:1-26`
-
-Re-exports deprecados desde `../rules.js`.
+*No hay items pendientes.*
 
 ---
 
@@ -152,6 +104,10 @@ Re-exports deprecados desde `../rules.js`.
 | Fuzzy CSV Headers | 2026-01-16 | ✅ csv-fuzzy-headers.test.ts |
 | **Eliminar sistema de plugins** | 2026-01-16 | ✅ -2,100 líneas, -84 tests |
 | **Eliminar ConfigFile/defineConfig** | 2026-01-16 | ✅ -170 líneas, API simplificada |
+| **Bug CRLF line endings** | 2026-01-17 | ✅ tokenizer ya normaliza |
+| **Eliminar LegacyExportResult** | 2026-01-17 | ✅ tipo deprecado eliminado |
+| **Eliminar ExporterTagCaseSchema** | 2026-01-17 | ✅ alias no usado eliminado |
+| **Eliminar deprecated constants** | 2026-01-17 | ✅ re-exports de rules.js |
 
 ---
 
@@ -159,7 +115,7 @@ Re-exports deprecados desde `../rules.js`.
 
 | Criterio | Estado |
 |----------|--------|
-| Tests automatizados | ✅ 736 tests (1 failing: CRLF) |
+| Tests automatizados | ✅ 821 tests |
 | CI/CD | ✅ GitHub Actions |
 | SemVer | ✅ Changesets |
 | TypeScript strict | ✅ |
@@ -170,8 +126,7 @@ Re-exports deprecados desde `../rules.js`.
 | Dependencies | ✅ 6 runtime |
 
 **Pendiente:**
-- [ ] Fix CRLF parser (1.1)
-- [ ] README v1.0 (1.2)
+- [ ] README v1.0 (1.1)
 
 ---
 
@@ -183,4 +138,4 @@ Re-exports deprecados desde `../rules.js`.
 
 ---
 
-*Actualizado: 2026-01-17 | Para v1.0: 2 items | Opcional: 3 items (limpieza)*
+*Actualizado: 2026-01-17 | Para v1.0: 1 item | Opcional: 0 items*

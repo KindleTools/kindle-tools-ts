@@ -377,16 +377,15 @@ El objetivo es **terminar el proyecto**, no crear otro proyecto de refactoring q
 
 ## 12. Oportunidades de Limpieza Identificadas (2026-01-17)
 
-### Código Muerto / Duplicado
+### Código Muerto / Duplicado - ✅ COMPLETADO
 
-| Item | Ubicación | Esfuerzo | Prioridad |
-|------|-----------|----------|-----------|
-| **LegacyExportResult** | `src/exporters/core/types.ts:159-167` | Bajo | Media |
-| Tipo deprecado sin uso interno. Verificar si hay consumidores externos antes de eliminar. |
-| **Aliases redundantes de schema** | `src/schemas/exporter.schema.ts:31-52` | Bajo | Baja |
-| `FolderStructureSchema`, `AuthorCaseSchema`, `ExporterTagCaseSchema` son re-exports del mismo schema base. |
-| **Deprecated constants** | `src/domain/core/constants.ts:1-26` | Muy bajo | Baja |
-| Re-exports deprecados desde `../rules.js`. |
+| Item | Estado | Fecha |
+|------|--------|-------|
+| **LegacyExportResult** | ✅ Eliminado | 2026-01-17 |
+| **ExporterTagCaseSchema** | ✅ Eliminado (alias no usado) | 2026-01-17 |
+| **Deprecated constants** | ✅ Re-exports eliminados, imports migrados a `#domain/rules.js` | 2026-01-17 |
+
+**Nota**: `FolderStructureSchema` y `AuthorCaseSchema` se mantienen porque SÍ se usan en `ExporterOptionsSchema`.
 
 ### Duplicación de Tipos
 

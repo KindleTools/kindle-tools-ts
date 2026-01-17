@@ -1,9 +1,6 @@
 import type { Clipping } from "#app-types/clipping.js";
 import { groupByBook } from "#domain/analytics/stats.js";
-import {
-  DEFAULT_SIMILARITY_THRESHOLD,
-  SUSPICIOUS_HIGHLIGHT_THRESHOLDS,
-} from "#domain/core/constants.js";
+import { ANALYSIS_THRESHOLDS, SUSPICIOUS_HIGHLIGHT_THRESHOLDS } from "#domain/rules.js";
 import { jaccardSimilarity } from "#utils/text/similarity.js";
 
 /**
@@ -103,7 +100,7 @@ export function flagSuspiciousHighlights(clippings: Clipping[]): {
  */
 export function flagFuzzyDuplicates(
   clippings: Clipping[],
-  threshold = DEFAULT_SIMILARITY_THRESHOLD,
+  threshold: number = ANALYSIS_THRESHOLDS.DEFAULT_SIMILARITY_THRESHOLD,
 ): {
   clippings: Clipping[];
   flaggedCount: number;

@@ -150,18 +150,3 @@ export interface Exporter {
    */
   export(clippings: Clipping[], options?: ExporterOptions): Promise<import("#errors").ExportResult>;
 }
-
-// =============================================================================
-// Legacy types for gradual migration
-// =============================================================================
-
-/**
- * @deprecated Use ExportResult from #errors instead.
- * Legacy result type for backwards compatibility during migration.
- */
-export interface LegacyExportResult {
-  success: boolean;
-  output: string | Uint8Array;
-  files?: import("#errors").ExportedFile[];
-  error?: Error;
-}

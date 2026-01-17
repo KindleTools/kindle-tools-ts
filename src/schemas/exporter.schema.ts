@@ -35,14 +35,6 @@ import { CaseTransformSchema, FolderStructureBaseSchema } from "./shared.schema.
  * Folder structure options for Markdown-based exporters.
  * Re-exported from shared for convenience.
  */
-// =============================================================================
-// Re-exports from shared (for convenience and backward compatibility)
-// =============================================================================
-
-/**
- * Folder structure options for Markdown-based exporters.
- * Re-exported from shared for convenience.
- */
 export const FolderStructureSchema = FolderStructureBaseSchema;
 
 /**
@@ -50,12 +42,6 @@ export const FolderStructureSchema = FolderStructureBaseSchema;
  * Re-exported from shared for convenience.
  */
 export const AuthorCaseSchema = CaseTransformSchema;
-
-/**
- * Tag case transformation.
- * Re-exported from shared for convenience.
- */
-export const ExporterTagCaseSchema = CaseTransformSchema;
 
 // =============================================================================
 // Template Preset Schema

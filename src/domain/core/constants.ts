@@ -8,24 +8,6 @@
  */
 
 /**
- * Core domain constants used across the application.
- *
- * @packageDocumentation
- * @deprecated Use src/constants/analysis.ts instead
- */
-
-export {
-  COMMON_PATTERNS,
-  DRM_LIMIT_MESSAGES,
-  SUSPICIOUS_HIGHLIGHT_THRESHOLDS,
-  TITLE_NOISE_PATTERNS,
-} from "#domain/rules.js";
-
-// Re-export specific value for backward compatibility with existing tests/code
-import { ANALYSIS_THRESHOLDS } from "#domain/rules.js";
-export const DEFAULT_SIMILARITY_THRESHOLD = ANALYSIS_THRESHOLDS.DEFAULT_SIMILARITY_THRESHOLD;
-
-/**
  * Constants related to data processing, identity generation, and heuristics.
  */
 export const PROCESSING_THRESHOLDS = {
