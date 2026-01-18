@@ -615,10 +615,3 @@ src/
 1.  **Import**: Raw file -> `Importer` -> `Clipping[]` (Raw)
 2.  **Process**: `Clipping[]` -> `Processor` -> `Clipping[]` (Cleaned, Deduped, Linked)
 3.  **Export**: `Clipping[]` -> `Exporter` -> Output (File/String/Archive)
-
----
-
-## 🔮 Future Improvements
-
--   **Pipeline Object**: Convert the `process()` function into a composable `Pipeline` class for middleware support.
--   **FileSystem Abstraction**: Create a proper `VirtualFileSystem` to handle exports uniformly (whether writing to disk in Node or creating a ZIP in Browser).
