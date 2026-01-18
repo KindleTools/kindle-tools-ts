@@ -22,6 +22,7 @@ import {
   type TagCase,
 } from "#exporters/index.js";
 import { CsvImporter, type Importer, JsonImporter, TxtImporter } from "#importers/index.js";
+import type { TemplatePreset } from "#templates/types.js";
 import type { TarEntry } from "#utils/fs/tar.js";
 import * as TarUtils from "#utils/fs/tar.js";
 import type { ZipEntry } from "#utils/fs/zip.js";
@@ -74,6 +75,8 @@ const elements = {
   optExtractTags: document.getElementById("opt-extractTags") as HTMLInputElement,
   optTagCase: document.getElementById("opt-tagCase") as HTMLSelectElement,
   optHighlightsOnly: document.getElementById("opt-highlightsOnly") as HTMLInputElement,
+  optMergedOutput: document.getElementById("opt-mergedOutput") as HTMLInputElement,
+  optRemoveUnlinkedNotes: document.getElementById("opt-removeUnlinkedNotes") as HTMLInputElement,
   optNormalizeUnicode: document.getElementById("opt-normalizeUnicode") as HTMLInputElement,
   optCleanContent: document.getElementById("opt-cleanContent") as HTMLInputElement,
   optCleanTitles: document.getElementById("opt-cleanTitles") as HTMLInputElement,
@@ -81,6 +84,9 @@ const elements = {
   optExcludeNotes: document.getElementById("opt-excludeNotes") as HTMLInputElement,
   optExcludeBookmarks: document.getElementById("opt-excludeBookmarks") as HTMLInputElement,
   optMinContentLength: document.getElementById("opt-minContentLength") as HTMLInputElement,
+  optExcludeBooks: document.getElementById("opt-excludeBooks") as HTMLTextAreaElement,
+  optStrict: document.getElementById("opt-strict") as HTMLInputElement,
+  optDateLocale: document.getElementById("opt-dateLocale") as HTMLSelectElement,
 
   // Results tabs
   statsContent: document.getElementById("stats-content") as HTMLDivElement,
@@ -101,8 +107,11 @@ const elements = {
   exportIncludeClippingTags: document.getElementById(
     "export-includeClippingTags",
   ) as HTMLInputElement,
+  exportIncludeRaw: document.getElementById("export-includeRaw") as HTMLInputElement,
+  exportPretty: document.getElementById("export-pretty") as HTMLInputElement,
   exportFolderStructure: document.getElementById("export-folderStructure") as HTMLSelectElement,
   exportAuthorCase: document.getElementById("export-authorCase") as HTMLSelectElement,
+  exportTemplatePreset: document.getElementById("export-templatePreset") as HTMLSelectElement,
   exportJsonContent: document.getElementById("export-json-content") as HTMLDivElement,
   exportCsvContent: document.getElementById("export-csv-content") as HTMLDivElement,
   exportMdContent: document.getElementById("export-md-content") as HTMLDivElement,
@@ -113,6 +122,13 @@ const elements = {
 
   // Book filter
   optBookFilter: document.getElementById("opt-bookFilter") as HTMLSelectElement,
+
+  // Tab counts
+  clippingsCount: document.getElementById("clippings-count") as HTMLSpanElement,
+  warningsCount: document.getElementById("warnings-count") as HTMLSpanElement,
+
+  // Clear button
+  clearBtn: document.getElementById("clear-btn") as HTMLButtonElement,
 };
 
 // =============================================================================
@@ -202,6 +218,17 @@ function getParseOptions(): ParseOptions {
 
   const bookFilter = elements.optBookFilter.value;
 
+  // Parse excludeBooks textarea (one book per line)
+  const excludeBooksText = elements.optExcludeBooks.value.trim();
+  const excludeBooks = excludeBooksText
+    ? excludeBooksText
+        .split("\n")
+        .map((b) => b.trim())
+        .filter((b) => b.length > 0)
+    : undefined;
+
+  const dateLocale = elements.optDateLocale.value || undefined;
+
   return {
     language: elements.optLanguage.value as ParseOptions["language"],
     removeDuplicates: elements.optRemoveDuplicates.checked,
@@ -210,12 +237,17 @@ function getParseOptions(): ParseOptions {
     extractTags: elements.optExtractTags.checked,
     ...(elements.optExtractTags.checked && { tagCase: elements.optTagCase.value as TagCase }),
     highlightsOnly: elements.optHighlightsOnly.checked,
+    mergedOutput: elements.optMergedOutput.checked,
+    removeUnlinkedNotes: elements.optRemoveUnlinkedNotes.checked,
     normalizeUnicode: elements.optNormalizeUnicode.checked,
     cleanContent: elements.optCleanContent.checked,
     cleanTitles: elements.optCleanTitles.checked,
     excludeTypes: excludeTypes.length > 0 ? excludeTypes : undefined,
     minContentLength: parseInt(elements.optMinContentLength.value, 10) || undefined,
     onlyBooks: bookFilter ? [bookFilter] : undefined,
+    excludeBooks,
+    dateLocale,
+    strict: elements.optStrict.checked,
   };
 }
 
@@ -236,6 +268,11 @@ function detectInputFormat(fileName: string): "txt" | "json" | "csv" {
 
 async function parseFile(): Promise<void> {
   if (!state.fileContent || !state.fileName) return;
+
+  // Show loading state
+  const originalText = elements.parseBtn.textContent;
+  elements.parseBtn.textContent = "Parsing...";
+  elements.parseBtn.disabled = true;
 
   const inputFormat = detectInputFormat(state.fileName);
   const startTime = performance.now();
@@ -307,6 +344,8 @@ async function parseFile(): Promise<void> {
     renderRawData();
     renderExports();
     populateBookFilter();
+    updateTabCounts();
+    elements.clearBtn.disabled = false;
   } catch (error) {
     console.error("Parse error:", error);
 
@@ -351,6 +390,10 @@ async function parseFile(): Promise<void> {
 
     errorHtml += `</div>`;
     elements.statsContent.innerHTML = errorHtml;
+  } finally {
+    // Restore button state
+    elements.parseBtn.textContent = originalText ?? "Parse File";
+    elements.parseBtn.disabled = false;
   }
 }
 
@@ -646,8 +689,11 @@ async function renderExports(): Promise<void> {
   const groupByBook = elements.exportGroupByBook.checked;
   const includeStats = elements.exportIncludeStats.checked;
   const includeClippingTags = elements.exportIncludeClippingTags.checked;
+  const includeRaw = elements.exportIncludeRaw.checked;
+  const pretty = elements.exportPretty.checked;
   const folderStructure = elements.exportFolderStructure.value as FolderStructure;
   const authorCase = elements.exportAuthorCase.value as AuthorCase;
+  const templatePreset = elements.exportTemplatePreset.value as TemplatePreset;
   const title = elements.exportTitle.value.trim() || undefined;
   const creator = elements.exportCreator.value.trim() || undefined;
 
@@ -657,7 +703,8 @@ async function renderExports(): Promise<void> {
     groupByBook,
     includeStats,
     includeClippingTags,
-    pretty: true,
+    includeRaw,
+    pretty,
   });
   const jsonData = unwrapExport(jsonResultRaw, "JSON");
   if (jsonData) {
@@ -669,7 +716,10 @@ async function renderExports(): Promise<void> {
 
   // CSV Export
   const csvExporter = new CsvExporter();
-  const csvResultRaw = await csvExporter.export(result.clippings, { includeClippingTags });
+  const csvResultRaw = await csvExporter.export(result.clippings, {
+    includeClippingTags,
+    includeRaw,
+  });
   const csvData = unwrapExport(csvResultRaw, "CSV");
   if (csvData) {
     const csvContent = typeof csvData.output === "string" ? csvData.output : "[Binary output]";
@@ -680,7 +730,7 @@ async function renderExports(): Promise<void> {
 
   // Markdown Export
   const mdExporter = new MarkdownExporter();
-  const mdResultRaw = await mdExporter.export(result.clippings, { groupByBook });
+  const mdResultRaw = await mdExporter.export(result.clippings, { groupByBook, templatePreset });
   const mdData = unwrapExport(mdResultRaw, "Markdown");
 
   if (mdData) {
@@ -1052,20 +1102,193 @@ function truncate(text: string, maxLength: number): string {
 }
 
 // =============================================================================
+// Tab Counts
+// =============================================================================
+
+function updateTabCounts(): void {
+  const result = state.parseResult;
+  if (result) {
+    elements.clippingsCount.textContent = `(${result.clippings.length})`;
+    elements.warningsCount.textContent =
+      result.warnings.length > 0 ? `(${result.warnings.length})` : "";
+  } else {
+    elements.clippingsCount.textContent = "";
+    elements.warningsCount.textContent = "";
+  }
+}
+
+// =============================================================================
+// Clear / Reset
+// =============================================================================
+
+function clearAll(): void {
+  state.fileContent = null;
+  state.fileName = null;
+  state.parseResult = null;
+
+  // Reset UI
+  elements.fileInfo.classList.add("hidden");
+  elements.fileInfo.innerHTML = "";
+  elements.parseBtn.disabled = true;
+  elements.clearBtn.disabled = true;
+  elements.downloadBtn.disabled = true;
+
+  // Reset results
+  elements.statsContent.innerHTML = '<div class="placeholder">Parse a file to see statistics</div>';
+  elements.clippingsContent.innerHTML =
+    '<div class="placeholder">Parse a file to see clippings</div>';
+  elements.warningsContent.innerHTML =
+    '<div class="placeholder">Parse a file to see warnings</div>';
+  elements.rawContent.innerHTML =
+    '<div class="placeholder">Parse a file to see raw JSON data</div>';
+
+  // Reset exports
+  elements.exportJsonContent.innerHTML = '<div class="placeholder">Parse a file first</div>';
+  elements.exportCsvContent.innerHTML = '<div class="placeholder">Parse a file first</div>';
+  elements.exportMdContent.innerHTML = '<div class="placeholder">Parse a file first</div>';
+  elements.exportObsidianContent.innerHTML = '<div class="placeholder">Parse a file first</div>';
+  elements.exportJoplinContent.innerHTML = '<div class="placeholder">Parse a file first</div>';
+  elements.exportHtmlContent.src = "";
+
+  // Reset tab counts
+  updateTabCounts();
+
+  // Reset book filters
+  elements.clippingsFilterBook.innerHTML = '<option value="">All books</option>';
+  elements.optBookFilter.innerHTML = '<option value="">All books</option>';
+
+  // Reset file input
+  elements.fileInput.value = "";
+}
+
+// =============================================================================
+// LocalStorage Persistence
+// =============================================================================
+
+const STORAGE_KEY = "kindle-workbench-options";
+
+function saveOptionsToStorage(): void {
+  const options = {
+    language: elements.optLanguage.value,
+    removeDuplicates: elements.optRemoveDuplicates.checked,
+    mergeNotes: elements.optMergeNotes.checked,
+    mergeOverlapping: elements.optMergeOverlapping.checked,
+    extractTags: elements.optExtractTags.checked,
+    tagCase: elements.optTagCase.value,
+    highlightsOnly: elements.optHighlightsOnly.checked,
+    mergedOutput: elements.optMergedOutput.checked,
+    removeUnlinkedNotes: elements.optRemoveUnlinkedNotes.checked,
+    normalizeUnicode: elements.optNormalizeUnicode.checked,
+    cleanContent: elements.optCleanContent.checked,
+    cleanTitles: elements.optCleanTitles.checked,
+    excludeHighlights: elements.optExcludeHighlights.checked,
+    excludeNotes: elements.optExcludeNotes.checked,
+    excludeBookmarks: elements.optExcludeBookmarks.checked,
+    minContentLength: elements.optMinContentLength.value,
+    strict: elements.optStrict.checked,
+    dateLocale: elements.optDateLocale.value,
+    // Export options
+    exportGroupByBook: elements.exportGroupByBook.checked,
+    exportIncludeStats: elements.exportIncludeStats.checked,
+    exportIncludeClippingTags: elements.exportIncludeClippingTags.checked,
+    exportIncludeRaw: elements.exportIncludeRaw.checked,
+    exportPretty: elements.exportPretty.checked,
+    exportFolderStructure: elements.exportFolderStructure.value,
+    exportAuthorCase: elements.exportAuthorCase.value,
+    exportTemplatePreset: elements.exportTemplatePreset.value,
+  };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(options));
+}
+
+function loadOptionsFromStorage(): void {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (!saved) return;
+
+  try {
+    const options = JSON.parse(saved);
+
+    // Parse options
+    if (options.language) elements.optLanguage.value = options.language;
+    if (typeof options.removeDuplicates === "boolean")
+      elements.optRemoveDuplicates.checked = options.removeDuplicates;
+    if (typeof options.mergeNotes === "boolean")
+      elements.optMergeNotes.checked = options.mergeNotes;
+    if (typeof options.mergeOverlapping === "boolean")
+      elements.optMergeOverlapping.checked = options.mergeOverlapping;
+    if (typeof options.extractTags === "boolean")
+      elements.optExtractTags.checked = options.extractTags;
+    if (options.tagCase) elements.optTagCase.value = options.tagCase;
+    if (typeof options.highlightsOnly === "boolean")
+      elements.optHighlightsOnly.checked = options.highlightsOnly;
+    if (typeof options.mergedOutput === "boolean")
+      elements.optMergedOutput.checked = options.mergedOutput;
+    if (typeof options.removeUnlinkedNotes === "boolean")
+      elements.optRemoveUnlinkedNotes.checked = options.removeUnlinkedNotes;
+    if (typeof options.normalizeUnicode === "boolean")
+      elements.optNormalizeUnicode.checked = options.normalizeUnicode;
+    if (typeof options.cleanContent === "boolean")
+      elements.optCleanContent.checked = options.cleanContent;
+    if (typeof options.cleanTitles === "boolean")
+      elements.optCleanTitles.checked = options.cleanTitles;
+    if (typeof options.excludeHighlights === "boolean")
+      elements.optExcludeHighlights.checked = options.excludeHighlights;
+    if (typeof options.excludeNotes === "boolean")
+      elements.optExcludeNotes.checked = options.excludeNotes;
+    if (typeof options.excludeBookmarks === "boolean")
+      elements.optExcludeBookmarks.checked = options.excludeBookmarks;
+    if (options.minContentLength) elements.optMinContentLength.value = options.minContentLength;
+    if (typeof options.strict === "boolean") elements.optStrict.checked = options.strict;
+    if (options.dateLocale) elements.optDateLocale.value = options.dateLocale;
+
+    // Export options
+    if (typeof options.exportGroupByBook === "boolean")
+      elements.exportGroupByBook.checked = options.exportGroupByBook;
+    if (typeof options.exportIncludeStats === "boolean")
+      elements.exportIncludeStats.checked = options.exportIncludeStats;
+    if (typeof options.exportIncludeClippingTags === "boolean")
+      elements.exportIncludeClippingTags.checked = options.exportIncludeClippingTags;
+    if (typeof options.exportIncludeRaw === "boolean")
+      elements.exportIncludeRaw.checked = options.exportIncludeRaw;
+    if (typeof options.exportPretty === "boolean")
+      elements.exportPretty.checked = options.exportPretty;
+    if (options.exportFolderStructure)
+      elements.exportFolderStructure.value = options.exportFolderStructure;
+    if (options.exportAuthorCase) elements.exportAuthorCase.value = options.exportAuthorCase;
+    if (options.exportTemplatePreset)
+      elements.exportTemplatePreset.value = options.exportTemplatePreset;
+
+    // Update tagCase enabled state based on extractTags
+    elements.optTagCase.disabled = !elements.optExtractTags.checked;
+  } catch {
+    console.warn("Failed to load saved options from localStorage");
+  }
+}
+
+// =============================================================================
 // Initialize
 // =============================================================================
 
 function init(): void {
   setupFileUpload();
   setupTabs();
+  loadOptionsFromStorage();
 
   // Parse button
   elements.parseBtn.addEventListener("click", parseFile);
 
-  // Re-parse on option change
+  // Clear button
+  elements.clearBtn.addEventListener("click", clearAll);
+
+  // Toggle tagCase enabled state based on extractTags
+  elements.optExtractTags.addEventListener("change", () => {
+    elements.optTagCase.disabled = !elements.optExtractTags.checked;
+  });
+
+  // Re-parse on option change + save to localStorage
   const optionInputs = document.querySelectorAll("#options-section input, #options-section select");
   optionInputs.forEach((input) => {
     input.addEventListener("change", () => {
+      saveOptionsToStorage();
       if (state.parseResult) {
         parseFile();
       }
@@ -1077,12 +1300,24 @@ function init(): void {
   elements.clippingsFilterType.addEventListener("change", filterClippings);
   elements.clippingsFilterBook.addEventListener("change", filterClippings);
 
-  // Export options
-  elements.exportGroupByBook.addEventListener("change", renderExports);
-  elements.exportIncludeStats.addEventListener("change", renderExports);
-  elements.exportIncludeClippingTags.addEventListener("change", renderExports);
-  elements.exportFolderStructure.addEventListener("change", renderExports);
-  elements.exportAuthorCase.addEventListener("change", renderExports);
+  // Export options + save to localStorage
+  const exportInputs = [
+    elements.exportGroupByBook,
+    elements.exportIncludeStats,
+    elements.exportIncludeClippingTags,
+    elements.exportIncludeRaw,
+    elements.exportPretty,
+    elements.exportFolderStructure,
+    elements.exportAuthorCase,
+    elements.exportTemplatePreset,
+  ];
+
+  exportInputs.forEach((input) => {
+    input.addEventListener("change", () => {
+      saveOptionsToStorage();
+      renderExports();
+    });
+  });
 
   // Download button
   elements.downloadBtn.addEventListener("click", downloadExport);
