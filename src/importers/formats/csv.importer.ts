@@ -1,7 +1,18 @@
 /**
  * CSV Importer for Kindle clippings.
  *
- * Imports clippings from CSV files exported by this tool.
+ * Imports clippings from CSV files exported by this tool or compatible formats.
+ *
+ * ## Header Matching
+ *
+ * The importer uses fuzzy matching (Levenshtein distance ≤ 2) to tolerate
+ * minor typos in column headers. For example:
+ * - `"Titl"` → `"title"` (distance 1)
+ * - `"Authr"` → `"author"` (distance 1)
+ * - `"Contnt"` → `"content"` (distance 2)
+ *
+ * When fuzzy matching is applied, a warning is added to the result.
+ * Headers with distance > 2 are kept as-is and may cause validation errors.
  *
  * @packageDocumentation
  */

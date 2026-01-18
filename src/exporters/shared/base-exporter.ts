@@ -101,13 +101,9 @@ export abstract class BaseExporter implements Exporter {
 
       const result = await this.doExport(clippings, validatedOptions);
 
-      // Use raw options for archive check to bypass Zod potential issues
-      // biome-ignore lint/suspicious/noExplicitAny: Temporary workaround for flexible options
-      const archiveFormat = (options as any)?.archive;
-
       // Handle archiving if requested
-      if (result.isOk() && archiveFormat) {
-        const format = archiveFormat;
+      if (result.isOk() && validatedOptions.archive) {
+        const format = validatedOptions.archive;
         const archiverResult = createArchiver(format);
 
         if (archiverResult.isErr()) {

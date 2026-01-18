@@ -20,12 +20,12 @@
     },
     "./node": {
       "import": {
-        "types": "./dist/node/index.d.ts",
-        "default": "./dist/node/index.js"
+        "types": "./dist/node.d.ts",
+        "default": "./dist/node.js"
       },
       "require": {
-        "types": "./dist/node/index.d.cts",
-        "default": "./dist/node/index.cjs"
+        "types": "./dist/node.d.cts",
+        "default": "./dist/node.cjs"
       }
     }
   },
@@ -79,7 +79,7 @@
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
     "check": "biome check --write . && pnpm run lint:eslint && pnpm test",
-    "check:exports": "attw --pack . --ignore-rules=node10",
+    "check:exports": "attw --pack . --ignore-rules=no-resolution",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tests/workbench/tsconfig.json",
     "prepare": "husky",
     "changeset": "changeset",

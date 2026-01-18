@@ -34,7 +34,13 @@ export class TemplateEngineFactory {
   /**
    * Get a TemplateEngine instance from cache or create a new one.
    *
+   * **Note:** Cached instances are shared across all callers. If you call
+   * `registerHelper()` on a cached instance, it affects all consumers using
+   * the same preset. If you need isolated helpers, create a new `TemplateEngine`
+   * instance directly instead of using the factory.
+   *
    * @param config - Template preset name or custom templates object
+   * @returns Cached or new TemplateEngine instance
    */
   static getEngine(config: TemplatePreset | CustomTemplates = "default"): TemplateEngine {
     // If config is a string (preset name), resolve it to templates first
