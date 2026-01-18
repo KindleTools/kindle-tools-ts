@@ -1,5 +1,13 @@
 /**
- * Constants related to defaults and locations.
+ * Configuration constants and defaults.
+ *
+ * @packageDocumentation
+ */
+
+import { LOCATIONS_PER_PAGE, PAGE_PADDING_LENGTH } from "#domain/core/locations.js";
+
+/**
+ * User-facing defaults.
  */
 export const DEFAULTS = {
   /**
@@ -14,18 +22,11 @@ export const DEFAULTS = {
 } as const;
 
 /**
- * Constants related to finding and estimating locations/pages.
+ * Location constants re-exported from domain for backwards compatibility.
+ *
+ * @see {@link #domain/core/locations.js} for the source of truth.
  */
 export const LOCATION_CONSTANTS = {
-  /**
-   * Number of Kindle locations that approximately correspond to one page.
-   * Based on ~128 bytes per location and typical font sizes.
-   */
-  LOCATIONS_PER_PAGE: 16,
-
-  /**
-   * Default number of digits for zero-padding page numbers.
-   * Using 4 digits allows for books up to 9999 pages.
-   */
-  PAGE_PADDING_LENGTH: 4,
+  LOCATIONS_PER_PAGE,
+  PAGE_PADDING_LENGTH,
 } as const;
