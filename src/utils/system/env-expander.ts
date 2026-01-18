@@ -4,14 +4,26 @@
  */
 
 /**
+ * Safely gets the process.env object, returning an empty record in browser environments.
+ * This prevents "process is not defined" errors when running in the browser.
+ */
+function getProcessEnv(): Record<string, string | undefined> {
+  if (typeof process !== "undefined" && process.env) {
+    return process.env;
+  }
+  return {};
+}
+
+/**
  * Expands environment variables in a string.
  * @param value The string to expand.
  * @returns The string with environment variables expanded.
  */
 export function expandString(value: string): string {
+  const env = getProcessEnv();
   // Regex matches ${VAR_NAME} or ${VAR_NAME:-default_value}
   return value.replace(/\$\{([a-zA-Z0-9_]+)(?::-(.*?))?\}/g, (_, varName, defaultValue) => {
-    return process.env[varName] ?? defaultValue ?? "";
+    return env[varName] ?? defaultValue ?? "";
   });
 }
 

@@ -25,6 +25,16 @@
 import type { AppError } from "./types.js";
 
 /**
+ * Safely gets an environment variable, returning undefined in browser environments.
+ */
+function getEnv(key: string): string | undefined {
+  if (typeof process !== "undefined" && process.env) {
+    return process.env[key];
+  }
+  return undefined;
+}
+
+/**
  * Log context for structured error logging.
  */
 export interface ErrorLogContext {
@@ -86,8 +96,7 @@ export interface Logger {
 const defaultLogger: Logger = {
   debug: (message, context) => {
     // Only log debug in development or if explicitly enabled
-    // biome-ignore lint/complexity/useLiteralKeys: process.env typing requires index access
-    if (process.env["NODE_ENV"] === "development" || process.env["DEBUG"]) {
+    if (getEnv("NODE_ENV") === "development" || getEnv("DEBUG")) {
       // biome-ignore lint/suspicious/noConsole: Logger implementation
       console.debug("[DEBUG]", message, context ? JSON.stringify(context, null, 2) : "");
     }
@@ -97,8 +106,7 @@ const defaultLogger: Logger = {
     console.info("[INFO]", message, context ? JSON.stringify(context) : "");
   },
   error: (entry) => {
-    // biome-ignore lint/complexity/useLiteralKeys: process.env typing requires index access
-    if (process.env["NODE_ENV"] === "development") {
+    if (getEnv("NODE_ENV") === "development") {
       // biome-ignore lint/suspicious/noConsole: Logger implementation
       console.error("[ERROR]", JSON.stringify(entry, null, 2));
     } else {
@@ -107,8 +115,7 @@ const defaultLogger: Logger = {
     }
   },
   warn: (entry) => {
-    // biome-ignore lint/complexity/useLiteralKeys: process.env typing requires index access
-    if (process.env["NODE_ENV"] === "development") {
+    if (getEnv("NODE_ENV") === "development") {
       // biome-ignore lint/suspicious/noConsole: Logger implementation
       console.warn("[WARN]", JSON.stringify(entry, null, 2));
     } else {

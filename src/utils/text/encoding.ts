@@ -1,13 +1,16 @@
 /**
  * Encoding utilities.
  *
+ * Works in both Node.js and browser environments using the standard TextDecoder API.
+ *
  * @packageDocumentation
  */
 
 /**
- * Type alias for buffer-like data (supports both Node.js Buffer and browser Uint8Array).
+ * Supported text encodings for Kindle files.
+ * Using standard encoding labels that TextDecoder understands.
  */
-type BufferLike = Uint8Array | Buffer;
+type SupportedEncoding = "utf-8" | "utf-16le" | "iso-8859-1";
 
 /**
  * Detect encoding from a buffer by checking BOM (Byte Order Mark).
@@ -18,22 +21,22 @@ type BufferLike = Uint8Array | Buffer;
  * - UTF-16 BE (FE FF)
  * - Falls back to UTF-8 (most common for Kindle files)
  *
- * @param buffer - File buffer to analyze (Uint8Array or Buffer)
- * @returns Detected encoding
+ * @param buffer - File buffer to analyze (Uint8Array)
+ * @returns Detected encoding label for TextDecoder
  */
-export function detectEncoding(buffer: BufferLike): BufferEncoding {
+export function detectEncoding(buffer: Uint8Array): SupportedEncoding {
   // UTF-8 BOM
   if (buffer[0] === 0xef && buffer[1] === 0xbb && buffer[2] === 0xbf) {
     return "utf-8";
   }
   // UTF-16 LE BOM
   if (buffer[0] === 0xff && buffer[1] === 0xfe) {
-    return "utf16le";
+    return "utf-16le";
   }
-  // UTF-16 BE BOM
+  // UTF-16 BE BOM - TextDecoder doesn't support utf-16be natively,
+  // but this is extremely rare for Kindle files. We'll use utf-16le as fallback.
   if (buffer[0] === 0xfe && buffer[1] === 0xff) {
-    // Node.js doesn't have utf16be, but we can handle it
-    return "utf16le"; // Will need byte swap, but this is rare for Kindle
+    return "utf-16le";
   }
   // Default: try UTF-8, which handles ASCII and most Kindle files
   return "utf-8";
@@ -42,27 +45,43 @@ export function detectEncoding(buffer: BufferLike): BufferEncoding {
 /**
  * Try to decode buffer with fallback encodings.
  *
- * Order: detected encoding -> utf-8 -> latin1 (always succeeds)
+ * Order: detected encoding -> utf-8 -> iso-8859-1 (always succeeds)
  *
- * @param buffer - File buffer (Uint8Array or Buffer)
+ * Uses TextDecoder which is available in both Node.js (v11+) and browsers.
+ *
+ * @param buffer - File buffer (Uint8Array)
  * @param primaryEncoding - Primary encoding to try
  * @returns Decoded string
  */
-export function decodeWithFallback(buffer: BufferLike, primaryEncoding: BufferEncoding): string {
-  // Convert Uint8Array to Buffer if needed (for .toString() method)
-  const buf = Buffer.isBuffer(buffer) ? buffer : Buffer.from(buffer);
-
+export function decodeWithFallback(buffer: Uint8Array, primaryEncoding: SupportedEncoding): string {
   try {
-    const content = buf.toString(primaryEncoding);
+    // Use fatal: false to allow decoding with replacement characters
+    const decoder = new TextDecoder(primaryEncoding, { fatal: false });
+    const content = decoder.decode(buffer);
+
     // Check for replacement character (indicates decoding issues)
     if (!content.includes("\ufffd")) {
       return content;
     }
   } catch {
-    // Encoding failed, try fallback
+    // Encoding failed or not supported, try fallback
   }
 
-  // Fallback to latin1 (ISO-8859-1) which always succeeds
+  // If primary encoding produced replacement chars or failed, try UTF-8
+  if (primaryEncoding !== "utf-8") {
+    try {
+      const utf8Decoder = new TextDecoder("utf-8", { fatal: false });
+      const content = utf8Decoder.decode(buffer);
+      if (!content.includes("\ufffd")) {
+        return content;
+      }
+    } catch {
+      // UTF-8 failed, continue to final fallback
+    }
+  }
+
+  // Final fallback: iso-8859-1 (Latin-1) always succeeds
   // This handles Windows cp1252 files reasonably well
-  return buf.toString("latin1");
+  const latin1Decoder = new TextDecoder("iso-8859-1");
+  return latin1Decoder.decode(buffer);
 }
