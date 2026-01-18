@@ -2,11 +2,11 @@
 
 [![npm version](https://img.shields.io/npm/v/kindle-tools-ts.svg?style=flat-square)](https://www.npmjs.com/package/kindle-tools-ts)
 [![CI](https://github.com/KindleTools/kindle-tools-ts/actions/workflows/ci.yml/badge.svg)](https://github.com/KindleTools/kindle-tools-ts/actions/workflows/ci.yml)
-[![install size](https://packagephobia.com/badge?p=kindle-tools-ts)](https://packagephobia.com/result?p=kindle-tools-ts)
-[![Downloads](https://img.shields.io/npm/dm/kindle-tools-ts.svg?style=flat-square)](https://www.npmjs.com/package/kindle-tools-ts)
-[![license](https://img.shields.io/npm/l/kindle-tools-ts.svg?style=flat-square)](https://github.com/KindleTools/kindle-tools-ts/blob/main/LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg?style=flat-square&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
+[![Downloads](https://img.shields.io/npm/dm/kindle-tools-ts.svg?style=flat-square)](https://www.npmjs.com/package/kindle-tools-ts)
+[![install size](https://packagephobia.com/badge?p=kindle-tools-ts)](https://packagephobia.com/result?p=kindle-tools-ts)
+[![license](https://img.shields.io/npm/l/kindle-tools-ts.svg?style=flat-square)](https://github.com/KindleTools/kindle-tools-ts/blob/main/LICENSE)
 [![Biome](https://img.shields.io/badge/Maintained%20with-Biome-60a5fa?style=flat-square&logo=biome)](https://biomejs.dev/)
 
 A robust TypeScript library to parse and process Amazon Kindle `My Clippings.txt` files with smart merging, deduplication, and multiple export formats.
@@ -15,23 +15,41 @@ A robust TypeScript library to parse and process Amazon Kindle `My Clippings.txt
 
 ---
 
+## TL;DR (Quick Install)
+
+```bash
+npm install kindle-tools-ts
+```
+
+```typescript
+import { parseFile } from 'kindle-tools-ts/node';
+import { JsonExporter } from 'kindle-tools-ts';
+
+const result = await parseFile('./My Clippings.txt');
+console.log(`Found ${result.stats.total} clippings`);
+
+const exporter = new JsonExporter();
+const json = await exporter.export(result.clippings, { pretty: true });
+```
+
+---
+
 ## 📑 Table of Contents
 
-- [💡 Why This Library?](#-why-this-library)
-- [✨ Features](#-features)
-- [🧠 Technical Details](#-technical-details)
-- [⚙️ Configuration](#️-configuration)
-- [📦 Installation](#-installation)
-- [🚀 Quick Start](#-quick-start)
-- [📚 API Reference](#-api-reference)
-- [📤 Export Formats](#-export-formats)
-- [🌍 Supported Languages](#-supported-languages)
-- [🌐 Browser Compatibility](#-browser-compatibility)
-- [🛠️ Workbench (Visual Testing)](#️-workbench-visual-testing)
-- [❓ FAQ](#-faq)
-- [🛠️ Development](#️-development)
-- [🤝 Contributing](#-contributing)
-- [📄 License](#-license)
+- [Why This Library?](#-why-this-library)
+- [Features](#-features)
+- [Installation](#-installation)
+- [Quick Start](#-quick-start)
+- [API Reference](#-api-reference)
+- [Export Formats](#-export-formats)
+- [Supported Languages](#-supported-languages)
+- [Browser Compatibility](#-browser-compatibility)
+- [Configuration](#️-configuration)
+- [Technical Details](#-technical-details)
+- [FAQ](#-faq)
+- [Development](#️-development)
+- [Contributing](#-contributing)
+- [License](#-license)
 
 ---
 
@@ -57,119 +75,46 @@ A robust TypeScript library to parse and process Amazon Kindle `My Clippings.txt
 
 ## ✨ Features
 
-- 🌍 **Multi-language support** — English, Spanish, Portuguese, German, French, Italian, Chinese, Japanese, Korean, Dutch, Russian
-- 🔍 **Automatic language detection** — Detects the language of your clippings file automatically
-- 🧠 **Smart merging** — Merges overlapping highlights when you extend a selection in Kindle
-- 🔄 **Deduplication** — Removes exact duplicate clippings with deterministic IDs
-- 🔗 **Note linking** — Links notes to their associated highlights based on location
-- 🏷️ **Tag extraction** — Automatically extracts tags from notes (comma/semicolon/newline separated)
-- 🧹 **Advanced text cleaning** — De-hyphenation for PDF artifacts, space normalization, edition markers removal
-- ⚠️ **Quality flags** — Detects suspicious highlights (accidental, incomplete, fragments)
-- 📊 **Fuzzy duplicate detection** — Uses Jaccard similarity to find near-duplicates
-- 📑 **Page utilities** — Zero-padded page formatting `[0042]` and estimation from Kindle locations
-- 📍 **Geo-location support** — Optional location metadata for personal knowledge management
-- 📥 **Multiple input formats** — Parse from Kindle TXT, or re-import from previously exported JSON/CSV
-- 📚 **6 export formats** — JSON, CSV, Markdown, Obsidian, Joplin JEX, HTML
-- 📊 **Extended statistics** — Avg words/highlight, avg highlights/book, and more
-- 📘 **TypeScript-first** — Full type definitions with strict mode
-- 🪶 **Lightweight** — Minimal runtime dependencies (date-fns, zod, handlebars, jszip)
-- 🔒 **Non-destructive** — Always preserves original data (titleRaw, contentRaw) for user review
-- 🛡️ **Security hardened** — CSV export includes formula injection protection (OWASP compliant)
+### Core Capabilities
 
----
+| Feature | Description |
+|---------|-------------|
+| 🌍 **Multi-language support** | EN, ES, PT, DE, FR, IT, ZH, JA, KO, NL, RU |
+| 🔍 **Auto language detection** | Automatically detects your file's language |
+| 🧠 **Smart merging** | Merges overlapping highlights when you extend a selection |
+| 🔄 **Deduplication** | Removes exact duplicates with deterministic IDs |
+| 🔗 **Note linking** | Links notes to their associated highlights |
+| 🏷️ **Tag extraction** | Extracts tags from notes (comma/semicolon separated) |
 
-## 🧠 Technical Details
+### Quality & Security
 
-### Deduplication Strategy
-**Config:** `removeDuplicates` (default: `true`)
-The library doesn't just delete duplicates; it aggressively preserves data. If two clippings are identical (same content + title + location) but have different tags (extracted from notes), the system **merges the tags into the surviving clipping** before removing the duplicate.
+| Feature | Description |
+|---------|-------------|
+| 🧹 **Text cleaning** | De-hyphenation, space normalization, edition markers removal |
+| ⚠️ **Quality flags** | Detects suspicious highlights (accidental, incomplete) |
+| 📊 **Fuzzy duplicates** | Jaccard similarity to find near-duplicates |
+| 🛡️ **CSV protection** | Formula injection protection (OWASP compliant) |
 
-### Smart Merging Logic
-**Config:** `mergeOverlapping` (default: `true`)
-Overlapping highlights are merged using a robust heuristic:
-- **Location Check**: Highlights must overlap or be within **5 characters** of each other.
-- **Content Check**: One highlight must be a substring of the other, OR they must share **>50% of the same words**.
-- **Result**: Creates a single merged entry with the longest content, combined location range, and most recent date.
+### Export Formats
 
-### Note Linking Algorithm
-**Config:** `mergeNotes` (default: `true`)
-Notes are linked to highlights using a two-phase strategy:
-1.  **Range Match (Primary)**: If the note's location falls strictly within the highlight's start/end range.
-2.  **Proximity Fallback**: If no range match is found, it searches for the nearest highlight within **10 location positions**.
+| Format | Description |
+|--------|-------------|
+| **JSON** | Standard JSON with metadata |
+| **CSV** | Excel-compatible with BOM |
+| **Markdown** | Blockquotes with Handlebars templates |
+| **Obsidian** | YAML frontmatter, folder structures |
+| **Joplin JEX** | Importable archive with notebooks |
+| **HTML** | Standalone page with dark mode & search |
 
-### Quality Flags
-The system doesn't just delete data; it flags potential issues for user review via the `isSuspiciousHighlight` property.
-- **`too_short`**: Content < 5 characters (likely accidental tap).
-- **`fragment`**: Starts with lowercase (likely mid-sentence selection).
-- **`incomplete`**: No terminal punctuation (cut off).
-- **`exact_duplicate`**: Copy of another highlight (only visible if `removeDuplicates: false`).
-- **`overlapping`**: Subset of another highlight (only visible if `mergeOverlapping: false`).
+### Technical
 
-### Tag Extraction
-**Config:** `extractTags` (default: `false`)
-Turn your Kindle notes into a tagging system.
-- If a note contains only comma/semicolon-separated words (e.g., "productivity, habit"), it's treated as a tag list.
-- Tags are assigned to the linked highlight.
-- Options: `tagCase` ("original" | "lowercase" | "uppercase").
-
-### Normalization Pipeline
-**Config:** `normalizeUnicode` (default: `true`)
-Before processing, text undergoes strict normalization to ensure data integrity:
-- **Unicode NFC**: Unifies characters (e.g., `ñ` vs `n+~`) to ensure duplicates are detected correctly.
-- **BOM Removal**: Strips Byte Order Marks often found in Kindle files.
-- **Line Endings**: Standardizes to Unix style `\n`.
-
-### Advanced Cleaning
-**Config:** `cleanContent`, `cleanTitles` (default: `true`)
-- **Content**: De-hyphenates words broken by PDF line endings (`pro-\nblem` → `problem`) and fixes spacing around punctuation.
-- **Titles**: Aggressively cleans Amazon noise, removing patterns like `_EBOK`, `(Spanish Edition)`, `[Print Replica]`, and file extensions (`.mobi`, `.pdf`).
-
-### Filtering & Constraints
-**Config:** `excludeBooks`, `onlyBooks`, `excludeTypes`, `minContentLength`
-The library includes powerful pre-parsing filters that are often overlooked:
-- **Blocklists/Allowlists**: Filter books by exact title matching (`excludeBooks`, `onlyBooks`).
-- **Type Filtering**: Ignore specific types like `'bookmark'` or `'note'` (`excludeTypes`).
-- **Noise Reduction**: Use `minContentLength` (e.g., 10) to automatically discard accidental one-word highlights or gibberish.
-
-### Security: CSV Injection Protection
-CSV exports are automatically protected against formula injection attacks (also known as CSV Injection or Formula Injection). This is a security vulnerability where malicious content can be interpreted as formulas by spreadsheet applications like Excel, Google Sheets, or LibreOffice Calc.
-
-**Protection mechanism:**
-- Fields starting with `=`, `+`, `-`, `@`, `\t`, or `\r` are prefixed with a single quote (`'`)
-- This neutralizes formula execution while preserving the original data
-- Applied automatically to all CSV exports via the `escapeCSV()` function
-
-**Example:**
-```
-Original:  =SUM(A1:A10)
-Sanitized: '=SUM(A1:A10)
-```
-
-> 📖 **Reference:** [OWASP - CSV Injection](https://owasp.org/www-community/attacks/CSV_Injection)
-
----
-
-## ⚙️ Configuration
-
-Configuration is passed directly as options objects to exporter and processor functions. TypeScript provides full autocomplete support.
-
-```typescript
-import { ObsidianExporter, parseString } from 'kindle-tools-ts';
-
-// Parse options
-const result = await parseString(content, {
-  language: "es",
-  extractTags: true,
-  tagCase: "lowercase",
-});
-
-// Export options
-const exporter = new ObsidianExporter();
-await exporter.export(result.clippings, {
-  folderStructure: "by-author",
-  includeStats: true,
-});
-```
+| Feature | Description |
+|---------|-------------|
+| 📘 **TypeScript-first** | Full type definitions with strict mode |
+| 🪶 **Lightweight** | 7 runtime dependencies |
+| 📥 **Multiple inputs** | Parse TXT, re-import JSON/CSV |
+| 🌐 **Isomorphic** | Works in Node.js and browsers |
+| 🔒 **Non-destructive** | Always preserves original data (`*Raw` fields) |
 
 ---
 
@@ -185,14 +130,15 @@ yarn add kindle-tools-ts
 
 ### Requirements
 
-- Node.js 18.18.0 or higher (use `.nvmrc` to ensure consistency)
-- Works on Windows, macOS, and Linux
+- **Node.js**: 18.18.0+ (use `.nvmrc` for consistency)
+- **Platforms**: Windows, macOS, Linux
+- **TypeScript**: 5.0+ (optional, JS works too)
 
 ---
 
 ## 🚀 Quick Start
 
-### Basic Usage
+### Basic Usage (Node.js)
 
 ```typescript
 import { JsonExporter } from 'kindle-tools-ts';
@@ -201,7 +147,7 @@ import { parseFile } from 'kindle-tools-ts/node';
 // Parse your clippings file
 const result = await parseFile('./My Clippings.txt');
 
-console.log(`Found ${result.stats.total} clippings from ${result.stats.totalBooks}`);
+console.log(`Found ${result.stats.total} clippings from ${result.stats.totalBooks} books`);
 console.log(`  - Highlights: ${result.stats.totalHighlights}`);
 console.log(`  - Notes: ${result.stats.totalNotes}`);
 console.log(`  - Bookmarks: ${result.stats.totalBookmarks}`);
@@ -212,7 +158,7 @@ const jsonOutput = await exporter.export(result.clippings, { pretty: true });
 console.log(jsonOutput.output);
 ```
 
-### Parse from String
+### Parse from String (Browser-safe)
 
 ```typescript
 import { parseString } from 'kindle-tools-ts';
@@ -248,17 +194,18 @@ import { parseFile } from 'kindle-tools-ts/node';
 
 const result = await parseFile('./My Clippings.txt');
 
-// Export to Markdown
+// Markdown
 const mdExporter = new MarkdownExporter();
 const markdown = await mdExporter.export(result.clippings);
 
-// Export to Obsidian (creates multiple files, one per book)
+// Obsidian (one file per book)
 const obsidianExporter = new ObsidianExporter();
 const obsidian = await obsidianExporter.export(result.clippings, {
-  outputPath: './vault/books/'
+  outputPath: './vault/books/',
+  folderStructure: 'by-author'
 });
 
-// Export to Joplin JEX (importable archive)
+// Joplin JEX archive
 const joplinExporter = new JoplinExporter();
 const jex = await joplinExporter.export(result.clippings, {
   outputPath: './clippings.jex'
@@ -273,81 +220,71 @@ const jex = await joplinExporter.export(result.clippings, {
 
 #### `parseFile(filePath, options?)`
 
-Parse a Kindle clippings file from disk (Node.js only).
-
-> **Note**: Import this from `kindle-tools-ts/node`.
+Parse a Kindle clippings file from disk. **Node.js only.**
 
 ```typescript
+import { parseFile } from 'kindle-tools-ts/node';
+
 const result = await parseFile('./My Clippings.txt', {
-  language: 'auto',           // 'auto' | 'en' | 'es' | ...
+  language: 'auto',           // 'auto' | 'en' | 'es' | 'pt' | ...
   removeDuplicates: true,     // Remove exact duplicates
   mergeOverlapping: true,     // Merge extended highlights
   mergeNotes: true,           // Link notes to highlights
   extractTags: false,         // Extract tags from notes
-  tagCase: 'lowercase',       // Tag case: 'original' | 'uppercase' | 'lowercase'
-  highlightsOnly: false,      // Return only highlights with embedded notes
-  normalizeUnicode: true,     // NFC normalization
-  cleanContent: true,         // Clean whitespace
-  cleanTitles: true,          // Remove file extensions from titles
+  tagCase: 'lowercase',       // 'original' | 'uppercase' | 'lowercase'
 });
 ```
 
 #### `parseString(content, options?)`
 
-Parse clippings from a string.
+Parse clippings from a string. **Works in browser.**
 
 ```typescript
+import { parseString } from 'kindle-tools-ts';
+
 const result = parseString(fileContent, { language: 'en' });
 ```
 
-#### `parse(content, options?)`
-
-Alias for `parseString`.
-
-### ParseResult Object
+### ParseResult
 
 ```typescript
 interface ParseResult {
-  clippings: Clipping[];      // Array of parsed clippings
+  clippings: Clipping[];      // Parsed clippings
   stats: ClippingsStats;      // Statistics
   warnings: ParseWarning[];   // Any parsing warnings
   meta: {
-    fileSize: number;         // Original file size in bytes
-    parseTime: number;        // Parse time in milliseconds
+    fileSize: number;         // Original file size
+    parseTime: number;        // Parse time in ms
     detectedLanguage: string; // Detected language code
     totalBlocks: number;      // Total blocks found
-    parsedBlocks: number;     // Successfully parsed blocks
+    parsedBlocks: number;     // Successfully parsed
   };
 }
 ```
 
-### Clipping Object
+### Clipping
 
 ```typescript
 interface Clipping {
   id: string;                    // Deterministic hash (12 chars)
   title: string;                 // Clean book title
-  author: string;                // Extracted author name
+  author: string;                // Extracted author
   content: string;               // Highlight/note content
   type: 'highlight' | 'note' | 'bookmark' | 'clip' | 'article';
-  page: number | null;           // Page number (if available)
-  location: {
-    raw: string;                 // Original location string
-    start: number;               // Start position
-    end: number | null;          // End position
-  };
-  date: Date | null;             // Parsed date
-  dateRaw: string;               // Original date string
-  isLimitReached: boolean;       // DRM limit message detected
-  isEmpty: boolean;              // Empty content
-  language: string;              // Detected language
-  source: 'kindle' | 'sideload'; // Book source
-  wordCount: number;             // Word count
-  charCount: number;             // Character count
+  page: number | null;
+  location: { raw: string; start: number; end: number | null };
+  date: Date | null;
+  dateRaw: string;
+  isLimitReached: boolean;       // DRM limit detected
+  isEmpty: boolean;
+  language: string;
+  source: 'kindle' | 'sideload';
+  wordCount: number;
+  charCount: number;
   note?: string;                 // Linked note content
-  linkedNoteId?: string;         // ID of linked note
-  linkedHighlightId?: string;    // ID of linked highlight
-  blockIndex: number;            // Position in original file
+  tags?: string[];               // Extracted tags
+  linkedNoteId?: string;
+  linkedHighlightId?: string;
 }
 ```
 
@@ -361,16 +298,22 @@ interface Exporter {
   extension: string;
   export(clippings: Clipping[], options?: ExporterOptions): Promise<ExportResult>;
 }
+```
 
+#### ExporterOptions
+
+```typescript
 interface ExporterOptions {
   outputPath?: string;           // Output file/directory
   groupByBook?: boolean;         // Group by book
   includeStats?: boolean;        // Include statistics
   pretty?: boolean;              // Pretty print (JSON)
-  includeRaw?: boolean;          // Include raw fields
+  includeRaw?: boolean;          // Include *Raw fields
   folderStructure?: 'flat' | 'by-book' | 'by-author' | 'by-author-book';
   authorCase?: 'original' | 'uppercase' | 'lowercase';
-  includeClippingTags?: boolean; // Include tags extracted from notes
+  includeClippingTags?: boolean; // Include extracted tags
+  title?: string;                // Custom export title
+  creator?: string;              // Custom author
 }
 ```
 
@@ -378,161 +321,211 @@ interface ExporterOptions {
 
 | Exporter | Format | Output |
 |----------|--------|--------|
-| `JsonExporter` | JSON | Single file, optional grouping, tags column |
-| `CsvExporter` | CSV | Single file with BOM for Excel, tags column |
+| `JsonExporter` | JSON | Single file, optional grouping |
+| `CsvExporter` | CSV | Excel-compatible with BOM |
 | `MarkdownExporter` | Markdown | Single file with blockquotes |
-| `ObsidianExporter` | Obsidian MD | Multiple files with YAML frontmatter, configurable folder structure |
-| `JoplinExporter` | JEX | Importable Joplin archive with 3-level notebook hierarchy |
-| `HtmlExporter` | HTML | Standalone page with dark mode & search |
-
+| `ObsidianExporter` | Obsidian MD | Multiple files with YAML frontmatter |
+| `JoplinExporter` | JEX | Importable Joplin archive |
+| `HtmlExporter` | HTML | Standalone page with dark mode |
 
 ### Importers
 
-Importers allow you to re-process previously exported files. This enables workflows where you export to JSON, edit the file, and then convert to another format.
+Re-process previously exported files:
 
 ```typescript
 import { JsonImporter, CsvImporter } from 'kindle-tools-ts';
 
 // Import from JSON
 const jsonImporter = new JsonImporter();
-const jsonContent = await fs.readFile('clippings.json', 'utf-8');
 const result = await jsonImporter.import(jsonContent);
 
-console.log(`Imported ${result.clippings.length} clippings`);
-
-// Import from CSV
+// Import from CSV (tolerates fuzzy headers)
 const csvImporter = new CsvImporter();
-const csvContent = await fs.readFile('clippings.csv', 'utf-8');
 const csvResult = await csvImporter.import(csvContent);
 ```
 
-#### Available Importers
+### Custom Logger
 
-| Importer | Format | Description |
-|----------|--------|-------------|
-| `JsonImporter` | JSON | Imports flat or grouped-by-book JSON exports |
-| `CsvImporter` | CSV | Imports CSV exports. Tolerates fuzzy headers (e.g. `Titl` -> `Title`) |
-
-### Utility Functions
+Inject your own logger (Pino, Winston, etc.):
 
 ```typescript
-// Basic stats
-import { calculateStats } from 'kindle-tools-ts';
+import { setLogger, resetLogger, nullLogger } from 'kindle-tools-ts';
 
-// Detailed utilities are now grouped under the Utils namespace
-import { Utils } from 'kindle-tools-ts';
+// Custom logger
+setLogger({
+  error: (entry) => myLogger.error(entry),
+  warn: (entry) => myLogger.warn(entry),
+  info: (msg, ctx) => myLogger.info(ctx, msg),
+  debug: (msg, ctx) => myLogger.debug(ctx, msg),
+});
 
-// Access specific utilities through the namespace
-const cleanText = Utils.normalizeText("Some   text");
-const distance = Utils.distanceBetween(locA, locB);
-const pageInfo = Utils.getPageInfo(150);
+// Silence all logs
+setLogger(nullLogger);
 
-// Or import specific sub-modules if you prefer deep linking (not recommended)
-// import { normalizeText } from 'kindle-tools-ts/dist/utils/normalizers'; // Requires checking specific paths
+// Reset to console
+resetLogger();
 ```
 
 ### Error Handling
 
-The library uses a mix of `neverthrow` Results (for operations that might fail predictably) and explicit `AppException` (for structural/validation errors).
-
 ```typescript
-import { 
-  parseFile, 
-  AppException, 
-  isImportError, 
-  isValidationError 
-} from 'kindle-tools-ts';
+import { parseFile, isImportError, isValidationError } from 'kindle-tools-ts';
 
 try {
-  const result = await parseFile('invalid.txt');
+  const result = await parseFile('file.txt');
   
-  // neverthrow pattern (if used by the API):
   if (result.isErr()) {
-    console.error('Operation failed:', result.error.message);
+    console.error(`[${result.error.code}] ${result.error.message}`);
   }
 } catch (error) {
   if (error instanceof AppException) {
-     console.error(`Error Code: ${error.code}`);
-     
-     if (isImportError(error.appError)) {
-       console.error('Import specific error:', error.appError.detailedMessage);
-     } else if (isValidationError(error.appError)) {
-       console.error('Validation issues:', error.appError.issues);
-     }
-  } else {
-    console.error('Unexpected error:', error);
+    if (isImportError(error.appError)) {
+      console.error('Import error:', error.appError.detailedMessage);
+    }
   }
 }
 ```
 
-The `AppError` type union covers:
-- `IMPORT_*`: specific parsing errors
-- `EXPORT_*`: export failures
-- `CONFIG_*`: loader issues
-- `VALIDATION_*`: schema or argument errors
-- `FS_*`: file system errors
-
-### Error Codes Reference
+#### Error Codes
 
 | Domain | Code | Description |
 |--------|------|-------------|
-| Import | `IMPORT_PARSE_ERROR` | Failed to parse file content |
-| Import | `IMPORT_EMPTY_FILE` | File has no content |
+| Import | `IMPORT_PARSE_ERROR` | Failed to parse content |
+| Import | `IMPORT_EMPTY_FILE` | Empty file |
 | Import | `IMPORT_INVALID_FORMAT` | Schema validation failed |
-| Import | `IMPORT_VALIDATION_ERROR` | Row-level validation errors |
-| Export | `EXPORT_UNKNOWN_FORMAT` | Unsupported export format |
+| Export | `EXPORT_UNKNOWN_FORMAT` | Unsupported format |
 | Export | `EXPORT_WRITE_FAILED` | Failed to write output |
-| Export | `EXPORT_NO_CLIPPINGS` | No clippings to export |
 | Export | `EXPORT_TEMPLATE_ERROR` | Template compilation failed |
-| Config | `CONFIG_NOT_FOUND` | Config file not found |
-| Config | `CONFIG_INVALID` | Invalid config structure |
-| Config | `CONFIG_LOAD_ERROR` | Failed to load config |
 
-### Custom Logger
+### Advanced: `processClippings()`
 
-By default, the library logs errors and warnings to `console`. You can inject your own logger to redirect logs to your preferred backend (Pino, Winston, Sentry, Datadog, etc.):
+For advanced use cases, you can call the processor directly:
 
 ```typescript
-import { setLogger, resetLogger, type Logger } from 'kindle-tools-ts';
-import pino from 'pino';
+import { processClippings, parseString } from 'kindle-tools-ts';
 
-const pinoLogger = pino();
-
-// Inject custom logger
-setLogger({
-  error: (entry) => pinoLogger.error(entry),
-  warn: (entry) => pinoLogger.warn(entry),
-  info: (msg, ctx) => pinoLogger.info(ctx, msg),
-  debug: (msg, ctx) => pinoLogger.debug(ctx, msg),
+// Parse without processing
+const raw = parseString(content, { 
+  removeDuplicates: false,
+  mergeOverlapping: false,
+  mergeNotes: false 
 });
 
-// Later, reset to default console logger
-resetLogger();
+// Process manually with custom options
+const processed = processClippings(raw.clippings, {
+  removeDuplicates: true,
+  mergeOverlapping: true,
+  extractTags: true,
+  tagCase: 'lowercase',
+});
+
+console.log(`Duplicates removed: ${processed.duplicatesRemoved}`);
+console.log(`Highlights merged: ${processed.mergedHighlights}`);
+console.log(`Notes linked: ${processed.linkedNotes}`);
 ```
 
-You can also use the library's logger in your own code using the exported helpers:
+### ProcessResult
 
 ```typescript
-import { logDebug, logInfo, logWarning, logError } from 'kindle-tools-ts';
-
-logInfo("Starting custom operation", { operation: "my-task" });
+interface ProcessResult {
+  clippings: Clipping[];           // Processed clippings
+  duplicatesRemoved: number;       // Exact duplicates removed
+  mergedHighlights: number;        // Overlapping merges
+  linkedNotes: number;             // Notes linked to highlights
+  emptyRemoved: number;            // Empty clippings removed
+  suspiciousFlagged: number;       // Flagged as suspicious
+  fuzzyDuplicatesFlagged: number;  // Flagged as fuzzy duplicates
+  tagsExtracted: number;           // Clippings with tags extracted
+  notesConsumed: number;           // Notes removed by mergedOutput
+}
 ```
 
-To silence all logs (useful for tests or production):
+### ExportResult
+
+Each exporter returns a different output type:
 
 ```typescript
-import { setLogger, nullLogger } from 'kindle-tools-ts';
+// String-based exporters (JSON, CSV, Markdown, HTML)
+interface ExportResultString {
+  output: string;                  // The exported content
+  stats?: ClippingsStats;          // Optional statistics
+}
 
-setLogger(nullLogger);
+// File-based exporters (Obsidian)
+interface ExportResultFiles {
+  files: ExportedFile[];           // Array of files
+  stats?: ClippingsStats;
+}
+// ExportedFile: { path: string; content: string }
+
+// Binary exporters (Joplin JEX)
+interface ExportResultBinary {
+  output: Uint8Array;              // TAR archive bytes
+  stats?: ClippingsStats;
+}
 ```
 
----
+**Usage example:**
+
+```typescript
+// JSON returns string
+const json = await new JsonExporter().export(clippings);
+console.log(json.output); // string
+
+// Obsidian returns files array
+const obsidian = await new ObsidianExporter().export(clippings);
+for (const file of obsidian.files) {
+  await fs.writeFile(file.path, file.content);
+}
+
+// Joplin returns Uint8Array
+const jex = await new JoplinExporter().export(clippings);
+await fs.writeFile('export.jex', jex.output);
+```
+
+### Utils Namespace
+
+Utility functions are grouped under the `Utils` namespace:
+
+```typescript
+import { Utils } from 'kindle-tools-ts';
+
+// Text utilities
+Utils.normalizeText("  multiple   spaces  "); // "multiple spaces"
+Utils.normalizeUnicode("café");               // NFC normalized
+
+// Similarity
+Utils.jaccardSimilarity("hello world", "world hello"); // 1.0
+
+// Page utilities  
+Utils.formatPage(42);                         // "[0042]"
+Utils.estimatePageFromLocation(160);          // 10 (160 / 16)
+Utils.getPageInfo(clipping);                  // { page: 42, estimated: false }
+
+// Date utilities
+Utils.formatDateHuman(new Date());            // "January 18, 2024"
+
+// Geo utilities
+Utils.formatLocation({ lat: 40.7, lon: -74 }); // "40.7, -74"
+```
+
+**Available modules:**
+
+| Module | Functions |
+|--------|-----------|
+| `Utils.normalizeText()` | Collapse whitespace, trim |
+| `Utils.normalizeUnicode()` | NFC normalization |
+| `Utils.jaccardSimilarity()` | Word overlap (0-1) |
+| `Utils.formatPage()` | Zero-padded `[0042]` |
+| `Utils.estimatePageFromLocation()` | Location ÷ 16 |
+| `Utils.getPageInfo()` | Page with estimation flag |
+| `Utils.formatDateHuman()` | Human-readable date |
+| `Utils.formatLocation()` | Geo coordinates |
+
 
 ## 📤 Export Formats
 
 ### JSON
-
-Standard JSON with clippings array and metadata.
 
 ```json
 {
@@ -552,7 +545,7 @@ Standard JSON with clippings array and metadata.
 
 ### CSV
 
-Excel-compatible CSV with BOM for proper UTF-8 handling.
+Excel-compatible with BOM for UTF-8:
 
 ```csv
 id,title,author,type,page,location,date,content,wordCount
@@ -560,8 +553,6 @@ a6439ae5832a,The Art of War,Sun Tzu,highlight,42,100-105,2024-01-01,"All warfare
 ```
 
 ### Markdown
-
-Clean Markdown with blockquotes.
 
 ```markdown
 # Kindle Highlights
@@ -571,144 +562,59 @@ Clean Markdown with blockquotes.
 
 > All warfare is based on deception.
 > — Page 42, Location 100-105
-
----
 ```
 
-#### 🎨 Advanced Template Customization
-
-You have full control over the Markdown output using [Handlebars](https://handlebarsjs.com/) templates.
-
-**1. Using Presets**
+#### Template Customization
 
 ```typescript
 const exporter = new MarkdownExporter();
+
+// Use presets
 exporter.export(clippings, { templatePreset: 'obsidian' });
 // Presets: 'default', 'minimal', 'obsidian', 'notion', 'academic', 'compact', 'verbose'
-```
 
-**2. Custom Templates**
-
-You can override specific levels of the export hierarchy:
-
-```typescript
+// Custom templates
 exporter.export(clippings, {
   customTemplates: {
-    // Level 1: How each clipping looks
     clipping: `> {{content}}\n> *({{page}})*\n`,
-    
-    // Level 2: How clippings are grouped into a book file
     book: `# {{title}}\n\n{{#each clippings}}{{> clipping}}{{/each}}`,
-    
-    // Level 3: (Optional) How books are combined if exporting to a single file
-    export: `{{#each books}}{{> book}}{{/each}}`
   }
 });
 ```
 
-**📚 Variable Reference**
+**Template Variables:**
 
-**Clipping Context** (Available in `clipping` template):
 | Variable | Description |
 |----------|-------------|
-| `content` | The highlight text or note content |
+| `content` | Highlight text |
 | `title` | Book title |
 | `author` | Book author |
-| `type` | `highlight`, `note`, or `bookmark` |
-| `page` | Page number string (e.g. "42" or "?") |
-| `location` | Location string (e.g. "100-105") |
-| `date` | Formatted date string |
-| `dateIso` | ISO date string for machine parsing |
-| `note` | Content of the linked user note (if any) |
-| `tags` | Array of strings extracted from note |
-| `tagsHashtags` | Tags formatted as hashtags: `#tag1 #tag2` |
-| `hasNote` | Boolean true if a note is attached |
-| `hasTags` | Boolean true if tags exist |
-| `isLimitReached`| Boolean true if DRM limit hit |
-
-**Book Context** (Available in `book` template):
-| Variable | Description |
-|----------|-------------|
-| `title` | Book title |
-| `author` | Book author |
-| `clippings` | Array of all clippings in the book |
-| `highlights` | Array of only highlights |
-| `notes` | Array of only standalone notes |
-| `bookmarks` | Array of only bookmarks |
-| `highlightCount`| Number of highlights |
-| `noteCount` | Number of notes |
-| `tags` | Array of all unique tags found in this book |
-
-**🛠️ Helper Reference**
-
-**Logic & Comparison:**
-- `eq a b`, `neq a b`: Equality check
-- `gt a b`, `lt a b`, `gte`, `lte`: Numeric parsing comparison
-- `and a b`, `or a b`, `not a`: Boolean logic
-- `isHighlight`, `isNote`, `isBookmark`: Block helpers (e.g. `{{#isHighlight}}...{{/isHighlight}}`)
-
-**Formatting:**
-- `formatDate date "short"|"long"|"iso"|"relative"`: Date formatting
-- `truncate text length`: Truncates text with ellipses
-- `upper`, `lower`, `capitalize`: String case transformation
-- `replace text "old" "new"`: String replacement
-- `blockquote text`: Prefixes every line with `> `
-- `yamlTags tags`: Formats array as YAML list items
-
-**Example: Detailed Obsidian Template**
-```handlebars
----
-title: "{{title}}"
-author: "{{author}}"
-tags:
-{{yamlTags tags}}
----
-
-# {{title}}
-
-{{#each highlights}}
-> {{content}}
-> — Loc {{location}} {{#if hasNote}}[[Note]]{{/if}}
-
-{{#if hasNote}}
-> [!NOTE] User Note
-> {{note}}
-{{/if}}
-{{/each}}
-```
+| `page` | Page number |
+| `location` | Location string |
+| `date` | Formatted date |
+| `tags` | Extracted tags array |
+| `tagsHashtags` | `#tag1 #tag2` |
+| `note` | Linked note content |
+| `hasNote` | Boolean |
+| `hasTags` | Boolean |
 
 ### Obsidian
 
-One file per book with YAML frontmatter and callouts. Supports configurable folder structure.
-
-**Folder structures:**
-- `flat` — All files in root folder (default)
-- `by-book` — `books/Title/Title.md`
-- `by-author` — `books/Author/Title.md`
-- `by-author-book` — `books/Author/Title/Title.md`
+One file per book with YAML frontmatter:
 
 ```markdown
 ---
 title: "The Art of War"
 author: "Sun Tzu"
 source: kindle
-type: book
 total_highlights: 25
-total_notes: 3
-date_imported: 2024-01-01
 tags:
-  - strategy  # clipping tags merged here
+  - strategy
 ---
 
 # The Art of War
 
 **Author:** [[Sun Tzu]]
-
-## 📊 Summary
-
-- **Highlights:** 25
-- **Notes:** 3
-- **Bookmarks:** 0
 
 ## 📝 Highlights
 
@@ -716,22 +622,26 @@ tags:
 > All warfare is based on deception.
 ```
 
+**Folder structures:**
+- `flat` — All files in root
+- `by-book` — `books/Title/Title.md`
+- `by-author` — `books/Author/Title.md`
+- `by-author-book` — `books/Author/Title/Title.md`
+
 ### Joplin JEX
 
-Importable archive with notebooks, notes, and tags. Uses deterministic IDs for idempotent imports (won't create duplicates when re-imported).
+Importable archive with notebooks, notes, and tags. Uses deterministic IDs for idempotent imports.
 
-**Notebook hierarchy:**
+**Hierarchy:**
 - `flat` — `Kindle Highlights > Book > Notes`
-- `by-author` or `by-author-book` — `Kindle Highlights > AUTHOR > Book > Notes`
-
-Author names can be transformed to UPPERCASE or lowercase via `authorCase` option.
+- `by-author` — `Kindle Highlights > AUTHOR > Book > Notes`
 
 ### HTML
 
-Standalone HTML page with:
+Standalone page with:
 - Responsive design
-- Dark mode toggle (persisted in localStorage)
-- Search/filter functionality
+- Dark mode toggle
+- Search/filter
 - Print-friendly styles
 - XSS protection
 
@@ -740,7 +650,7 @@ Standalone HTML page with:
 ## 🌍 Supported Languages
 
 | Code | Language | "Added on" Pattern |
-|------|----------|--------------------|
+|------|----------|-------------------|
 | `en` | English | "Added on Friday, January 1, 2024" |
 | `es` | Spanish | "Añadido el viernes, 1 de enero de 2024" |
 | `pt` | Portuguese | "Adicionado em sexta-feira, 1 de janeiro de 2024" |
@@ -753,29 +663,28 @@ Standalone HTML page with:
 | `nl` | Dutch | "Toegevoegd op vrijdag 1 januari 2024" |
 | `ru` | Russian | "Добавлено пятница, 1 января 2024 г." |
 
-Language is auto-detected by analyzing the clippings file content.
+Language is auto-detected by analyzing the file content.
 
 ---
 
 ## 🌐 Browser Compatibility
 
-The library is **isomorphic** — it works in both Node.js and browsers:
+The library is **isomorphic** — works in both Node.js and browsers:
 
-| Environment | Parsing | Exporting | File System Access |
-|-------------|---------|-----------|--------------------|
+| Environment | Parsing | Exporting | File System |
+|-------------|---------|-----------|-------------|
 | **Node.js** | ✅ `parseFile()` + `parseString()` | ✅ All formats | ✅ Native fs |
-| **Browser** | ✅ `parseString()` only | ✅ All formats (output as string/Blob) | ❌ Use File API |
+| **Browser** | ✅ `parseString()` only | ✅ All formats | ❌ Use File API |
 
-**Browser usage example:**
+**Browser example:**
 
 ```typescript
 import { parseString, JsonExporter } from 'kindle-tools-ts';
 
-// Get file content from <input type="file">
+// From <input type="file">
 const file = inputElement.files[0];
 const content = await file.text();
 
-// Parse and export
 const result = parseString(content);
 const exporter = new JsonExporter();
 const json = await exporter.export(result.clippings);
@@ -783,15 +692,75 @@ const json = await exporter.export(result.clippings);
 
 ---
 
-## 🛠️ Workbench (Visual Testing)
+## ⚙️ Configuration
 
-Since version 0.5.0, the CLI has been removed in favor of a visual workbench for testing and development.
+### ParseOptions
 
-```bash
-pnpm run gui
+```typescript
+interface ParseOptions {
+  // Language
+  language?: 'auto' | 'en' | 'es' | 'pt' | 'de' | 'fr' | 'it' | 'zh' | 'ja' | 'ko' | 'nl' | 'ru';
+
+  // Processing
+  removeDuplicates?: boolean;      // Default: true
+  mergeOverlapping?: boolean;      // Default: true
+  mergeNotes?: boolean;            // Default: true
+  extractTags?: boolean;           // Default: false
+  tagCase?: 'original' | 'uppercase' | 'lowercase';  // Default: 'uppercase'
+  highlightsOnly?: boolean;        // Default: false
+
+  // Normalization
+  normalizeUnicode?: boolean;      // Default: true
+  cleanContent?: boolean;          // Default: true
+  cleanTitles?: boolean;           // Default: true
+
+  // Filtering
+  excludeTypes?: ClippingType[];   // Exclude specific types
+  excludeBooks?: string[];         // Exclude books by title
+  onlyBooks?: string[];            // Only these books
+  minContentLength?: number;       // Minimum content length
+}
 ```
 
-Open `http://localhost:5173` to interactively parser files, visualize results, and test exporters.
+---
+
+## 🧠 Technical Details
+
+### Smart Merging
+
+Overlapping highlights are merged using:
+- **Location check**: Overlap or within 5 characters
+- **Content check**: Substring match OR >50% word overlap (Jaccard)
+- **Result**: Longest content, combined range, latest date
+
+### Note Linking
+
+Two-phase algorithm:
+1. **Range match**: Note location within highlight's range
+2. **Proximity fallback**: Within 10 locations
+
+### Quality Flags
+
+Flags added via `isSuspiciousHighlight`:
+- `too_short`: < 5 characters
+- `fragment`: Starts lowercase
+- `incomplete`: No ending punctuation
+
+### Deduplication
+
+Uses deterministic SHA-256 hash of:
+- Normalized title
+- Location
+- Type
+- First 50 chars of content
+
+Same input = same ID = idempotent imports.
+
+### Security
+
+- **CSV injection**: Fields starting with `=+−@` are prefixed with `'`
+- **XSS protection**: HTML export escapes all content
+- **Schema validation**: All inputs validated with Zod
 
 ---
 
@@ -803,8 +772,14 @@ A: No. It only reads the file and produces new output.
 **Q: Can I use it in React/Next.js/Vue?**
 A: Yes! Use `parseString` for client-side operations.
 
-**Q: Why "KindleToolsTS" instead of "KindleTools"?**
-A: It's a complete rewrite of my original Python tool, now in TypeScript for web compatibility.
+**Q: Why are there `*Raw` fields?**
+A: They preserve original data for debugging and re-processing.
+
+**Q: How do I silence logs?**
+A: `setLogger(nullLogger)` from the main export.
+
+**Q: Can I re-import exported JSON/CSV?**
+A: Yes! Use `JsonImporter` or `CsvImporter`.
 
 ---
 
@@ -813,6 +788,7 @@ A: It's a complete rewrite of my original Python tool, now in TypeScript for web
 ```bash
 # Clone
 git clone https://github.com/KindleTools/kindle-tools-ts.git
+cd kindle-tools-ts
 
 # Install
 pnpm install
@@ -822,19 +798,33 @@ pnpm test
 
 # Build
 pnpm build
+
+# Visual workbench
+pnpm run gui   # Opens http://localhost:5173
 ```
 
 ---
 
 ## 🤝 Contributing
 
-PRs are welcome! Please make sure to:
-1.  Run `pnpm run check` before submitting.
-2.  Add tests for new features.
-3.  Follow the [Conventional Commits](https://www.conventionalcommits.org/) spec.
+PRs are welcome! Please:
+
+1. Run `pnpm run check` before submitting
+2. Add tests for new features
+3. Follow [Conventional Commits](https://www.conventionalcommits.org/)
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
 ---
 
 ## 📄 License
 
 MIT © [Andrés M. Jiménez](https://github.com/andresz1)
+
+---
+
+## 📖 More Resources
+
+- [ARCHITECTURE.md](ARCHITECTURE.md) — Technical deep-dive for contributors
+- [ROADMAP.md](ROADMAP.md) — Project status and future plans
+- [CHANGELOG.md](CHANGELOG.md) — Version history
