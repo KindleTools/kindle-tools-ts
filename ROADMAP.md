@@ -14,6 +14,22 @@ No hay tareas pendientes. El proyecto está listo para v1.0.
 
 ---
 
+## Quality Polishing (Pre-v1.0)
+
+Antes del release, priorizamos pequeñas mejoras de consistencia y limpieza:
+
+| Área | Qué revisar |
+|------|-------------|
+| **Constantes** | ¿Están en el lugar correcto según arquitectura? |
+| **Exports** | ¿Todos los módulos exportan lo necesario? |
+| **Dead code** | ¿Hay código huérfano de features descartadas? |
+| **Naming** | ¿Son consistentes los nombres? |
+
+> **Filosofía**: Pulir detalles pequeños antes de congelar v1.0.
+> No justifica nuevas features, pero sí asegurar que todo esté limpio y bien ubicado.
+
+---
+
 ## Not Planned
 
 ### Descartado

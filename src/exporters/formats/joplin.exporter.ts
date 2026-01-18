@@ -17,8 +17,8 @@
 
 import type { Clipping } from "#app-types/clipping.js";
 import type { GeoLocation } from "#app-types/geo.js";
-import { PROCESSING_THRESHOLDS } from "#domain/core/constants.js";
 import { formatPage, getEffectivePage } from "#domain/core/locations.js";
+import { PROCESSING_THRESHOLDS } from "#domain/rules.js";
 import type { ExportedFile } from "#exporters/core/types.js";
 import {
   MultiFileExporter,

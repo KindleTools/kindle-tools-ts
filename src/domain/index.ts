@@ -9,6 +9,10 @@
 
 // Statistics utilities
 export { calculateStats, groupByBook } from "./analytics/stats.js";
+// Text comparison
+export { compareTexts, isSubset, type SimilarityResult } from "./core/comparison.js";
+// Identity generation
+export { generateClippingId, generateDuplicateHash } from "./core/identity.js";
 // Page number utilities
 export {
   estimatePageFromLocation,
@@ -30,7 +34,6 @@ export {
   type TitleAuthorResult,
   type TitleSanitizeResult,
 } from "./parsing/sanitizers.js";
-
 // Tag extraction utilities
 export {
   extractTagsFromNote,
@@ -39,3 +42,12 @@ export {
   type TagExtractionOptions,
   type TagExtractionResult,
 } from "./parsing/tags.js";
+// Business rules and thresholds
+export {
+  ANALYSIS_THRESHOLDS,
+  COMMON_PATTERNS,
+  DRM_LIMIT_MESSAGES,
+  PROCESSING_THRESHOLDS,
+  SUSPICIOUS_HIGHLIGHT_THRESHOLDS,
+  TITLE_NOISE_PATTERNS,
+} from "./rules.js";
