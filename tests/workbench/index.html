@@ -62,8 +62,12 @@
                 <option value="original">Original</option>
               </select>
             </label>
-            <label title="Return only highlights with embedded notes (removes standalone notes and bookmarks)"><input
-                type="checkbox" id="opt-highlightsOnly"> Highlights only (merged)</label>
+            <label title="Return only highlights (removes standalone notes and bookmarks)"><input
+                type="checkbox" id="opt-highlightsOnly"> Highlights only</label>
+            <label title="Remove linked notes from output (content embedded in highlight's note field)"><input
+                type="checkbox" id="opt-mergedOutput"> Merged output (consume notes)</label>
+            <label title="Also remove notes not linked to any highlight" style="margin-left: 20px;"><input
+                type="checkbox" id="opt-removeUnlinkedNotes"> Remove unlinked notes</label>
           </div>
 
           <div class="option-group">
@@ -86,6 +90,33 @@
               Filter books:
               <select id="opt-bookFilter" style="width: 150px">
                 <option value="">All books</option>
+              </select>
+            </label>
+            <label>
+              Exclude books (one per line):
+              <textarea id="opt-excludeBooks" rows="2" style="width: 150px; font-size: 11px;" placeholder="Book Title 1&#10;Book Title 2"></textarea>
+            </label>
+          </div>
+
+          <div class="option-group">
+            <h3>Advanced</h3>
+            <label title="Throw errors instead of collecting warnings"><input type="checkbox" id="opt-strict"> Strict mode</label>
+            <label>
+              Date locale:
+              <select id="opt-dateLocale" style="width: 100px">
+                <option value="" selected>Auto</option>
+                <option value="en-US">en-US</option>
+                <option value="en-GB">en-GB</option>
+                <option value="es-ES">es-ES</option>
+                <option value="pt-BR">pt-BR</option>
+                <option value="de-DE">de-DE</option>
+                <option value="fr-FR">fr-FR</option>
+                <option value="it-IT">it-IT</option>
+                <option value="nl-NL">nl-NL</option>
+                <option value="ru-RU">ru-RU</option>
+                <option value="zh-CN">zh-CN</option>
+                <option value="ja-JP">ja-JP</option>
+                <option value="ko-KR">ko-KR</option>
               </select>
             </label>
           </div>
@@ -163,6 +194,8 @@
           <label><input type="checkbox" id="export-groupByBook"> Group by book</label>
           <label><input type="checkbox" id="export-includeStats" checked> Include stats</label>
           <label><input type="checkbox" id="export-includeClippingTags" checked> Include clipping tags</label>
+          <label><input type="checkbox" id="export-includeRaw"> Include raw fields</label>
+          <label><input type="checkbox" id="export-pretty" checked> Pretty print (JSON)</label>
           <label>
             Folder structure:
             <select id="export-folderStructure">
@@ -178,6 +211,18 @@
               <option value="original">Original</option>
               <option value="uppercase" selected>UPPERCASE</option>
               <option value="lowercase">lowercase</option>
+            </select>
+          </label>
+          <label>
+            Template preset:
+            <select id="export-templatePreset">
+              <option value="default" selected>Default</option>
+              <option value="minimal">Minimal</option>
+              <option value="obsidian">Obsidian</option>
+              <option value="notion">Notion</option>
+              <option value="academic">Academic</option>
+              <option value="compact">Compact</option>
+              <option value="verbose">Verbose</option>
             </select>
           </label>
           <button id="download-btn" class="btn btn-secondary" disabled>Download</button>

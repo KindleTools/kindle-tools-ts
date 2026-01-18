@@ -22,6 +22,7 @@ import {
   type TagCase,
 } from "#exporters/index.js";
 import { CsvImporter, type Importer, JsonImporter, TxtImporter } from "#importers/index.js";
+import type { TemplatePreset } from "#templates/types.js";
 import type { TarEntry } from "#utils/fs/tar.js";
 import * as TarUtils from "#utils/fs/tar.js";
 import type { ZipEntry } from "#utils/fs/zip.js";
@@ -74,6 +75,8 @@ const elements = {
   optExtractTags: document.getElementById("opt-extractTags") as HTMLInputElement,
   optTagCase: document.getElementById("opt-tagCase") as HTMLSelectElement,
   optHighlightsOnly: document.getElementById("opt-highlightsOnly") as HTMLInputElement,
+  optMergedOutput: document.getElementById("opt-mergedOutput") as HTMLInputElement,
+  optRemoveUnlinkedNotes: document.getElementById("opt-removeUnlinkedNotes") as HTMLInputElement,
   optNormalizeUnicode: document.getElementById("opt-normalizeUnicode") as HTMLInputElement,
   optCleanContent: document.getElementById("opt-cleanContent") as HTMLInputElement,
   optCleanTitles: document.getElementById("opt-cleanTitles") as HTMLInputElement,
@@ -81,6 +84,9 @@ const elements = {
   optExcludeNotes: document.getElementById("opt-excludeNotes") as HTMLInputElement,
   optExcludeBookmarks: document.getElementById("opt-excludeBookmarks") as HTMLInputElement,
   optMinContentLength: document.getElementById("opt-minContentLength") as HTMLInputElement,
+  optExcludeBooks: document.getElementById("opt-excludeBooks") as HTMLTextAreaElement,
+  optStrict: document.getElementById("opt-strict") as HTMLInputElement,
+  optDateLocale: document.getElementById("opt-dateLocale") as HTMLSelectElement,
 
   // Results tabs
   statsContent: document.getElementById("stats-content") as HTMLDivElement,
@@ -101,8 +107,11 @@ const elements = {
   exportIncludeClippingTags: document.getElementById(
     "export-includeClippingTags",
   ) as HTMLInputElement,
+  exportIncludeRaw: document.getElementById("export-includeRaw") as HTMLInputElement,
+  exportPretty: document.getElementById("export-pretty") as HTMLInputElement,
   exportFolderStructure: document.getElementById("export-folderStructure") as HTMLSelectElement,
   exportAuthorCase: document.getElementById("export-authorCase") as HTMLSelectElement,
+  exportTemplatePreset: document.getElementById("export-templatePreset") as HTMLSelectElement,
   exportJsonContent: document.getElementById("export-json-content") as HTMLDivElement,
   exportCsvContent: document.getElementById("export-csv-content") as HTMLDivElement,
   exportMdContent: document.getElementById("export-md-content") as HTMLDivElement,
@@ -202,6 +211,17 @@ function getParseOptions(): ParseOptions {
 
   const bookFilter = elements.optBookFilter.value;
 
+  // Parse excludeBooks textarea (one book per line)
+  const excludeBooksText = elements.optExcludeBooks.value.trim();
+  const excludeBooks = excludeBooksText
+    ? excludeBooksText
+        .split("\n")
+        .map((b) => b.trim())
+        .filter((b) => b.length > 0)
+    : undefined;
+
+  const dateLocale = elements.optDateLocale.value || undefined;
+
   return {
     language: elements.optLanguage.value as ParseOptions["language"],
     removeDuplicates: elements.optRemoveDuplicates.checked,
@@ -210,12 +230,17 @@ function getParseOptions(): ParseOptions {
     extractTags: elements.optExtractTags.checked,
     ...(elements.optExtractTags.checked && { tagCase: elements.optTagCase.value as TagCase }),
     highlightsOnly: elements.optHighlightsOnly.checked,
+    mergedOutput: elements.optMergedOutput.checked,
+    removeUnlinkedNotes: elements.optRemoveUnlinkedNotes.checked,
     normalizeUnicode: elements.optNormalizeUnicode.checked,
     cleanContent: elements.optCleanContent.checked,
     cleanTitles: elements.optCleanTitles.checked,
     excludeTypes: excludeTypes.length > 0 ? excludeTypes : undefined,
     minContentLength: parseInt(elements.optMinContentLength.value, 10) || undefined,
     onlyBooks: bookFilter ? [bookFilter] : undefined,
+    excludeBooks,
+    dateLocale,
+    strict: elements.optStrict.checked,
   };
 }
 
@@ -646,8 +671,11 @@ async function renderExports(): Promise<void> {
   const groupByBook = elements.exportGroupByBook.checked;
   const includeStats = elements.exportIncludeStats.checked;
   const includeClippingTags = elements.exportIncludeClippingTags.checked;
+  const includeRaw = elements.exportIncludeRaw.checked;
+  const pretty = elements.exportPretty.checked;
   const folderStructure = elements.exportFolderStructure.value as FolderStructure;
   const authorCase = elements.exportAuthorCase.value as AuthorCase;
+  const templatePreset = elements.exportTemplatePreset.value as TemplatePreset;
   const title = elements.exportTitle.value.trim() || undefined;
   const creator = elements.exportCreator.value.trim() || undefined;
 
@@ -657,7 +685,8 @@ async function renderExports(): Promise<void> {
     groupByBook,
     includeStats,
     includeClippingTags,
-    pretty: true,
+    includeRaw,
+    pretty,
   });
   const jsonData = unwrapExport(jsonResultRaw, "JSON");
   if (jsonData) {
@@ -669,7 +698,10 @@ async function renderExports(): Promise<void> {
 
   // CSV Export
   const csvExporter = new CsvExporter();
-  const csvResultRaw = await csvExporter.export(result.clippings, { includeClippingTags });
+  const csvResultRaw = await csvExporter.export(result.clippings, {
+    includeClippingTags,
+    includeRaw,
+  });
   const csvData = unwrapExport(csvResultRaw, "CSV");
   if (csvData) {
     const csvContent = typeof csvData.output === "string" ? csvData.output : "[Binary output]";
@@ -680,7 +712,7 @@ async function renderExports(): Promise<void> {
 
   // Markdown Export
   const mdExporter = new MarkdownExporter();
-  const mdResultRaw = await mdExporter.export(result.clippings, { groupByBook });
+  const mdResultRaw = await mdExporter.export(result.clippings, { groupByBook, templatePreset });
   const mdData = unwrapExport(mdResultRaw, "Markdown");
 
   if (mdData) {
