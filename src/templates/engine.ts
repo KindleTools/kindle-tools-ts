@@ -9,6 +9,7 @@
 
 import type Handlebars from "handlebars";
 import type { Clipping } from "#app-types/clipping.js";
+import { formatDateHuman } from "#utils/system/dates.js";
 import { createHandlebarsInstance } from "./helpers.js";
 import { BOOK_DEFAULT, CLIPPING_DEFAULT, EXPORT_DEFAULT, getTemplatePreset } from "./presets.js";
 import type {
@@ -160,13 +161,7 @@ export class TemplateEngine {
   toClippingContext(clipping: Clipping): ClippingContext {
     const tags = clipping.tags ?? [];
     const dateStr = clipping.date ? clipping.date.toISOString() : "";
-    const formattedDate = clipping.date
-      ? clipping.date.toLocaleDateString(undefined, {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-        })
-      : "";
+    const formattedDate = clipping.date ? formatDateHuman(clipping.date) : "";
 
     return {
       title: clipping.title,
@@ -225,11 +220,7 @@ export class TemplateEngine {
       highlightCount: contexts.filter((c) => c.type === "highlight").length,
       noteCount: contexts.filter((c) => c.type === "note").length,
       bookmarkCount: contexts.filter((c) => c.type === "bookmark").length,
-      exportDate: now.toLocaleDateString(undefined, {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      }),
+      exportDate: formatDateHuman(now),
       exportDateIso: now.toISOString(),
       tags,
       hasTags: tags.length > 0,
@@ -272,11 +263,7 @@ export class TemplateEngine {
       totalHighlights,
       totalNotes,
       totalBookmarks,
-      exportDate: now.toLocaleDateString(undefined, {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      }),
+      exportDate: formatDateHuman(now),
       exportDateIso: now.toISOString(),
       ...(title !== undefined && { title }),
       ...(options !== undefined && { options }),

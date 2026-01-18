@@ -12,20 +12,21 @@
 
 /**
  * Default clipping template - clean and readable.
+ * Uses triple braces {{{ }}} to prevent HTML entity escaping.
  */
 export const CLIPPING_DEFAULT = `{{#if (eq type "highlight")}}
-> {{content}}
+> {{{content}}}
 > — Page {{page}}, Location {{location}}
 {{#if hasNote}}
 
-**Note:** {{note}}
+**Note:** {{{note}}}
 {{/if}}
 {{#if hasTags}}
 **Tags:** {{tagsHashtags}}
 {{/if}}
 {{else if (eq type "note")}}
 **Note (Location {{location}}):**
-{{content}}
+{{{content}}}
 {{else if (eq type "bookmark")}}
 **Bookmark** at Location {{location}}{{#if (neq page "?")}} (Page {{page}}){{/if}}
 {{/if}}
@@ -35,10 +36,10 @@ export const CLIPPING_DEFAULT = `{{#if (eq type "highlight")}}
  * Minimal clipping template - just the essentials.
  */
 export const CLIPPING_MINIMAL = `{{#isHighlight}}
-> {{content}}
+> {{{content}}}
 {{/isHighlight}}
 {{#isNote}}
-- {{content}}
+- {{{content}}}
 {{/isNote}}
 `;
 
@@ -46,41 +47,42 @@ export const CLIPPING_MINIMAL = `{{#isHighlight}}
  * Academic/Citation style template.
  */
 export const CLIPPING_ACADEMIC = `{{#isHighlight}}
-"{{content}}" ({{author}}, *{{title}}*, p. {{page}})
+"{{{content}}}" ({{{author}}}, *{{{title}}}*, p. {{page}})
 {{#if hasNote}}
-  → {{note}}
+  → {{{note}}}
 {{/if}}
 {{/isHighlight}}
 {{#isNote}}
-[Note at {{location}}]: {{content}}
+[Note at {{location}}]: {{{content}}}
 {{/isNote}}
 `;
 
 /**
  * Compact template for lists.
  */
-export const CLIPPING_COMPACT = `- {{content}}{{#if hasNote}} *({{note}})*{{/if}} [p.{{page}}]
+export const CLIPPING_COMPACT = `- {{{content}}}{{#if hasNote}} *({{{note}}})*{{/if}} [p.{{page}}]
 `;
 
 /**
  * Joplin-optimized clipping template for individual notes.
  * Python-compatible format: content first, metadata footer at bottom.
  * Uses noteConsumedAsTags helper to hide notes that were parsed into tags.
+ * Uses triple braces {{{ }}} to prevent HTML entity escaping in Markdown.
  */
-export const CLIPPING_JOPLIN = `{{content}}
+export const CLIPPING_JOPLIN = `{{{content}}}
 {{#if (and hasNote (not (noteConsumedAsTags)))}}
 
 ---
 
 **My Note:**
-{{note}}
+{{{note}}}
 {{/if}}
 
 
 -----
 - date: {{date}}
-- author: {{author}}
-- book: {{title}}
+- author: {{{author}}}
+- book: {{{title}}}
 {{#if (neq page "?")}}
 - page: {{page}}
 {{/if}}
@@ -95,8 +97,8 @@ export const CLIPPING_JOPLIN = `{{content}}
  */
 export const CLIPPING_VERBOSE = `### {{type}} at Location {{location}}
 
-**Book:** {{title}}
-**Author:** {{author}}
+**Book:** {{{title}}}
+**Author:** {{{author}}}
 **Page:** {{page}}
 **Date:** {{date}}
 **Source:** {{source}}
@@ -105,16 +107,16 @@ export const CLIPPING_VERBOSE = `### {{type}} at Location {{location}}
 {{/if}}
 
 {{#isHighlight}}
-> {{content}}
+> {{{content}}}
 {{#if hasNote}}
 
 ---
-**My thoughts:** {{note}}
+**My thoughts:** {{{note}}}
 {{/if}}
 {{/isHighlight}}
 
 {{#isNote}}
-{{content}}
+{{{content}}}
 {{/isNote}}
 
 ---
@@ -186,18 +188,18 @@ tags:
 {{#each highlights}}
 {{#if (opt "useCallouts")}}
 > [!quote] Page {{page}}, Location {{location}}
-> {{content}}
+> {{{content}}}
 {{#if hasNote}}
 
 > [!note] My Note
-> {{note}}
+> {{{note}}}
 {{/if}}
 {{else}}
-> {{content}}
+> {{{content}}}
 > — Page {{page}}, Location {{location}}
 
 {{#if hasNote}}
-**Note:** {{note}}
+**Note:** {{{note}}}
 {{/if}}
 {{/if}}
 
@@ -209,9 +211,9 @@ tags:
 {{#each notes}}
 {{#if (opt "useCallouts")}}
 > [!info] Location {{location}}
-> {{content}}
+> {{{content}}}
 {{else}}
-- {{content}} (Location {{location}})
+- {{{content}}} (Location {{location}})
 {{/if}}
 
 {{/each}}
@@ -241,11 +243,11 @@ tags: {{join tags ", "}}
 ## Highlights
 
 {{#each highlights}}
-> {{content}}
+> {{{content}}}
 > — *Page {{page}} | Location {{location}}*
 
 {{#if hasNote}}
-**Note:** {{note}}
+**Note:** {{{note}}}
 {{/if}}
 
 {{/each}}
@@ -254,7 +256,7 @@ tags: {{join tags ", "}}
 ## Notes
 
 {{#each notes}}
-- {{content}} *(Location {{location}})*
+- {{{content}}} *(Location {{location}})*
 {{/each}}
 {{/if}}
 `;
@@ -277,11 +279,11 @@ export const BOOK_NOTION = `# 📚 {{title}}
 
 {{#each highlights}}
 ### Highlight {{@index}}
-> {{content}}
+> {{{content}}}
 
 📍 Page {{page}} | Location {{location}}
 {{#if hasNote}}
-💡 **Note:** {{note}}
+💡 **Note:** {{{note}}}
 {{/if}}
 {{#if hasTags}}
 🏷️ {{tagsString}}
@@ -295,7 +297,7 @@ export const BOOK_NOTION = `# 📚 {{title}}
 ## Personal Notes
 
 {{#each notes}}
-- **[{{location}}]** {{content}}
+- **[{{location}}]** {{{content}}}
 {{/each}}
 {{/if}}
 `;
@@ -303,11 +305,11 @@ export const BOOK_NOTION = `# 📚 {{title}}
 /**
  * Minimal book template.
  */
-export const BOOK_MINIMAL = `# {{title}}
-*{{author}}*
+export const BOOK_MINIMAL = `# {{{title}}}
+*{{{author}}}*
 
 {{#each highlights}}
-> {{content}}
+> {{{content}}}
 
 {{/each}}
 `;
@@ -315,9 +317,9 @@ export const BOOK_MINIMAL = `# {{title}}
 /**
  * Academic/Study book template.
  */
-export const BOOK_ACADEMIC = `# {{title}}
+export const BOOK_ACADEMIC = `# {{{title}}}
 
-**Author:** {{author}}
+**Author:** {{{author}}}
 **Total Annotations:** {{totalClippings}}
 **Date Compiled:** {{exportDate}}
 
@@ -334,13 +336,13 @@ export const BOOK_ACADEMIC = `# {{title}}
 {{#each highlights}}
 ### Passage {{add @index 1}}
 
-> {{content}}
+> {{{content}}}
 
 **Location:** Page {{page}}, Kindle Location {{location}}
 
 {{#if hasNote}}
 **Analysis/Notes:**
-{{note}}
+{{{note}}}
 {{/if}}
 
 {{#if hasTags}}
@@ -354,14 +356,14 @@ export const BOOK_ACADEMIC = `# {{title}}
 ## Study Notes
 
 {{#each notes}}
-- {{content}} *(Location {{location}})*
+- {{{content}}} *(Location {{location}})*
 {{/each}}
 
 ---
 
 ## References
 
-{{author}}. *{{title}}.* [Kindle Edition].
+{{{author}}}. *{{{title}}}.* [Kindle Edition].
 `;
 
 // ============================================================================

@@ -486,6 +486,7 @@ export class JoplinExporter extends MultiFileExporter {
 
   private serializeTag(tag: JoplinTag): string {
     const lines: string[] = [];
+    // Tag title is already NFC-normalized during import if normalizeUnicode option is enabled
     lines.push(tag.title);
     lines.push("");
     lines.push(`id: ${tag.id}`);

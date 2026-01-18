@@ -5,6 +5,7 @@
  */
 
 import Handlebars from "handlebars";
+import { formatDateHuman, formatDateISO } from "#utils/system/dates.js";
 import type { ClippingContext } from "./types.js";
 
 /**
@@ -108,7 +109,7 @@ export function createHandlebarsInstance(): typeof Handlebars {
 
   /**
    * Format date: {{formatDate date "short"}}
-   * Options: "short", "long", "iso", "relative"
+   * Options: "short" (YYYY-MM-DD), "long" (YYYY-MM-DD HH:MM:SS), "iso" (full ISO 8601), "relative"
    */
   hbs.registerHelper("formatDate", (dateStr: string, format: string): string => {
     if (!dateStr) return "";
@@ -117,14 +118,9 @@ export function createHandlebarsInstance(): typeof Handlebars {
 
     switch (format) {
       case "short":
-        return date.toLocaleDateString();
+        return formatDateISO(date);
       case "long":
-        return date.toLocaleDateString(undefined, {
-          weekday: "long",
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        });
+        return formatDateHuman(date);
       case "iso":
         return date.toISOString();
       case "relative": {
@@ -139,7 +135,7 @@ export function createHandlebarsInstance(): typeof Handlebars {
         return `${Math.floor(diffDays / 365)} years ago`;
       }
       default:
-        return date.toISOString().split("T")[0] ?? "";
+        return formatDateISO(date);
     }
   });
 
