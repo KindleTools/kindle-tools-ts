@@ -22,6 +22,8 @@ jobs:
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
+        with:
+          version: 10
 
 
       - name: Setup Node.js
@@ -34,7 +36,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Create Release Pull Request
-        uses: changesets/action@v1
+        uses: changesets/action@v2
         with:
           publish: pnpm release
           version: pnpm version
