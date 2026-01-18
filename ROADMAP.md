@@ -154,6 +154,178 @@ El HTML está como strings inline. Ya existe `html.styles.ts` para CSS, pero el 
 
 ---
 
+## Mejoras de Exporters (2026-01-18)
+
+Análisis de la arquitectura de exporters. El código está bien estructurado pero hay oportunidades de mejora.
+
+### ✅ Lo que está excelente
+
+| Aspecto | Comentario |
+|---------|------------|
+| Arquitectura | Patrón Template Method con `BaseExporter` → `MultiFileExporter` → exporters concretos |
+| Reutilización | `exporter-utils.ts` centraliza funciones comunes sin duplicación |
+| Type Safety | Validación con Zod, interfaces bien definidas |
+| Error handling | Uso de `neverthrow` Result types consistente |
+| Factory Pattern | Registry dinámico que permite registrar nuevos exporters |
+
+### 💡 Mejoras propuestas
+
+| Prioridad | Mejora | Esfuerzo | Descripción |
+|-----------|--------|----------|-------------|
+| **Media** | Eliminar estado mutable en `JoplinExporter` | Medio | `this.ctx` podría causar state leaks si se reutiliza la instancia. Pasar contexto como parámetro. |
+| **Baja** | Fallback de author en `HtmlExporter` | 5 min | Línea 169 no usa `DEFAULT_UNKNOWN_AUTHOR` como otros exporters |
+| **Baja** | Extraer constantes de emojis | 10 min | Emojis en `html.exporter.ts:186-191` deberían estar en `shared/constants.ts` |
+| **Baja** | Validación centralizada de clippings vacíos | 10 min | Mover check a `BaseExporter.export()` para consistencia |
+| **Muy Baja** | Documentar CSP incompatibility | 2 min | JavaScript inline no es CSP-compliant, añadir nota en JSDoc |
+
+### 🔧 Detalles técnicos
+
+#### 1. Estado mutable en JoplinExporter
+
+```typescript
+// Actual (joplin.exporter.ts:171)
+private ctx: JoplinExportContext | null = null;
+
+// Propuesto: pasar ctx como parámetro
+protected override async doExport(...): Promise<ExportResult> {
+  const ctx = this.createContext(options);
+  const preambleFiles = await this.exportPreamble(clippings, options, ctx);
+  const bookFiles = await this.processBook(bookClippings, options, engine, ctx);
+}
+```
+
+#### 2. Author fallback faltante
+
+```typescript
+// Actual (html.exporter.ts:169)
+<p class="book-author">by ${this.escapeHtml(first.author)}</p>
+
+// Propuesto
+<p class="book-author">by ${this.escapeHtml(first.author || this.DEFAULT_UNKNOWN_AUTHOR)}</p>
+```
+
+> **Decisión**: Ninguna de estas mejoras es crítica para v1.0. Son mejoras de robustez que pueden implementarse en v1.1 o posteriores.
+
+---
+
+## Mejoras de Importers (2026-01-18)
+
+Análisis de la arquitectura de importers. Código muy bien estructurado con excelente UX de errores.
+
+### ✅ Lo que está excelente
+
+| Aspecto | Comentario |
+|---------|------------|
+| Arquitectura | Misma estructura que exporters: `BaseImporter` → importers concretos |
+| Factory Pattern | Registry dinámico con default importer (`TxtImporter`) |
+| Fuzzy matching | Headers CSV con Levenshtein (≤2) para tolerar typos |
+| Sugerencias | `"Did you mean 'highlight'?"` en errores de validación |
+| Multi-formato JSON | Soporta `{ clippings: [] }`, `{ books: {} }`, y `[]` |
+| Modularidad TXT | Parser dividido en: tokenizer → language-detector → parser → text-cleaner |
+| Multi-idioma | Detección automática de 10+ idiomas |
+
+### 💡 Mejoras propuestas
+
+| Prioridad | Mejora | Esfuerzo | Descripción |
+|-----------|--------|----------|-------------|
+| **Baja** | IDs determinísticos en `generateImportId` | 15 min | Usar hash del contenido en lugar de `Date.now()` para idempotencia |
+| **Muy Baja** | Cachear resultado de `detectLanguage` | 10 min | Evitar recálculo si se llama múltiples veces |
+
+### 🔧 Detalles técnicos
+
+#### 1. IDs no determinísticos
+
+```typescript
+// Actual (importer-utils.ts:21)
+export function generateImportId(index: number): string {
+  return `imp_${Date.now().toString(36)}_${index.toString(36)}`;
+}
+
+// Propuesto: hash del contenido para idempotencia
+export function generateImportId(content: string, index: number): string {
+  const hash = sha256Sync(content).slice(0, 8);
+  return `imp_${hash}_${index.toString(36)}`;
+}
+```
+
+**Impacto**: Permitiría re-importar el mismo archivo y obtener los mismos IDs, útil para deduplicación.
+
+> **Decisión**: Los importers están **mejor logrados** que los exporters en términos de UX de errores. No hay mejoras urgentes.
+
+---
+
+## Revisión Transversal (2026-01-18)
+
+Análisis general del proyecto: naming, exports, dependencias y tests.
+
+### ✅ Revisión completada
+
+| Área | Estado | Observaciones |
+|------|--------|---------------|
+| **Naming** | ✅ Impecable | Clases (PascalCase), funciones (camelCase), archivos (kebab-case) |
+| **Exports** | ✅ Bien organizado | `src/index.ts` con 184 líneas, secciones claras |
+| **Tests** | ✅ 818 tests | 8 carpetas organizadas, 58 unit tests |
+
+### 🔧 Cambios realizados (2026-01-18)
+
+| Cambio | Estado | Descripción |
+|--------|--------|-------------|
+| ~~Eliminar `@types/handlebars`~~ | ✅ Hecho | Deprecated - Handlebars tiene tipos bundled |
+| ~~Eliminar `@types/jszip`~~ | ✅ Hecho | Deprecated - JSZip tiene tipos bundled |
+| ~~Actualizar `zod`~~ | ✅ Hecho | 4.3.4 → 4.3.5 (bugfixes menores) |
+| ~~Actualizar `vite`~~ | ✅ Hecho | 6.4.1 → 7.3.1 (major update para GUI) |
+
+### 💡 Pendiente para futuro
+
+| Prioridad | Item | Descripción |
+|-----------|------|-------------|
+| **Info** | Monitorear estabilidad Vite 7 | Verificar que no haya regresiones en el workbench |
+
+---
+
+## Análisis de Templates y Domain (2026-01-18)
+
+Revisión del sistema de templates (Handlebars) y la lógica de dominio.
+
+### ✅ Templates - Estado excelente
+
+| Archivo | Líneas | Descripción |
+|---------|--------|-------------|
+| `engine.ts` | 446 | Motor Handlebars con Factory, cache, validación |
+| `presets.ts` | 519 | 8 presets (default, minimal, obsidian, joplin, notion, academic, compact, verbose) |
+| `helpers.ts` | 276 | 30+ helpers organizados por categoría |
+| `types.ts` | 100+ | Contextos tipados (ClippingContext, BookContext, ExportContext) |
+
+**Puntos fuertes:**
+- Factory con cache (`TemplateEngineFactory`)
+- Helper `opt` para opciones dinámicas en templates
+- Validación de custom templates con `validateTemplate()`
+
+### ✅ Domain - Estado excelente
+
+| Módulo | Descripción |
+|--------|-------------|
+| `rules.ts` | Constantes de negocio centralizadas |
+| `analytics/` | `calculateStats()`, `groupByBook()` |
+| `core/` | IDs determinísticos (SHA-256), Jaccard similarity |
+| `parsing/` | Tags, sanitizers, dates, 11 idiomas |
+
+**Puntos fuertes:**
+- IDs idempotentes con `generateClippingId()`
+- Lógica de negocio separada de infraestructura
+- Tag extraction con validación anti-oraciones
+
+### 💡 Observaciones menores
+
+| Prioridad | Observación | Ubicación |
+|-----------|-------------|-----------|
+| **Muy Baja** | Helper `replace` usa RegExp sin escape de caracteres especiales | `helpers.ts:97` |
+| **Info** | `presets.ts` tiene 519 líneas, podría separarse en archivos por preset | No urgente |
+
+> **Decisión**: Ambos módulos están muy bien estructurados. No hay mejoras necesarias para v1.0.
+
+---
+
 ## Not Planned
 
 ### Descartado
