@@ -18,13 +18,13 @@ import { LOCATION_CONSTANTS } from "#config/defaults.js";
  *
  * Note: This is an approximation; actual ratios vary by book formatting.
  */
-export const LOCATIONS_PER_PAGE = LOCATION_CONSTANTS.LOCATIONS_PER_PAGE;
+export const LOCATIONS_PER_PAGE: number = LOCATION_CONSTANTS.LOCATIONS_PER_PAGE;
 
 /**
  * Default number of digits for zero-padding page numbers.
  * Using 4 digits allows for books up to 9999 pages.
  */
-export const PAGE_PADDING_LENGTH = LOCATION_CONSTANTS.PAGE_PADDING_LENGTH;
+export const PAGE_PADDING_LENGTH: number = LOCATION_CONSTANTS.PAGE_PADDING_LENGTH;
 
 /**
  * Format a page number with zero-padding for consistent sorting.

@@ -42,7 +42,7 @@
     "forceConsistentCasingInFileNames": true,
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
-    "isolatedDeclarations": true,
+    "isolatedDeclarations": false,
     // Paths and Resolution
     "baseUrl": ".",
     "resolveJsonModule": true,

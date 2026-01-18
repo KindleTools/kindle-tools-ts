@@ -15,7 +15,7 @@ export const SYSTEM_LIMITS = {
    * Chunk size (in bytes) for streaming operations.
    * Default: 64KB (standard for Node.js streams is often 64KB).
    */
-  STREAM_CHUNK_SIZE: 64 * 1024, // 64KB
+  STREAM_CHUNK_SIZE: 65536, // 64KB (64 * 1024)
 
   /**
    * Maximum length for generated filenames.
