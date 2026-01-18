@@ -30,14 +30,7 @@ Plan para llevar el proyecto a **v1.0 estable** y cerrar el scope de features.
 
 ## 1. Para v1.0 (Prioritario)
 
-### 1.1 Actualizar README para v1.0
-
-| Impacto | Esfuerzo | Riesgo | ROI |
-|---------|----------|--------|-----|
-| 🟡 Medio | 🟢 Bajo | 🟢 Bajo | ⭐⭐⭐ |
-
-- [x] Eliminar referencias al sistema de plugins
-- [ ] Añadir: "v1.0 - Feature complete, accepting bug fixes only"
+**✅ COMPLETADO** - Todas las tareas de limpieza para v1.0 han sido realizadas (2026-01-18).
 
 ---
 
@@ -57,13 +50,11 @@ Plan para llevar el proyecto a **v1.0 estable** y cerrar el scope de features.
 | **VitePress Documentation Site** | Over-engineering |
 | **Architecture Decision Records** | ARCHITECTURE.md basta |
 | **Browser Entry Point separado** | El actual funciona en browser |
-| **Performance Benchmarking** | No hay problemas de rendimiento reportados |
 | **Refactorizar archivos largos** | Código funciona, refactor estético no justifica riesgo |
 | **Monorepo Structure** | Complejidad no justificada |
 | **Path Modifiers** | Scope creep |
 | **Fuzzy Template Suggestions** | Nice-to-have, no esencial |
 | **Proactive Path Validation** | El usuario puede validar antes |
-| **CLI / CLI Suggestions** | Usuarios crean wrappers, fuera de scope |
 | **Fuzzy TXT Parsing** | Over-engineering, el parser funciona |
 | **Author Normalization O(n)** | Optimización prematura |
 | **Universal Compatibility Layer** | Ya funciona en browser |
@@ -80,6 +71,8 @@ Plan para llevar el proyecto a **v1.0 estable** y cerrar el scope de features.
 | Streaming Architecture | Caso raro (50MB+) |
 | Web Crypto API async | Complejidad no justificada |
 | Plugin System | Eliminado - over-engineering |
+| Performance Benchmarking | No hay problemas de rendimiento reportados |
+| CLI / CLI Suggestions | Usuarios crean wrappers, fuera de scope |
 
 ### Sin Plan
 
@@ -110,6 +103,10 @@ Plan para llevar el proyecto a **v1.0 estable** y cerrar el scope de features.
 | **Eliminar deprecated constants** | 2026-01-17 | ✅ re-exports de rules.js |
 | **Eliminar residuos plugins (errores)** | 2026-01-17 | ✅ PluginError, PluginErrorCodes |
 | **Eliminar validateConfig** | 2026-01-17 | ✅ código CLI huérfano |
+| **Limpiar ARCHITECTURE.md (plugins)** | 2026-01-18 | ✅ 4 secciones eliminadas |
+| **Limpiar docs/ARCHITECTURE.md (plugins)** | 2026-01-18 | ✅ 3 secciones actualizadas |
+| **Limpiar src/index.ts (comentarios)** | 2026-01-18 | ✅ comentarios duplicados |
+| **README v1.0 - Feature Complete** | 2026-01-18 | ✅ nota añadida |
 
 ---
 
@@ -125,10 +122,9 @@ Plan para llevar el proyecto a **v1.0 estable** y cerrar el scope de features.
 | Security | ✅ Zod, CSV injection protection |
 | Documentación | ✅ README 800+ líneas |
 | Error handling | ✅ neverthrow |
-| Dependencies | ✅ 6 runtime |
+| Dependencies | ✅ 7 runtime |
 
-**Pendiente:**
-- [ ] README v1.0 (1.1)
+**Pendiente:** *Ninguno - Listo para v1.0*
 
 ---
 
@@ -140,4 +136,4 @@ Plan para llevar el proyecto a **v1.0 estable** y cerrar el scope de features.
 
 ---
 
-*Actualizado: 2026-01-17 | Para v1.0: 1 item | Opcional: 0 items*
+*Actualizado: 2026-01-18 | **v1.0 READY** | Para v1.0: 0 items | Opcional: 0 items*

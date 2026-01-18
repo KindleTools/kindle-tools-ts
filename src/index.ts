@@ -39,9 +39,8 @@ export {
   MarkdownExporter,
   ObsidianExporter,
 } from "./exporters/index.js";
+
 // Txt Importer Core (Direct access)
-// Txt Importer Core (Direct access)
-// Language
 export { detectLanguage } from "./importers/formats/txt/language-detector.js";
 export { parse, parseString } from "./importers/formats/txt/parser.js";
 export type { Importer, ImportResult } from "./importers/index.js";
@@ -105,8 +104,6 @@ export type {
 } from "./types/clipping.js";
 export type { ParseOptions, ParseResult, ProcessOptions, TagCase } from "./types/config.js";
 export type { SupportedLanguage } from "./types/language.js";
-
-// Removed internal file system types from public API
 
 // =============================================================================
 // Utilities Namespace (Optional usage)

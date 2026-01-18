@@ -11,6 +11,8 @@
 
 A robust TypeScript library to parse and process Amazon Kindle `My Clippings.txt` files with smart merging, deduplication, and multiple export formats.
 
+> **v1.0 - Feature Complete.** This library is stable and production-ready. Only accepting bug fixes.
+
 ---
 
 ## 📑 Table of Contents

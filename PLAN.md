@@ -14,7 +14,7 @@ Este documento analiza el estado actual de **KindleToolsTS** para determinar qu�
 |---------|-------|-------------|
 | Archivos TypeScript | 108 | Alto para una librería npm |
 | Líneas de código (src/) | ~15,500 | Considerable |
-| Dependencias runtime | 6 | Reducido (era 8) |
+| Dependencias runtime | 7 | Reducido (era 9) |
 | Formatos de export | 6 | Completo |
 | Idiomas soportados | 11 | Muy completo |
 | Archivos de test | 49 | Buena cobertura |
@@ -102,7 +102,7 @@ He analizado los paquetes npm existentes para parsing de Kindle clippings:
 
 ## 4. Dependencias: Análisis
 
-### Runtime Dependencies (6) - Actualizado
+### Runtime Dependencies (7) - Actualizado
 
 | Dependencia | Tamaño | ¿Necesaria? | Estado |
 |-------------|--------|-------------|--------|
@@ -112,6 +112,7 @@ He analizado los paquetes npm existentes para parsing de Kindle clippings:
 | **jszip** | ~90KB | ✅ Sí | Joplin export |
 | **neverthrow** | ~5KB | ✅ Sí | Result types |
 | **fastest-levenshtein** | ~2KB | ✅ Sí | Fuzzy matching |
+| **papaparse** | ~20KB | ✅ Sí | CSV parsing (importer) |
 | ~~**cosmiconfig**~~ | ~~20KB~~ | ❌ Eliminado | ✅ Completado 2026-01-16 |
 | ~~**@iarna/toml**~~ | ~~30KB~~ | ❌ Eliminado | ✅ Completado 2026-01-16 |
 
@@ -120,7 +121,7 @@ He analizado los paquetes npm existentes para parsing de Kindle clippings:
 ✅ **Completado:**
 - cosmiconfig + @iarna/toml: **-50KB eliminados**
 
-**Resultado:** De 8 → 6 dependencias runtime
+**Resultado:** De 9 → 7 dependencias runtime
 
 ---
 
@@ -295,7 +296,7 @@ Es **cerrar**. Declarar que está terminado y resistir la tentación de "mejorar
 | **Plugins** | ~~Over-engineered~~ | ~~Eliminar~~ | ✅ Eliminado |
 | **Templates** | Complejo | Mantener (ya funciona) | ✅ |
 | **Config** | ~~Over-engineered~~ | ~~Simplificar~~ | ✅ Completado |
-| **Dependencias** | 6 (era 8) | Mantener | ✅ |
+| **Dependencias** | 7 (era 9) | Mantener | ✅ |
 | **Scope** | Congelado | Feature freeze | ✅ |
 
 ### El verdadero problema
@@ -468,6 +469,119 @@ El sistema de plugins fue eliminado pero quedaron residuos en el sistema de erro
 
 ---
 
+## 14. Análisis Final Pre-v1.0 (2026-01-17)
+
+### Estado del Proyecto
+
+**Métricas Verificadas:**
+
+| Métrica | Valor | Observación |
+|---------|-------|-------------|
+| Archivos TypeScript (src/) | ~95 | Reducido tras eliminar plugins |
+| Dependencias runtime | **7** | zod, date-fns, handlebars, jszip, neverthrow, fastest-levenshtein, **papaparse** |
+| Tests | 62 archivos | Cobertura integral |
+| Código de plugins en src/ | **0** | ✅ Completamente eliminado |
+
+### Hallazgos Críticos para v1.0
+
+#### 🔴 DOCUMENTACIÓN DESACTUALIZADA
+
+**1. ARCHITECTURE.md (raíz) - Referencias a plugins eliminados:**
+
+| Línea | Contenido Problemático |
+|-------|------------------------|
+| 47 | `├── plugins/` en estructura de directorios |
+| 412-450 | Sección completa "## Plugin System" |
+| 615-616 | `plugins/` con descripción |
+| 668 | "Pipeline Object... plugins/middleware" |
+
+**2. docs/ARCHITECTURE.md - También desactualizado:**
+
+| Línea | Contenido Problemático |
+|-------|------------------------|
+| 33 | `├── plugins/` en estructura |
+| 119-142 | Menciona "plugin validation" en AppException |
+| 293 | Export path `"./plugins"` que NO existe |
+
+#### 🟡 CÓDIGO LIMPIO (Residuos Menores)
+
+**src/index.ts:**
+
+| Línea | Problema |
+|-------|----------|
+| 42-43 | Comentario duplicado: `// Txt Importer Core (Direct access)` (x2) |
+| 109 | Comentario residual: `// Removed internal file system types from public API` |
+
+#### ✅ LO QUE ESTÁ BIEN
+
+- **src/** está completamente limpio de plugins (grep verificado)
+- **API pública** coherente y bien organizada
+- **Patrones** (Factory, DI, Strategy) correctamente implementados
+- **TypeScript config** moderna y estricta
+- **Build config** (tsup) optimizada para ESM+CJS
+- **Tests** completos con property-based testing (fast-check)
+- **Seguridad** (CSV injection, path traversal) implementada
+
+### Plan de Limpieza Final - ✅ COMPLETADO (2026-01-18)
+
+#### Prioridad Alta (Bloquea v1.0) - ✅ COMPLETADO
+
+| # | Acción | Archivo | Estado |
+|---|--------|---------|--------|
+| 1 | Eliminar sección "Plugin System" completa | ARCHITECTURE.md | ✅ |
+| 2 | Eliminar referencias a `src/plugins/` | ARCHITECTURE.md | ✅ |
+| 3 | Eliminar mención de plugins en exports | docs/ARCHITECTURE.md | ✅ |
+| 4 | Eliminar `plugins/` de estructura de directorios | docs/ARCHITECTURE.md | ✅ |
+| 5 | Actualizar texto "plugin validation" | docs/ARCHITECTURE.md | ✅ |
+
+#### Prioridad Media (Pulido) - ✅ COMPLETADO
+
+| # | Acción | Archivo | Estado |
+|---|--------|---------|--------|
+| 6 | Eliminar comentario duplicado | src/index.ts | ✅ |
+| 7 | Eliminar comentario residual | src/index.ts | ✅ |
+| 8 | Actualizar contador de dependencias | plan.md | ✅ |
+
+#### README para v1.0 - ✅ COMPLETADO
+
+| # | Acción | Archivo | Estado |
+|---|--------|---------|--------|
+| 9 | Añadir nota "v1.0 - Feature Complete" | README.md | ✅ |
+| 10 | Verificar que no mencione plugins | README.md | ✅ |
+
+### Verificaciones Pre-Release
+
+```bash
+# 1. Tests
+pnpm test
+
+# 2. Linting + Format
+pnpm run check
+
+# 3. Validar exports para consumidores
+pnpm run check:exports
+
+# 4. TypeScript strict
+pnpm run typecheck
+
+# 5. Build final
+pnpm build
+```
+
+### Conclusión Final
+
+**✅ PROYECTO LISTO PARA v1.0**
+
+Todas las tareas de limpieza han sido completadas:
+- Documentación sincronizada con el código (sin referencias a plugins eliminados)
+- Código limpio de comentarios residuales
+- README actualizado con nota de "Feature Complete"
+- Dependencias correctamente documentadas (7 runtime)
+
+**No hay deuda técnica.** La arquitectura es sólida, el código está limpio, y los tests son exhaustivos.
+
+---
+
 *Documento generado: 2026-01-15*
-*Última actualización: 2026-01-17*
+*Última actualización: 2026-01-18*
 *Autor: Análisis asistido por Claude Opus 4.5*

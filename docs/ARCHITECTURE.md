@@ -30,7 +30,6 @@ src/
 │   ├── formats/      # Format implementations (txt/ is the main parser)
 │   └── shared/       # Base classes and utilities
 ├── node/             # Node.js-specific code (parseFile)
-├── plugins/          # Plugin system for custom importers/exporters
 ├── ports/            # Abstractions for external dependencies
 │   └── adapters/     # Implementations (NodeFileSystem, MemoryFileSystem)
 ├── schemas/          # Zod schemas for validation
@@ -118,7 +117,7 @@ function parseDate(input: string): Result<Date, ParseError> {
 
 ### 3. AppException for Structural Errors
 
-When exceptions are necessary (e.g., plugin validation), use the typed `AppException`:
+When exceptions are necessary (e.g., schema validation failures), use the typed `AppException`:
 
 ```typescript
 // src/errors/types.ts
@@ -136,7 +135,7 @@ export class AppException extends Error {
 // Usage
 throw new AppException({
   code: 'VALIDATION_ERROR',
-  message: 'Invalid plugin configuration',
+  message: 'Invalid configuration',
   issues: [{ path: ['name'], message: 'Required' }]
 });
 ```
@@ -289,8 +288,7 @@ The library uses Node.js subpath exports for clean imports:
 {
   "exports": {
     ".": "./dist/index.js",           // Main API
-    "./node": "./dist/node/index.js", // Node.js specific (parseFile)
-    "./plugins": "./dist/plugins/index.js" // Plugin system
+    "./node": "./dist/node/index.js"  // Node.js specific (parseFile)
   }
 }
 ```
