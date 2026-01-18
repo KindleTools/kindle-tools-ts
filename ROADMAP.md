@@ -326,6 +326,153 @@ Revisión del sistema de templates (Handlebars) y la lógica de dominio.
 
 ---
 
+## Planes de Mejora Documentados (2026-01-18)
+
+Análisis exhaustivo del código con planes de acción detallados en `/docs/`.
+
+### Plan 2.1: Consolidación de Archivos
+
+> Documentación completa: [docs/2.1 Plan de Consolidación.md](docs/2.1%20Plan%20de%20Consolidación.md)
+
+Merge de archivos pequeños para reducir fragmentación:
+
+| Fase | Origen | Destino | Riesgo | Archivos Eliminados |
+|------|--------|---------|--------|---------------------|
+| 1.1 | `core/limits.ts` | `domain/rules.ts` | 🟢 Bajo | 1 |
+| 1.2 | `importers/shared/constants.ts` | `domain/rules.ts` | 🟢 Bajo | 1 |
+| 2.1 | `utils/text/patterns.ts` | `utils/text/normalizers.ts` | 🟢 Bajo | 1 |
+| 2.2 | `utils/text/counting.ts` | `utils/text/normalizers.ts` | 🟢 Bajo | 1 |
+| 2.3 | `types/geo.ts` | `utils/geo/index.ts` | 🟢 Bajo | 1 |
+| 3.1 | `AuthorNormalizer` (clase muerta) | Eliminar | 🟡 Medio | 1 |
+
+**Resultado**: -6 archivos, ~163 líneas recuperadas.
+
+### Plan 2.2: Eliminación de Abstracciones
+
+> Documentación completa: [docs/2.2 Plan de Eliminación de Abstracciones.md](docs/2.2%20Plan%20de%20Eliminación%20de%20Abstracciones.md)
+
+Simplificación de abstracciones innecesarias:
+
+| Elemento | Tipo | Acción | Riesgo |
+|----------|------|--------|--------|
+| `AuthorNormalizer` | Clase static-only | Convertir a funciones exportadas | 🟢 Bajo |
+| `TemplateEngineFactory` | Factory/Cache | Simplificar a función con closure | 🟡 Medio |
+
+**Abstracciones a mantener** (justificadas):
+- `ImporterFactory`, `ExporterFactory` (extensibles)
+- `BaseImporter`, `BaseExporter` (herencia correcta)
+- `FileSystem`, `Logger` (DI para testing)
+
+### Plan 2.3: Simplificación de Código
+
+> Documentación completa: [docs/2.3 Plan de Simplificación de Código.md](docs/2.3%20Plan%20de%20Simplificación%20de%20Código.md)
+
+Refactorización de funciones complejas:
+
+| Función | Archivo | Líneas | Prioridad | Acción |
+|---------|---------|--------|-----------|--------|
+| `CsvImporter.doImport()` | csv.importer.ts | 272 | 🔴 Alta | Extraer helpers |
+| `JoplinExporter.processBook()` | joplin.exporter.ts | 141 | 🟡 Media | Separar autor/notas |
+| `JsonImporter.doImport()` | json.importer.ts | 135 | 🟡 Media | Extraer validación |
+| `parseString()` | parser.ts | 137 | ✅ OK | **No refactorizar** |
+
+**Estrategia**: Extraer helpers internos sin crear archivos nuevos.
+
+### Orden de Ejecución Recomendado
+
+```
+1. Plan 2.1: Consolidación (Fase 1 → Fase 2 → Fase 3)
+2. Plan 2.2: Abstracciones (AuthorNormalizer → TemplateEngineFactory)
+3. Plan 2.3: Simplificación (CsvImporter → JsonImporter → JoplinExporter)
+```
+
+> **Decisión**: Estas mejoras son de **prioridad baja** (v1.1+). El código actual es funcional y well-tested. Son mejoras de mantenibilidad que no afectan funcionalidad.
+
+---
+
+## Análisis de Complejidad (2026-01-18)
+
+> Documentación completa: [docs/1.4 Análisis de Complejidad Ciclomática.md](docs/1.4%20Análisis%20de%20Complejidad%20Ciclomática.md)
+
+### Funciones con mayor complejidad
+
+| Función | Archivo | Líneas | Nivel Anidamiento |
+|---------|---------|--------|-------------------|
+| `CsvImporter.doImport()` | csv.importer.ts | 272 | 🔴 4 niveles |
+| `JoplinExporter.processBook()` | joplin.exporter.ts | 141 | 🟡 3 niveles |
+| `parseString()` | parser.ts | 137 | 🟡 3 niveles |
+
+### Archivos monolíticos (>300 líneas)
+
+| Archivo | Líneas | Estado |
+|---------|--------|--------|
+| `joplin.exporter.ts` | 514 | 🟡 Podría extraer tipos |
+| `templates/presets.ts` | 519 | ✅ OK (datos) |
+| `csv.importer.ts` | 388 | 🟡 Podría extraer schema |
+
+**Dependencias circulares**: ✅ Ninguna detectada
+
+---
+
+## Archivos Zombies Identificados (2026-01-18)
+
+> Documentación completa: [docs/1.2 Detección de Archivos Zombies.md](docs/1.2%20Detección%20de%20Archivos%20Zombies.md)
+
+| Categoría | Archivos | Estado |
+|-----------|----------|--------|
+| **Alto impacto** | `core/limits.ts`, `importers/shared/constants.ts` | Consolidar en `domain/rules.ts` |
+| **Medio impacto** | `utils/text/counting.ts`, `utils/text/patterns.ts` | Merge en `normalizers.ts` |
+| **API sin uso interno** | `utils/geo/index.ts` (203 líneas) | Mantener (API pública) |
+
+**Archivos consolidables**: 6  
+**Líneas recuperables**: ~110  
+**Nivel de contaminación**: BAJO
+
+---
+
+## Sugerencias Adicionales (2026-01-18)
+
+Mejoras identificadas durante el análisis exhaustivo del proyecto.
+
+### 🔴 Quick Wins (Alta Prioridad)
+
+| Área | Sugerencia | Archivo | Esfuerzo |
+|------|------------|---------|----------|
+| **Unicode en tags** | Cambiar `/^[a-zA-Z...]/.test(tag)` a `/^\p{L}/u.test(tag)` para soportar tags en ruso, chino, japonés | `domain/parsing/tags.ts:191` | 5 min |
+| **Sentence detection multiidioma** | Añadir palabras en español/portugués al filtro (`el`, `la`, `es`, `de`, `que`, `um`, `uma`) | `domain/parsing/tags.ts:202` | 10 min |
+
+> **Impacto**: Mejora significativa para usuarios multiidioma (11 idiomas soportados).
+
+### 🟡 Prioridad Media
+
+| Área | Sugerencia | Archivo | Esfuerzo |
+|------|------------|---------|----------|
+| **Documentar `LOCATIONS_PER_PAGE`** | El valor `16` necesita comentario explicando origen | `domain/core/locations.ts:21` | 5 min |
+| **HTML template separado** | El HTML está inline; podría ir a archivo `.html` | `exporters/formats/html.exporter.ts` | 30 min |
+| **Evaluar linters** | ESLint + Biome: posible duplicación | `eslint.config.mjs`, `biome.json` | 15 min |
+| **Turbo.json** | ¿Necesario para monorepo de 1 package? | `turbo.json` | 5 min |
+
+### 🟢 Baja Prioridad (Nice to have)
+
+| Área | Sugerencia | Archivo | Descripción |
+|------|------------|---------|-------------|
+| **Helper `replace` sin escape** | RegExp sin escapar caracteres especiales | `templates/helpers.ts:97` | Bug potencial |
+| **Author fallback en HTML** | No usa `DEFAULT_UNKNOWN_AUTHOR` | `html.exporter.ts:169` | Inconsistencia |
+| **Emojis hardcoded** | Podrían estar en constantes compartidas | `html.exporter.ts:186-191` | Mantenibilidad |
+| **CSP incompatibility** | JavaScript inline no es CSP-compliant | `html.exporter.ts` | Documentar limitación |
+
+### ⚠️ Observaciones de Arquitectura
+
+| Observación | Estado |
+|-------------|--------|
+| `ARCHITECTURE.md` muy largo (1,518 líneas) | Podría dividirse en `/docs` |
+| `index.ts` con 60+ exports | Necesario para biblioteca npm |
+| 30 subdirectorios para 100 archivos | Ratio ~3.3 archivos/carpeta, aceptable |
+
+> **Decisión**: Las quick wins (Unicode y multiidioma) deberían implementarse antes de v1.0. El resto son mejoras para v1.1+.
+
+---
+
 ## Not Planned
 
 ### Descartado
