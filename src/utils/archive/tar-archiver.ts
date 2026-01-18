@@ -1,15 +1,23 @@
+import { createTarArchive, type TarEntry } from "../fs/tar.js";
 import type { Archiver } from "./archiver.js";
 
+/**
+ * TAR archiver implementation using the existing createTarArchive function.
+ * Used for Joplin JEX exports.
+ */
 export class TarArchiver implements Archiver {
-  addFile(_path: string, _content: string | Uint8Array): void {
-    throw new Error("Tar archiving is not yet implemented.");
+  private entries: TarEntry[] = [];
+
+  addFile(path: string, content: string | Uint8Array): void {
+    this.entries.push({ name: path, content });
   }
 
   addDirectory(_path: string): void {
-    throw new Error("Tar archiving is not yet implemented.");
+    // TAR doesn't require explicit directory entries for files with paths
+    // The directory structure is implicit in the file paths
   }
 
-  finalize(): Promise<Uint8Array> {
-    return Promise.reject(new Error("Tar archiving is not yet implemented."));
+  async finalize(): Promise<Uint8Array> {
+    return createTarArchive(this.entries);
   }
 }
