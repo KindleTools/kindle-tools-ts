@@ -217,12 +217,17 @@ export class JoplinExporter extends MultiFileExporter {
     const allTagNames = this.collectAllTags(clippings, defaultTags, includeClippingTags);
 
     for (const tagName of allTagNames) {
-      const tagId = this.generateId("tag", tagName);
+      // Normalize to lowercase + NFC to work around Joplin's SQLite Unicode case-sensitivity limitation
+      // SQLite's COLLATE NOCASE doesn't work correctly with accented characters (ó, é, ñ, etc.)
+      // See: https://github.com/laurent22/joplin/issues/11179
+      const normalizedTagName = tagName.normalize("NFC").toLowerCase();
+      const tagId = this.generateId("tag", normalizedTagName);
+      // Map original tagName to tagId for note-tag association lookup
       this.ctx.tagMap.set(tagName, tagId);
 
       const tag: JoplinTag = {
         id: tagId,
-        title: tagName,
+        title: normalizedTagName,
         parent_id: "",
         created_time: now,
         updated_time: now,
@@ -417,7 +422,9 @@ export class JoplinExporter extends MultiFileExporter {
    * Uses MD5-equivalent length (32 chars) for compatibility with Python version.
    */
   private generateId(type: string, content: string): string {
-    const input = `${type}:${content.toLowerCase().trim()}`;
+    // Normalize to NFC before lowercasing to ensure consistent IDs for accented characters
+    const normalized = content.normalize("NFC").toLowerCase().trim();
+    const input = `${type}:${normalized}`;
     const hash = sha256Sync(input);
     // Joplin uses 32-character hex IDs
     return hash.slice(0, 32);
