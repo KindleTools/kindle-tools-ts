@@ -10,12 +10,12 @@ describe("encoding", () => {
 
     it("should detect UTF-16 LE BOM", () => {
       const buffer = Buffer.from([0xff, 0xfe, 0x61, 0x00]); // BOM + 'a'
-      expect(detectEncoding(buffer)).toBe("utf16le");
+      expect(detectEncoding(buffer)).toBe("utf-16le");
     });
 
     it("should return utf16le for UTF-16 BE BOM (per current implementation)", () => {
       const buffer = Buffer.from([0xfe, 0xff, 0x00, 0x61]);
-      expect(detectEncoding(buffer)).toBe("utf16le");
+      expect(detectEncoding(buffer)).toBe("utf-16le");
     });
 
     it("should default to utf-8", () => {

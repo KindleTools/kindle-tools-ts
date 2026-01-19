@@ -4,7 +4,7 @@ import { extractTagsFromLinkedNotes } from "#core/processing/tag-processor.js";
 
 describe("tag-processor", () => {
   describe("extractTagsFromLinkedNotes", () => {
-    const baseClipping: Clipping = {
+    const baseClipping = {
       id: "1",
       title: "Book 1",
       author: "Author 1",
@@ -13,7 +13,7 @@ describe("tag-processor", () => {
       date: new Date(),
       location: { start: 1, end: 1, raw: "1" },
       page: 1,
-    };
+    } as Clipping;
 
     it("should extract tags from linked notes for highlights", () => {
       const clippings: Clipping[] = [
@@ -60,7 +60,7 @@ describe("tag-processor", () => {
         },
       ];
 
-      const result = extractTagsFromLinkedNotes(clippings, "lowercase");
+      const result = extractTagsFromLinkedNotes(clippings, { tagCase: "lowercase" });
       expect(result.clippings[0].tags).toEqual(["mytag"]);
     });
 
