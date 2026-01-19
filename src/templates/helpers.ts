@@ -93,10 +93,14 @@ export function createHandlebarsInstance(): typeof Handlebars {
 
   /**
    * Replace text: {{replace text "old" "new"}}
+   * The search string is treated as literal text, not a regex pattern.
    */
-  hbs.registerHelper("replace", (str: string, search: string, replacement: string): string =>
-    str ? str.replace(new RegExp(search, "g"), replacement) : "",
-  );
+  hbs.registerHelper("replace", (str: string, search: string, replacement: string): string => {
+    if (!str) return "";
+    // Escape special regex characters to treat search as literal text
+    const escaped = search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return str.replace(new RegExp(escaped, "g"), replacement);
+  });
 
   /**
    * Join array: {{join tags ", "}}

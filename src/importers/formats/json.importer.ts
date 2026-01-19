@@ -57,7 +57,7 @@ function jsonToClipping(json: ClippingImport, index: number): Clipping {
 
   // Build base clipping with required fields
   const clipping: Clipping = {
-    id: json.id ?? generateImportId(index),
+    id: json.id ?? generateImportId(content, index),
     title,
     titleRaw: json.titleRaw ?? title,
     author,

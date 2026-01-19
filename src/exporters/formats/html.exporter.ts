@@ -166,7 +166,7 @@ ${getHtmlStyles(customCss)}
     <article class="book" data-title="${this.escapeHtml(bookTitle.toLowerCase())}">
       <header class="book-header">
         <h2 class="book-title">${this.escapeHtml(first.title)}</h2>
-        <p class="book-author">by ${this.escapeHtml(first.author)}</p>
+        <p class="book-author">by ${this.escapeHtml(first.author || this.DEFAULT_UNKNOWN_AUTHOR)}</p>
         <span class="book-count">${clippings.length} highlight${clippings.length !== 1 ? "s" : ""}</span>
       </header>
       <div class="clippings">

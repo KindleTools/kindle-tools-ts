@@ -35,6 +35,7 @@ import {
   MAX_VALIDATION_ERRORS,
   parseLocationString,
 } from "#importers/shared/index.js";
+import { ClippingTypeSchema } from "#schemas/clipping.schema.js";
 
 /**
  * Schema for validating CSV row data.
@@ -45,7 +46,7 @@ const CsvRowSchema = z.object({
   id: z.string().optional(),
   title: z.string().optional(),
   author: z.string().optional(),
-  type: z.enum(["highlight", "note", "bookmark", "clip", "article"]).or(z.literal("")).optional(),
+  type: ClippingTypeSchema.or(z.literal("")).optional(),
   page: z
     .string()
     .optional()
@@ -289,7 +290,7 @@ export class CsvImporter extends BaseImporter {
 
         const data = validatedRow.data;
 
-        const id = data.id || generateImportId(rowIdx);
+        const id = data.id || generateImportId(data.content || "", rowIdx);
         const title = data.title || "Unknown";
         const author = data.author || "Unknown";
         const type = (data.type || "highlight") as ClippingType;

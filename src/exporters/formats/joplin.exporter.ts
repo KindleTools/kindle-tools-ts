@@ -370,6 +370,7 @@ export class JoplinExporter extends MultiFileExporter {
         now,
         creator,
         geoLocation,
+        ctx,
       );
       files.push(...noteFiles);
     } else {
@@ -383,6 +384,7 @@ export class JoplinExporter extends MultiFileExporter {
         estimatePages,
         creator,
         geoLocation,
+        ctx,
       );
       files.push(...noteFiles);
     }
@@ -392,6 +394,7 @@ export class JoplinExporter extends MultiFileExporter {
 
   /**
    * Create a single note containing all clippings from a book (per-book mode).
+   * Receives ctx as parameter for stateless operation.
    */
   private createBookNote(
     clippings: Clipping[],
@@ -401,10 +404,10 @@ export class JoplinExporter extends MultiFileExporter {
     now: number,
     creator: string,
     geoLocation: { latitude: number; longitude: number; altitude?: number },
+    ctx: JoplinExportContext,
   ): ExportedFile[] {
     const files: ExportedFile[] = [];
     const first = clippings[0]!;
-    const ctx = this.ctx!;
 
     // Generate note ID based on book title for determinism
     const noteId = this.generateId("book-note", `${first.author}/${first.title}`);
@@ -471,6 +474,7 @@ export class JoplinExporter extends MultiFileExporter {
 
   /**
    * Create one note per clipping (per-clipping mode, default).
+   * Receives ctx as parameter for stateless operation.
    */
   private createClippingNotes(
     clippings: Clipping[],
@@ -481,9 +485,9 @@ export class JoplinExporter extends MultiFileExporter {
     estimatePages: boolean,
     creator: string,
     geoLocation: { latitude: number; longitude: number; altitude?: number },
+    ctx: JoplinExportContext,
   ): ExportedFile[] {
     const files: ExportedFile[] = [];
-    const ctx = this.ctx!;
 
     for (const clipping of clippings) {
       const noteId = this.generateId("note", clipping.id);

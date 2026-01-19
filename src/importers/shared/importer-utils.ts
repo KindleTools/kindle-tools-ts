@@ -8,17 +8,21 @@
 
 import type { Clipping, ClippingLocation } from "#app-types/clipping.js";
 import { type ImportResult, type ImportSuccess, importSuccess, importUnknownError } from "#errors";
+import { sha256Sync } from "#utils/security/hashing.js";
 
 /**
- * Generate a unique ID for imported clippings that don't have one.
+ * Generate a deterministic ID for imported clippings that don't have one.
  *
- * Uses timestamp + index for uniqueness.
+ * Uses content hash + index for determinism. Re-importing the same file
+ * will generate the same IDs, enabling consistent deduplication.
  *
- * @param index - Row/item index
- * @returns Generated ID string
+ * @param content - Content to hash (e.g., clipping content or row data)
+ * @param index - Row/item index for uniqueness within the same content
+ * @returns Generated ID string (deterministic)
  */
-export function generateImportId(index: number): string {
-  return `imp_${Date.now().toString(36)}_${index.toString(36)}`;
+export function generateImportId(content: string, index: number): string {
+  const hash = sha256Sync(`${content}|${index}`).slice(0, 8);
+  return `imp_${hash}_${index.toString(36)}`;
 }
 
 /**
