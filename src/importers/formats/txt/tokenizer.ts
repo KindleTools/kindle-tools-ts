@@ -4,7 +4,7 @@
  * @packageDocumentation
  */
 
-import { BOM } from "#utils/text/patterns.js";
+import { BOM } from "#utils/text/normalizers.js";
 import { PATTERNS } from "./constants.js";
 
 /**

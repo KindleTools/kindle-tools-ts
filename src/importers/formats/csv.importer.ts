@@ -21,6 +21,7 @@ import { distance } from "fastest-levenshtein";
 import Papa from "papaparse";
 import { z } from "zod";
 import type { Clipping, ClippingType } from "#app-types/clipping.js";
+import { SYSTEM_LIMITS } from "#domain/rules.js";
 import {
   type ImportErrorDetail,
   type ImportResult,
@@ -30,11 +31,7 @@ import {
   logDebug,
 } from "#errors";
 import { BaseImporter } from "#importers/shared/base-importer.js";
-import {
-  generateImportId,
-  MAX_VALIDATION_ERRORS,
-  parseLocationString,
-} from "#importers/shared/index.js";
+import { generateImportId, parseLocationString } from "#importers/shared/index.js";
 import { ClippingTypeSchema } from "#schemas/clipping.schema.js";
 
 /**
@@ -100,6 +97,20 @@ function getSuggestion(field: string, value: unknown): string | undefined {
   return undefined;
 }
 
+/** Expected CSV column headers */
+const EXPECTED_HEADERS = [
+  "id",
+  "title",
+  "author",
+  "type",
+  "page",
+  "location",
+  "date",
+  "content",
+  "wordcount",
+  "tags",
+] as const;
+
 /**
  * Import clippings from CSV format.
  */
@@ -162,59 +173,9 @@ export class CsvImporter extends BaseImporter {
       return importInvalidFormat("CSV file has no header row");
     }
 
-    const ExpectedHeaders = [
-      "id",
-      "title",
-      "author",
-      "type",
-      "page",
-      "location",
-      "date",
-      "content",
-      "wordcount",
-      "tags",
-    ];
-
-    const headers = headerRow.map((h) => {
-      const normalized = h.toLowerCase().trim();
-      if (!normalized) return "";
-
-      // Exact match
-      if (ExpectedHeaders.includes(normalized)) {
-        return normalized;
-      }
-
-      // Fuzzy match
-      let bestMatch = "";
-      let minDistance = Infinity;
-
-      for (const expected of ExpectedHeaders) {
-        const d = distance(normalized, expected);
-        if (d < minDistance) {
-          minDistance = d;
-          bestMatch = expected;
-        }
-      }
-
-      // Threshold: 2 is safe for most typos (Titl->Title, Authr->Author)
-      if (minDistance <= 2) {
-        const msg = `Fuzzy matched header '${normalized}' to '${bestMatch}' (dist: ${minDistance})`;
-        logDebug(msg);
-        warnings.push(msg); // Warn the user so they know
-        return bestMatch;
-      }
-
-      return normalized;
-    });
-
-    // Map column names to indices
-    const colIndex: Record<string, number> = {};
-    for (let i = 0; i < headers.length; i++) {
-      const header = headers[i];
-      if (header) {
-        colIndex[header] = i;
-      }
-    }
+    // Parse and normalize headers with fuzzy matching
+    const headers = this.parseHeaders(headerRow, warnings);
+    const colIndex = this.buildColumnIndex(headers);
 
     // Required columns
     const hasContent = "content" in colIndex;
@@ -228,8 +189,8 @@ export class CsvImporter extends BaseImporter {
 
     // Parse data rows
     for (let rowIdx = 1; rowIdx < rows.length; rowIdx++) {
-      if (errors.length >= MAX_VALIDATION_ERRORS) {
-        const msg = `Stopped after ${MAX_VALIDATION_ERRORS} errors. File may be corrupted.`;
+      if (errors.length >= SYSTEM_LIMITS.MAX_VALIDATION_ERRORS) {
+        const msg = `Stopped after ${SYSTEM_LIMITS.MAX_VALIDATION_ERRORS} errors. File may be corrupted.`;
         errors.push({
           row: -1,
           field: "file",
@@ -263,6 +224,64 @@ export class CsvImporter extends BaseImporter {
     });
 
     return this.success(clippings, warnings);
+  }
+
+  /**
+   * Parse and normalize CSV headers with fuzzy matching.
+   *
+   * @param headerRow - Raw header row from CSV
+   * @param warnings - Array to collect fuzzy match warnings
+   * @returns Normalized header names
+   */
+  private parseHeaders(headerRow: string[], warnings: string[]): string[] {
+    return headerRow.map((h) => {
+      const normalized = h.toLowerCase().trim();
+      if (!normalized) return "";
+
+      // Exact match
+      if (EXPECTED_HEADERS.includes(normalized as (typeof EXPECTED_HEADERS)[number])) {
+        return normalized;
+      }
+
+      // Fuzzy match
+      let bestMatch = "";
+      let minDistance = Infinity;
+
+      for (const expected of EXPECTED_HEADERS) {
+        const d = distance(normalized, expected);
+        if (d < minDistance) {
+          minDistance = d;
+          bestMatch = expected;
+        }
+      }
+
+      // Threshold: 2 is safe for most typos (Titl->Title, Authr->Author)
+      if (minDistance <= 2) {
+        const msg = `Fuzzy matched header '${normalized}' to '${bestMatch}' (dist: ${minDistance})`;
+        logDebug(msg);
+        warnings.push(msg);
+        return bestMatch;
+      }
+
+      return normalized;
+    });
+  }
+
+  /**
+   * Build a mapping from column names to their indices.
+   *
+   * @param headers - Normalized header names
+   * @returns Column name to index mapping
+   */
+  private buildColumnIndex(headers: string[]): Record<string, number> {
+    const colIndex: Record<string, number> = {};
+    for (let i = 0; i < headers.length; i++) {
+      const header = headers[i];
+      if (header) {
+        colIndex[header] = i;
+      }
+    }
+    return colIndex;
   }
 
   /**

@@ -1,14 +1,11 @@
 import { distance } from "fastest-levenshtein";
 
 /**
- * Utility to normalize and compare author names.
+ * Utility functions to normalize and compare author names.
  * Helps identifying if slightly different strings refer to the same author.
  * e.g. "J.K. Rowling" vs "Rowling, J.K." vs "J. K. Rowling"
- */
-/**
- * Utility to normalize and compare author names.
- * Helps identifying if slightly different strings refer to the same author.
- * e.g. "J.K. Rowling" vs "Rowling, J.K." vs "J. K. Rowling"
+ *
+ * @packageDocumentation
  */
 
 /**
@@ -62,15 +59,3 @@ export function getAuthorSimilarity(nameA: string, nameB: string): number {
 export function areSameAuthor(nameA: string, nameB: string, threshold = 0.85): boolean {
   return getAuthorSimilarity(nameA, nameB) >= threshold;
 }
-
-/**
- * @deprecated Use standalone functions instead: normalizeAuthorName, getAuthorSimilarity, areSameAuthor
- */
-/**
- * @deprecated Use standalone functions instead: normalizeAuthorName, getAuthorSimilarity, areSameAuthor
- */
-export const AuthorNormalizer = {
-  normalize: normalizeAuthorName,
-  getSimilarity: getAuthorSimilarity,
-  areSameAuthor: areSameAuthor,
-};

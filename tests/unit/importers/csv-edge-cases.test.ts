@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { SYSTEM_LIMITS } from "#domain/rules.js";
 import { CsvImporter } from "#importers/formats/csv.importer.js";
-import { MAX_VALIDATION_ERRORS } from "#importers/shared/index.js";
 
 describe("CsvImporter Edge Cases", () => {
   const importer = new CsvImporter();
@@ -37,10 +37,10 @@ describe("CsvImporter Edge Cases", () => {
     }
   });
 
-  it("should accumulate errors up to MAX_VALIDATION_ERRORS", async () => {
+  it("should accumulate errors up to SYSTEM_LIMITS.MAX_VALIDATION_ERRORS", async () => {
     const header = "Title, Content, Date";
     const invalidRow = "Title, Content, InvalidDate";
-    const rows = Array(MAX_VALIDATION_ERRORS + 5).fill(invalidRow);
+    const rows = Array(SYSTEM_LIMITS.MAX_VALIDATION_ERRORS + 5).fill(invalidRow);
     const content = [header, ...rows].join("\n");
 
     const resultWrap = await importer.import(content);
@@ -52,7 +52,7 @@ describe("CsvImporter Edge Cases", () => {
       // Check if it has 'errors' property (validation error)
       if ("errors" in error) {
         const details = error.errors;
-        expect(details.length).toBeGreaterThanOrEqual(MAX_VALIDATION_ERRORS);
+        expect(details.length).toBeGreaterThanOrEqual(SYSTEM_LIMITS.MAX_VALIDATION_ERRORS);
         expect(details[details.length - 1].message).toContain("Stopped after");
       } else {
         throw new Error("Expected validation error with details");

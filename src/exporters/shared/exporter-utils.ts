@@ -9,7 +9,7 @@
 
 import type { Clipping } from "#app-types/clipping.js";
 import { DEFAULTS } from "#config/defaults.js";
-import { SYSTEM_LIMITS } from "#core/limits.js";
+import { SYSTEM_LIMITS } from "#domain/rules.js";
 import {
   AppException,
   type ExportedFile,

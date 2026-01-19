@@ -1,4 +1,24 @@
 /**
+ * System limits and technical thresholds.
+ *
+ * These values represent hard limits of the processing engine
+ * and file system constraints.
+ */
+export const SYSTEM_LIMITS = {
+  /**
+   * Maximum length for generated filenames.
+   * Ensures compatibility across different file systems (Windows MAX_PATH, etc.).
+   */
+  MAX_FILENAME_LENGTH: 100,
+
+  /**
+   * Maximum number of validation errors/warnings to accumulate before aborting import.
+   * This prevents Out-Of-Memory errors when processing massive corrupt files.
+   */
+  MAX_VALIDATION_ERRORS: 100,
+} as const;
+
+/**
  * Constants related to content analysis and domain rules.
  *
  * These values define business rules for duplicate detection,

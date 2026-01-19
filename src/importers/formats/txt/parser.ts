@@ -22,9 +22,8 @@ import {
   sanitizeContent,
   sanitizeTitle,
 } from "#domain/parsing/sanitizers.js";
-import { MAX_VALIDATION_ERRORS } from "#importers/shared/constants.js";
-import { countWords } from "#utils/text/counting.js";
-import { normalizeWhitespace, removeBOM } from "#utils/text/normalizers.js";
+import { SYSTEM_LIMITS } from "#domain/rules.js";
+import { countWords, normalizeWhitespace, removeBOM } from "#utils/text/normalizers.js";
 import { detectLanguage } from "./language-detector.js";
 import { cleanText } from "./text-cleaner.js";
 import { tokenize } from "./tokenizer.js";
@@ -77,10 +76,10 @@ export async function parseString(content: string, options?: ParseOptions): Prom
   let parsedBlocks = 0;
 
   for (const block of blocks) {
-    if (warnings.length >= MAX_VALIDATION_ERRORS) {
+    if (warnings.length >= SYSTEM_LIMITS.MAX_VALIDATION_ERRORS) {
       warnings.push({
         type: "unknown_format",
-        message: `Stopped after ${MAX_VALIDATION_ERRORS} warnings. File may be corrupted.`,
+        message: `Stopped after ${SYSTEM_LIMITS.MAX_VALIDATION_ERRORS} warnings. File may be corrupted.`,
         blockIndex: -1,
         raw: "",
       });

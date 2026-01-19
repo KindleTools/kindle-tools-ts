@@ -1,10 +1,63 @@
 /**
  * Text normalization utilities.
  *
+ * Includes regex patterns, word counting, and text cleaning functions.
+ *
  * @packageDocumentation
  */
 
-import * as Patterns from "./patterns.js";
+// =============================================================================
+// Regex Patterns
+// =============================================================================
+
+/**
+ * Byte Order Mark (BOM) at start of file
+ */
+export const BOM = /^\uFEFF/;
+
+/**
+ * Multiple consecutive spaces
+ */
+export const MULTIPLE_SPACES = /\s{2,}/g;
+
+/**
+ * Control characters to remove (U+0000-U+0008, U+000B, U+000C, U+000E-U+001F, U+007F)
+ */
+// biome-ignore lint/suspicious/noControlCharactersInRegex: Intentional - regex detects control chars for text cleaning
+export const CONTROL_CHARS = /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g;
+
+/**
+ * Non-breaking space
+ */
+export const NBSP = /\u00A0/g;
+
+/**
+ * Zero-width characters (ZWS, ZWNJ, ZWJ, BOM)
+ */
+export const ZERO_WIDTH = /(?:\u200B|\u200C|\u200D|\uFEFF)/g;
+
+// =============================================================================
+// Word Counting
+// =============================================================================
+
+/**
+ * Count words in a text.
+ *
+ * @param text - Text to count words in
+ * @returns Number of words
+ */
+export function countWords(text: string): number {
+  if (!text || text.trim().length === 0) {
+    return 0;
+  }
+
+  // Split by whitespace and filter empty strings
+  return text.trim().split(/\s+/).filter(Boolean).length;
+}
+
+// =============================================================================
+// Text Normalization
+// =============================================================================
 
 /**
  * Apply Unicode NFC normalization to text.
@@ -35,7 +88,7 @@ export function normalizeUnicode(text: string): string {
  * @returns Text without BOM
  */
 export function removeBOM(text: string): string {
-  return text.replace(Patterns.BOM, "");
+  return text.replace(BOM, "");
 }
 
 /**
@@ -59,8 +112,8 @@ export function normalizeLineEndings(text: string): string {
  */
 export function normalizeWhitespace(text: string): string {
   return text
-    .replace(Patterns.NBSP, " ") // Non-breaking space to regular space
-    .replace(Patterns.MULTIPLE_SPACES, " ") // Collapse multiple spaces
+    .replace(NBSP, " ") // Non-breaking space to regular space
+    .replace(MULTIPLE_SPACES, " ") // Collapse multiple spaces
     .trim();
 }
 
@@ -71,7 +124,7 @@ export function normalizeWhitespace(text: string): string {
  * @returns Clean text
  */
 export function removeControlCharacters(text: string): string {
-  return text.replace(Patterns.CONTROL_CHARS, "").replace(Patterns.ZERO_WIDTH, "");
+  return text.replace(CONTROL_CHARS, "").replace(ZERO_WIDTH, "");
 }
 
 /**

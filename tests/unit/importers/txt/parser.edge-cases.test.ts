@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { SYSTEM_LIMITS } from "#domain/rules.js";
 import { parseString } from "#importers/formats/txt/parser.js";
-import { MAX_VALIDATION_ERRORS } from "#importers/shared/constants.js";
 
 describe("TxtParser Edge Cases", () => {
   const validBlock = [
@@ -13,7 +13,7 @@ describe("TxtParser Edge Cases", () => {
 
   const _createContent = (blocks: number) => Array(blocks).fill(validBlock).join("\n");
 
-  it("should stop parsing when MAX_VALIDATION_ERRORS is reached", async () => {
+  it("should stop parsing when SYSTEM_LIMITS.MAX_VALIDATION_ERRORS is reached", async () => {
     // Create a block that causes a warning (unparseable metadata)
     const badBlock = [
       "Test Book",
@@ -23,13 +23,13 @@ describe("TxtParser Edge Cases", () => {
       "==========",
     ].join("\n");
 
-    const content = Array(MAX_VALIDATION_ERRORS + 5)
+    const content = Array(SYSTEM_LIMITS.MAX_VALIDATION_ERRORS + 5)
       .fill(badBlock)
       .join("\n");
     const result = await parseString(content);
 
-    expect(result.warnings).toHaveLength(MAX_VALIDATION_ERRORS + 1);
-    expect(result.warnings[MAX_VALIDATION_ERRORS].message).toContain("Stopped after");
+    expect(result.warnings).toHaveLength(SYSTEM_LIMITS.MAX_VALIDATION_ERRORS + 1);
+    expect(result.warnings[SYSTEM_LIMITS.MAX_VALIDATION_ERRORS].message).toContain("Stopped after");
   });
 
   describe("Filtering Options", () => {

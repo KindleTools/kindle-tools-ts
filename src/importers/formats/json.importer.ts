@@ -9,13 +9,10 @@
 import { closest } from "fastest-levenshtein";
 import type { Clipping, ClippingLocation, ClippingType } from "#app-types/clipping.js";
 import type { SupportedLanguage } from "#app-types/language.js";
+import { SYSTEM_LIMITS } from "#domain/rules.js";
 import { type ImportResult, importParseError, logDebug } from "#errors";
 import { BaseImporter } from "#importers/shared/base-importer.js";
-import {
-  generateImportId,
-  MAX_VALIDATION_ERRORS,
-  parseLocationString,
-} from "#importers/shared/index.js";
+import { generateImportId, parseLocationString } from "#importers/shared/index.js";
 import {
   type ClippingImport,
   ClippingImportSchema,
@@ -150,10 +147,12 @@ export class JsonImporter extends BaseImporter {
 
     // Helper to add warning respecting limit
     const addWarning = (msg: string) => {
-      if (warnings.length < MAX_VALIDATION_ERRORS) {
+      if (warnings.length < SYSTEM_LIMITS.MAX_VALIDATION_ERRORS) {
         warnings.push(msg);
-      } else if (warnings.length === MAX_VALIDATION_ERRORS) {
-        warnings.push(`Stopped after ${MAX_VALIDATION_ERRORS} warnings. File may be corrupted.`);
+      } else if (warnings.length === SYSTEM_LIMITS.MAX_VALIDATION_ERRORS) {
+        warnings.push(
+          `Stopped after ${SYSTEM_LIMITS.MAX_VALIDATION_ERRORS} warnings. File may be corrupted.`,
+        );
       }
     };
 
@@ -201,7 +200,7 @@ export class JsonImporter extends BaseImporter {
 
     for (const [i, item] of itemsToProcess.entries()) {
       // Check limit before processing
-      if (warnings.length > MAX_VALIDATION_ERRORS) {
+      if (warnings.length > SYSTEM_LIMITS.MAX_VALIDATION_ERRORS) {
         break; // Stop processing entirely if we crossed the threshold
       }
 
