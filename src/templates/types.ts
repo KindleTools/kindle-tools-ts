@@ -36,12 +36,16 @@ export interface CustomTemplates {
   book?: string;
   /** Template for full export */
   export?: string;
+  /** Template for clipping note title (default: "[{{page}}] {{snippet}}") */
+  clippingTitle?: string;
+  /** Template for book note title (default: "{{title}}") */
+  bookTitle?: string;
 }
 
 /**
  * Available template types.
  */
-export type TemplateType = "clipping" | "book" | "export";
+export type TemplateType = "clipping" | "book" | "export" | "clippingTitle" | "bookTitle";
 
 // ============================================================================
 // Context Types

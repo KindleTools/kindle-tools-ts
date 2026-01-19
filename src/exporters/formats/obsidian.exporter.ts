@@ -6,11 +6,13 @@
  * - Callouts for highlights and notes
  * - Wikilinks for interconnection
  * - Tags support
+ * - Configurable granularity: per-clipping (default) or per-book
  *
  * @packageDocumentation
  */
 
 import type { Clipping } from "#app-types/clipping.js";
+import { formatPage, getEffectivePage } from "#domain/core/locations.js";
 import type { ExportedFile } from "#exporters/core/types.js";
 import {
   MultiFileExporter,
@@ -37,6 +39,7 @@ export interface ObsidianExporterOptions extends MultiFileExporterOptions {
    * Default: true
    */
   estimatePages?: boolean;
+  // noteGranularity is inherited from ExporterOptionsParsed (default: "per-clipping")
 }
 
 /**
@@ -74,6 +77,9 @@ export class ObsidianExporter extends MultiFileExporter {
 
   /**
    * Process a single book for multi-file export.
+   * Supports two granularities:
+   * - per-book: One file containing all clippings from the book (default)
+   * - per-clipping: One file per clipping
    */
   protected override async processBook(
     clippings: Clipping[],
@@ -83,40 +89,47 @@ export class ObsidianExporter extends MultiFileExporter {
     const first = clippings[0];
     if (!first) return [];
 
-    // Convert exporter options to template options for the opt helper
-    const templateOptions = this.toTemplateOptions(options);
+    const granularity = options.noteGranularity ?? "per-book";
 
-    // Generate context with template options so the opt helper can read them
+    if (granularity === "per-book") {
+      return this.processBookAsOneFile(clippings, options, engine);
+    }
+
+    return this.processBookAsClippings(clippings, options, engine);
+  }
+
+  /**
+   * Original per-book behavior: one file per book with all clippings.
+   */
+  private processBookAsOneFile(
+    clippings: Clipping[],
+    options: ObsidianExporterOptions,
+    engine: TemplateEngine,
+  ): ExportedFile[] {
+    const first = clippings[0]!;
+    const templateOptions = this.toTemplateOptions(options);
     const context = engine.toBookContext(clippings, templateOptions);
 
     // Apply tag logic
-    // 1. Start with tags from options
-    // 2. Add clipping tags if filtering is enabled (default: true)
     const optionsTags = options.tags ?? [];
     const includeClippingTags = options.includeClippingTags !== false;
 
     let finalTags: string[];
-
     if (includeClippingTags) {
-      // Merge option tags with clipping tags (already in context.tags)
       finalTags = Array.from(new Set([...optionsTags, ...context.tags])).sort();
     } else {
-      // Only use option tags
       finalTags = [...optionsTags].sort();
     }
 
-    // Update context
     context.tags = finalTags;
     context.hasTags = finalTags.length > 0;
 
     const content = engine.renderBookContext(context);
 
-    // Create safe filename
+    // Generate file path
     const folderStructure = options.folderStructure;
     const authorCase = options.authorCase;
-    // Obsidian keeps books in a specific folder ("books" by default)
     const baseFolder = options.folder ?? options.baseFolder ?? "books";
-
     const safeTitle = this.sanitizeFilename(first.title);
     const safeAuthor = this.sanitizeFilename(
       this.applyCase(first.author || this.DEFAULT_UNKNOWN_AUTHOR, authorCase),
@@ -124,11 +137,117 @@ export class ObsidianExporter extends MultiFileExporter {
 
     const filePath = this.generateFilePath(baseFolder, safeAuthor, safeTitle, folderStructure);
 
-    return [
-      {
-        path: filePath,
-        content,
-      },
+    return [{ path: filePath, content }];
+  }
+
+  /**
+   * Per-clipping behavior: one file per clipping with YAML frontmatter.
+   */
+  private processBookAsClippings(
+    clippings: Clipping[],
+    options: ObsidianExporterOptions,
+    engine: TemplateEngine,
+  ): ExportedFile[] {
+    const first = clippings[0]!;
+    const files: ExportedFile[] = [];
+
+    const folderStructure = options.folderStructure;
+    const authorCase = options.authorCase;
+    const baseFolder = options.folder ?? options.baseFolder ?? "books";
+    const estimatePages = options.estimatePages ?? ObsidianExporter.DEFAULTS.estimatePages;
+
+    const safeBookTitle = this.sanitizeFilename(first.title);
+    const safeAuthor = this.sanitizeFilename(
+      this.applyCase(first.author || this.DEFAULT_UNKNOWN_AUTHOR, authorCase),
+    );
+
+    // Build base folder path for the book
+    let bookFolder: string;
+    switch (folderStructure) {
+      case "flat":
+        bookFolder = `${baseFolder}/${safeBookTitle}`;
+        break;
+      case "by-book":
+        bookFolder = `${baseFolder}/${safeBookTitle}`;
+        break;
+      case "by-author":
+        bookFolder = `${baseFolder}/${safeAuthor}`;
+        break;
+      case "by-author-book":
+      default:
+        bookFolder = `${baseFolder}/${safeAuthor}/${safeBookTitle}`;
+        break;
+    }
+
+    // Process each clipping
+    for (const clipping of clippings) {
+      // Get formatted page for title template
+      const effectivePage = estimatePages
+        ? getEffectivePage(clipping.page, clipping.location)
+        : (clipping.page ?? 0);
+
+      const formattedPage = formatPage(effectivePage) ?? "[0000]";
+
+      // Generate filename from title template
+      const title = engine.renderClippingTitle(clipping, formattedPage);
+      const safeTitle = this.sanitizeFilename(title, 60);
+      const fileName = `${safeTitle}.md`;
+      const filePath = `${bookFolder}/${fileName}`;
+
+      // Generate YAML frontmatter + content
+      const content = this.renderClippingWithFrontmatter(clipping, options, engine);
+
+      files.push({ path: filePath, content });
+    }
+
+    return files;
+  }
+
+  /**
+   * Render a single clipping with Obsidian-style YAML frontmatter.
+   */
+  private renderClippingWithFrontmatter(
+    clipping: Clipping,
+    options: ObsidianExporterOptions,
+    engine: TemplateEngine,
+  ): string {
+    const optionsTags = options.tags ?? [];
+    const includeClippingTags = options.includeClippingTags !== false;
+
+    // Collect tags
+    const tagSet = new Set<string>(optionsTags);
+    if (includeClippingTags && clipping.tags) {
+      for (const tag of clipping.tags) {
+        tagSet.add(tag);
+      }
+    }
+    const tags = Array.from(tagSet).sort();
+
+    // Build frontmatter
+    const frontmatter = [
+      "---",
+      `title: "${this.escapeYaml(clipping.content.slice(0, 50))}..."`,
+      `book: "${this.escapeYaml(clipping.title)}"`,
+      `author: "${this.escapeYaml(clipping.author)}"`,
+      `type: ${clipping.type}`,
+      `page: ${clipping.page ?? "null"}`,
+      `location: "${clipping.location.raw}"`,
+      `date: ${clipping.date?.toISOString() ?? "null"}`,
+      `source: kindle`,
     ];
+
+    if (tags.length > 0) {
+      frontmatter.push("tags:");
+      for (const tag of tags) {
+        frontmatter.push(`  - ${tag}`);
+      }
+    }
+
+    frontmatter.push("---", "");
+
+    // Render clipping content using template engine
+    const body = engine.renderClipping(clipping);
+
+    return frontmatter.join("\n") + body;
   }
 }

@@ -7,6 +7,22 @@
  */
 
 // ============================================================================
+// Title Templates
+// ============================================================================
+
+/**
+ * Default title template for per-clipping notes.
+ * Uses page with left-padding and a content snippet.
+ */
+export const CLIPPING_TITLE_DEFAULT = "{{page}} {{snippet}}";
+
+/**
+ * Default title template for per-book notes.
+ * Uses the book title directly.
+ */
+export const BOOK_TITLE_DEFAULT = "{{title}}";
+
+// ============================================================================
 // Clipping Templates
 // ============================================================================
 

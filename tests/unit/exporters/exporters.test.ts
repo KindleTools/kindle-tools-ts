@@ -566,20 +566,19 @@ describe("JoplinExporter", () => {
       const result = await exporter.export(SAMPLE_CLIPPINGS);
       const content = getFilesContent(result);
 
-      // Count type_: 2 (folders) - should be 1 root + 3 authors + 3 books = 7
-      // (may be less if authors are shared)
+      // Default is by-author: 1 root + 3 authors = 4 folders
+      // Notes go directly into author folders (no book subfolders)
       const folderMatches = content.match(/type_: 2/g);
-      expect(folderMatches?.length).toBeGreaterThan(4);
+      expect(folderMatches?.length).toBe(4);
     });
 
-    it("should use 3-level hierarchy when folderStructure is by-author", async () => {
+    it("should use 2-level hierarchy when folderStructure is by-author", async () => {
       const result = await exporter.export(SAMPLE_CLIPPINGS, { folderStructure: "by-author" });
       const content = getFilesContent(result);
 
-      // Count type_: 2 (folders) - should be 1 root + 3 authors + 3 books = 7
-      // (may be less if authors are shared)
+      // by-author: 1 root + 3 authors = 4 folders (no book subfolders)
       const folderMatches = content.match(/type_: 2/g);
-      expect(folderMatches?.length).toBeGreaterThan(4);
+      expect(folderMatches?.length).toBe(4);
     });
 
     it("should apply uppercase to author notebook names", async () => {

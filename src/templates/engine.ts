@@ -11,7 +11,14 @@ import type Handlebars from "handlebars";
 import type { Clipping } from "#app-types/clipping.js";
 import { formatDateHuman } from "#utils/system/dates.js";
 import { createHandlebarsInstance } from "./helpers.js";
-import { BOOK_DEFAULT, CLIPPING_DEFAULT, EXPORT_DEFAULT, getTemplatePreset } from "./presets.js";
+import {
+  BOOK_DEFAULT,
+  BOOK_TITLE_DEFAULT,
+  CLIPPING_DEFAULT,
+  CLIPPING_TITLE_DEFAULT,
+  EXPORT_DEFAULT,
+  getTemplatePreset,
+} from "./presets.js";
 import type {
   BookContext,
   ClippingContext,
@@ -108,6 +115,8 @@ export class TemplateEngine {
   private hbs: typeof Handlebars;
   private clippingTemplate: Handlebars.TemplateDelegate;
   private bookTemplate: Handlebars.TemplateDelegate;
+  private clippingTitleTemplate: Handlebars.TemplateDelegate;
+  private bookTitleTemplate: Handlebars.TemplateDelegate;
   private exportTemplate: Handlebars.TemplateDelegate;
 
   constructor(customTemplates?: CustomTemplates) {
@@ -117,10 +126,16 @@ export class TemplateEngine {
     const clippingTpl = customTemplates?.clipping ?? CLIPPING_DEFAULT;
     const bookTpl = customTemplates?.book ?? BOOK_DEFAULT;
 
-    // Compile templates
+    // Compile content templates
     this.clippingTemplate = this.hbs.compile(clippingTpl);
     this.bookTemplate = this.hbs.compile(bookTpl);
     this.exportTemplate = this.hbs.compile(customTemplates?.export ?? EXPORT_DEFAULT);
+
+    // Compile title templates
+    this.clippingTitleTemplate = this.hbs.compile(
+      customTemplates?.clippingTitle ?? CLIPPING_TITLE_DEFAULT,
+    );
+    this.bookTitleTemplate = this.hbs.compile(customTemplates?.bookTitle ?? BOOK_TITLE_DEFAULT);
 
     // Register partials for use in other templates ({{> partialName}})
     this.hbs.registerPartial("clipping", clippingTpl);
@@ -298,6 +313,38 @@ export class TemplateEngine {
   }
 
   /**
+   * Render a title for a single clipping note.
+   * Uses the clippingTitle template (default: "{{page}} {{snippet}}").
+   *
+   * @param clipping - The clipping to generate a title for
+   * @param formattedPage - Pre-formatted page number (e.g., "[0042]")
+   * @returns Rendered title string
+   */
+  renderClippingTitle(clipping: Clipping, formattedPage: string): string {
+    const snippet = clipping.content.slice(0, 50).replace(/\n/g, " ").trim();
+    const context = {
+      ...this.toClippingContext(clipping),
+      page: formattedPage,
+      pageNumber: clipping.page ?? 0,
+      snippet,
+    };
+    return this.clippingTitleTemplate(context).trim();
+  }
+
+  /**
+   * Render a title for a book note.
+   * Uses the bookTitle template (default: "{{title}}").
+   *
+   * @param clippings - All clippings from the book
+   * @returns Rendered title string
+   */
+  renderBookTitle(clippings: Clipping[]): string {
+    if (clippings.length === 0) return "";
+    const context = this.toBookContext(clippings);
+    return this.bookTitleTemplate(context).trim();
+  }
+
+  /**
    * Render a full export (all books).
    * @param grouped - Map of book title to clippings
    * @param title - Custom export title
@@ -427,6 +474,8 @@ export class TemplateEngine {
         "exportDateIso",
         "title",
       ],
+      clippingTitle: ["page", "pageNumber", "snippet", "title", "author", "type", "location"],
+      bookTitle: ["title", "author", "highlightCount", "noteCount", "totalClippings"],
     };
   }
 }

@@ -124,6 +124,13 @@ export const ExporterOptionsSchema = z
       "Case transformation for author folder names",
     ),
 
+    // Note granularity (for multi-file exports like Joplin/Obsidian)
+    // No default - each exporter defines its own (Joplin: per-clipping, Obsidian: per-book)
+    noteGranularity: z
+      .enum(["per-clipping", "per-book"])
+      .optional()
+      .describe("Export granularity: one file/note per clipping or per book"),
+
     // Metadata
     title: z.string().optional().describe("Title for the export (HTML page title, etc.)"),
     notebookName: z.string().optional().describe("Notebook name for Joplin exports"),
