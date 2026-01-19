@@ -1,5 +1,15 @@
 import type { Clipping } from "#app-types/clipping.js";
-import { extractTagsFromNote } from "#domain/parsing/tags.js";
+import { extractTagsFromNote, type TagExtractionOptions } from "#domain/parsing/tags.js";
+
+/**
+ * Options for tag extraction from linked notes.
+ */
+export interface TagProcessorOptions {
+  /** Case transformation for extracted tags */
+  tagCase?: "original" | "uppercase" | "lowercase";
+  /** Custom separators for splitting tags */
+  separators?: string | RegExp;
+}
 
 /**
  * Extract tags from linked notes and assign them to highlights.
@@ -13,16 +23,21 @@ import { extractTagsFromNote } from "#domain/parsing/tags.js";
  * - Add a note with tags: "productivity, psychology, habits"
  *
  * @param clippings - Clippings to process
+ * @param options - Tag extraction options
  * @returns Clippings with tags and extraction count
  */
 export function extractTagsFromLinkedNotes(
   clippings: Clipping[],
-  tagCase?: "original" | "uppercase" | "lowercase",
+  options?: TagProcessorOptions,
 ): {
   clippings: Clipping[];
   extractedCount: number;
 } {
   let extractedCount = 0;
+
+  const extractionOptions: TagExtractionOptions = {};
+  if (options?.tagCase) extractionOptions.tagCase = options.tagCase;
+  if (options?.separators) extractionOptions.separators = options.separators;
 
   const result = clippings.map((clipping) => {
     // Only process highlights with linked notes
@@ -31,7 +46,7 @@ export function extractTagsFromLinkedNotes(
     }
 
     // Extract tags from the note content
-    const extraction = extractTagsFromNote(clipping.note, tagCase ? { tagCase } : {});
+    const extraction = extractTagsFromNote(clipping.note, extractionOptions);
 
     if (extraction.hasTags) {
       extractedCount++;

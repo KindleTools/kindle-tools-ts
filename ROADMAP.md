@@ -6,497 +6,378 @@
 
 ---
 
-## Estado Actual
+## Estado Actual (2026-01-18)
 
-**Todas las mejoras de calidad identificadas han sido implementadas (2026-01-18).**
+**v1.0 Feature Complete.** El proyecto está listo para release.
 
-No hay tareas pendientes. El proyecto está listo para v1.0.
-
----
-
-## Quality Polishing (Pre-v1.0)
-
-Antes del release, priorizamos pequeñas mejoras de consistencia y limpieza:
-
-| Área | Qué revisar |
-|------|-------------|
-| **Constantes** | ¿Están en el lugar correcto según arquitectura? |
-| **Exports** | ¿Todos los módulos exportan lo necesario? |
-| **Dead code** | ¿Hay código huérfano de features descartadas? |
-| **Naming** | ¿Son consistentes los nombres? |
-
-> **Filosofía**: Pulir detalles pequeños antes de congelar v1.0.
-> No justifica nuevas features, pero sí asegurar que todo esté limpio y bien ubicado.
+Las mejoras documentadas en este roadmap son **opcionales** y pueden implementarse en releases menores futuras (v1.1, v1.2, etc.).
 
 ---
 
-## Análisis DRY (2026-01-18)
+## Matriz de Priorización
 
-Análisis exhaustivo del código fuente para identificar violaciones del principio DRY (Don't Repeat Yourself).
+Clasificación de todas las mejoras identificadas por **Beneficio**, **Dificultad** e **Impacto**.
 
-### Categoría 1: Definiciones de tipos duplicadas
+### Leyenda
 
-Los tipos están definidos tanto en `types/` (interfaces manuales) como en `schemas/` (inferidos de Zod), creando redundancia.
+| Criterio | Alto | Medio | Bajo |
+|----------|------|-------|------|
+| **Beneficio** | Mejora significativa para usuarios o mantenibilidad | Mejora moderada | Mejora estética o marginal |
+| **Dificultad** | Fácil (<15 min) | Media (15-60 min) | Difícil (>1 hora) |
+| **Impacto** | Afecta funcionalidad core o muchos archivos | Afecta un módulo | Cambio localizado |
 
-| Tipo | Ubicaciones | Recomendación |
-|------|-------------|---------------|
-| `SupportedLanguage` | `types/language.ts`, `schemas/clipping.schema.ts`, `schemas/shared.schema.ts` | Usar solo `z.infer` del schema |
-| `GeoLocation` | `types/geo.ts`, `schemas/config.schema.ts` | Usar solo `z.infer` del schema |
-| `ClippingType` | `types/clipping.ts`, `schemas/clipping.schema.ts`, `schemas/config.schema.ts` | Usar solo `z.infer` del schema |
-| `TagCase` | `domain/parsing/tags.ts`, `schemas/config.schema.ts`, `types/config.ts` | Usar solo `z.infer` del schema |
-| `FolderStructure` | `exporters/core/types.ts`, `schemas/shared.schema.ts` | Usar solo `z.infer` del schema |
-| `AuthorCase` | `exporters/core/types.ts`, `schemas/shared.schema.ts` | Usar solo `z.infer` del schema |
+### Tabla de Priorización Completa
 
-**Impacto**: Bajo (los valores literales coinciden). Riesgo de desincronización futura.
-
-### Categoría 2: Lógica de transformación duplicada
-
-| Función | Ubicaciones | Descripción |
-|---------|-------------|-------------|
-| Case transform | `domain/parsing/tags.ts:cleanTag`, `exporters/shared/exporter-utils.ts:applyCase` | Misma lógica switch uppercase/lowercase/original |
-
-**Solución propuesta**: Extraer a `utils/text/case-transformer.ts`.
-
-### Categoría 3: Enums inline duplicados
-
-| Enum | Ubicaciones |
-|------|-------------|
-| `ClippingType` enum | `csv.importer.ts:48` repite `z.enum(["highlight", "note", ...])` |
-
-**Solución**: Reusar `ClippingTypeSchema` de `schemas/clipping.schema.ts`.
-
-### Prioridad de corrección
-
-| Prioridad | Item | Razón |
-|-----------|------|-------|
-| **Baja** | Tipos duplicados | Backward compatibility, ya exportados en API pública |
-| **Baja** | Lógica case transform | Funciona, cambio estético |
-| **Media** | Enums inline | Fácil de corregir, reduce riesgo de desincronización |
-
-> **Decisión**: Estas violaciones son **aceptables para v1.0**. Son mejoras de higiene que pueden hacerse en una release menor futura (v1.1). El código actual es funcional y well-tested.
+| # | Mejora | Beneficio | Dificultad | Impacto | Prioridad | Fase |
+|---|--------|:---------:|:----------:|:-------:|:---------:|:----:|
+| **QUICK WINS - Multiidioma** ||||||
+| 1 | Regex Unicode para tags | Alto | Fácil | Alto | ✅ | v1.0 |
+| 2 | ~~Sentence detection ES/PT~~ | ~~Alto~~ | ~~Fácil~~ | ~~Alto~~ | ❌ | Descartado |
+| 3 | Documentar `LOCATIONS_PER_PAGE` | Medio | Fácil | Bajo | ✅ | v1.0 |
+| **ROBUSTEZ** ||||||
+| 4 | Helper `replace` escape regex | Medio | Fácil | Medio | 🟡 | v1.1 |
+| 5 | Author fallback HtmlExporter | Medio | Fácil | Bajo | 🟡 | v1.1 |
+| 6 | Validación clippings vacíos en Base | Medio | Fácil | Medio | 🟡 | v1.1 |
+| 7 | IDs determinísticos importers | Alto | Media | Alto | 🟡 | v1.1 |
+| **CÓDIGO LIMPIO** ||||||
+| 8 | Reusar `ClippingTypeSchema` CSV | Medio | Fácil | Medio | 🟡 | v1.1 |
+| 9 | Estado inmutable JoplinExporter | Alto | Media | Medio | 🟡 | v1.1 |
+| 10 | Refactorizar `CsvImporter.doImport()` | Medio | Media | Medio | 🟡 | v1.2 |
+| **CONSOLIDACIÓN** ||||||
+| 11 | Merge `limits.ts` → `rules.ts` | Medio | Fácil | Bajo | 🟢 | v1.2 |
+| 12 | Merge `importers/constants.ts` → `rules.ts` | Medio | Fácil | Bajo | 🟢 | v1.2 |
+| 13 | Merge `patterns.ts` + `counting.ts` → `normalizers.ts` | Bajo | Fácil | Bajo | 🟢 | v1.2 |
+| 14 | Eliminar `AuthorNormalizer` muerto | Medio | Fácil | Bajo | 🟢 | v1.2 |
+| **TOOLING** ||||||
+| 15 | Evaluar ESLint + Biome duplicación | Medio | Fácil | Medio | 🟡 | v1.1 |
+| 16 | Revisar necesidad `turbo.json` | Bajo | Fácil | Bajo | 🟢 | v1.2 |
+| **BAJO VALOR** ||||||
+| 17 | Extraer case transformer | Bajo | Fácil | Bajo | 🟢 | v1.3+ |
+| 18 | Extraer emojis a constantes | Bajo | Fácil | Bajo | 🟢 | v1.3+ |
+| 19 | Separar HTML template | Bajo | Media | Bajo | 🟢 | v1.3+ |
+| 20 | Cache `detectLanguage` | Bajo | Fácil | Bajo | 🟢 | v1.3+ |
+| 21 | Unificar tipos con `z.infer` | Bajo | Media | Bajo | 🟢 | v1.3+ |
+| 22 | Simplificar `TemplateEngineFactory` | Bajo | Media | Bajo | 🟢 | v1.3+ |
+| 23 | Dividir `presets.ts` | Bajo | Media | Bajo | 🟢 | Never |
+| 24 | Documentar CSP incompatibility | Bajo | Fácil | Bajo | 🟢 | v1.1 |
 
 ---
 
-## Observaciones Adicionales (2026-01-18)
+## Plan de Acción
 
-Observaciones de código durante el análisis exhaustivo del proyecto.
+### Fase 1: v1.0 Release (Quick Wins)
 
-### ✅ Lo que está excelente (mantener así)
+Mejoras de alta prioridad que mejoran experiencia multiidioma.
 
-| Aspecto | Comentario |
-|---------|------------|
-| Arquitectura Clean | Separación `domain/` → `core/` → `importers/exporters/` muy clara |
-| Error handling | Uso de `neverthrow` con Result types es robusto |
-| Documentación inline | JSDoc completos en casi todos los módulos |
-| Tests | 818 tests con buena cobertura |
-| Subpath imports | Uso de `#alias` (no `@alias`) es correcto para Node.js moderno |
+#### 1.1 Regex Unicode para tags
 
-### 💡 Sugerencias menores de pulido
+**Archivo:** `domain/parsing/tags.ts:191`
 
-#### 1. Regex de validación de tags limitada a alfabeto latino
+**Problema:** La validación de tags solo acepta alfabeto latino + acentos europeos. Tags en ruso, chino, japonés, coreano (idiomas ya soportados) son rechazados.
 
-**Archivo**: `domain/parsing/tags.ts:191`
-
+**Implementación:**
 ```typescript
-// Actual (solo latín + acentos europeos)
+// Antes (solo latín)
 if (!/^[a-zA-ZáéíóúñüàèìòùâêîôûäëïöçÁÉÍÓÚÑÜÀÈÌÒÙÂÊÎÔÛÄËÏÖÇ]/.test(tag))
 
-// Propuesto (cualquier letra Unicode)
+// Después (cualquier letra Unicode)
 if (!/^\p{L}/u.test(tag))
 ```
 
-**Impacto**: Soportaría correctamente tags en ruso, chino, japonés, coreano (idiomas ya soportados).
+**Beneficio:** Soporta tags en todos los idiomas del sistema (11).
+**Esfuerzo:** ~5 minutos.
+**Tests:** Añadir casos para tags en cirílico, CJK.
 
-#### 2. Filtro de sentence detection solo en inglés
+#### ~~1.2 Sentence detection~~ (DESCARTADO)
 
-**Archivo**: `domain/parsing/tags.ts:202`
+**Se eliminó el filtro de palabras completamente** (incluyendo el de inglés).
 
+**Razón:** El usuario activa `extractTags: true` explícitamente, indicando que sus notas son tags. Palabras comunes como "the", "de", "el" aparecen en tags legítimos ("The Lean Startup", "arte de vivir"). El filtro de >3 espacios es suficiente para rechazar oraciones largas.
+
+**Cambio realizado:** Se eliminó el regex de palabras, dejando solo:
+- Longitud válida (2-50 caracteres)
+- Empieza con letra Unicode
+- Máximo 3 espacios internos
+
+#### 1.3 Documentar `LOCATIONS_PER_PAGE`
+
+**Archivo:** `domain/core/locations.ts:21`
+
+**Problema:** El valor `16` es una heurística conocida pero sin documentación de origen.
+
+**Implementación:**
 ```typescript
-// Actual (solo inglés)
-if (/\b(the|is|are|was|were|have|has|will|would|could|should|does|did)\b/i.test(tag))
-
-// Propuesto (añadir español/portugués)
-if (/\b(the|is|are|was|were|have|has|will|would|could|should|does|did|el|la|es|los|las|un|una|um|uma|de|que)\b/i.test(tag))
+/**
+ * Kindle locations per page estimate.
+ *
+ * This is a widely-accepted heuristic based on:
+ * - Average Kindle page ≈ 256 words
+ * - Average location ≈ 16 words (128 bytes)
+ * - Therefore: ~16 locations per page
+ *
+ * Source: Community consensus from Kindle forums and reverse engineering.
+ * Accuracy varies by book formatting and font size settings.
+ */
+export const LOCATIONS_PER_PAGE = 16;
 ```
 
-**Impacto**: Mejor detección de fragmentos de oraciones en español/portugués.
-
-#### 3. Constante `LOCATIONS_PER_PAGE` sin fuente documentada
-
-**Archivo**: `domain/core/locations.ts:21`
-
-El valor `16` es una heurística conocida, pero podría beneficiarse de un link a fuente o explicación más detallada de cómo se derivó.
-
-#### 4. HTML template embebido en exportador
-
-**Archivo**: `exporters/formats/html.exporter.ts`
-
-El HTML está como strings inline. Ya existe `html.styles.ts` para CSS, pero el template HTML sigue embebido. Separarlo mejoraría mantenibilidad.
-
-#### 5. Archivos largos (no crítico)
-
-| Archivo | Líneas | Nota |
-|---------|--------|------|
-| `importers/formats/txt/parser.ts` | ~450+ | Podría dividirse en el futuro |
-| `exporters/formats/joplin.exporter.ts` | ~450+ | Podría dividirse en el futuro |
-
-### 🎯 Prioridad de implementación
-
-| Prioridad | Sugerencia | Esfuerzo |
-|-----------|------------|----------|
-| **Alta** | Regex Unicode para tags | ~5 min |
-| **Media** | Sentence detection multiidioma | ~10 min |
-| **Baja** | Documentar `LOCATIONS_PER_PAGE` | ~5 min |
-| **Muy Baja** | Separar HTML template | ~30 min |
-| **No hacer** | Dividir archivos largos | Riesgo > beneficio |
-
-> **Decisión**: Las sugerencias 1 y 2 son **quick wins** que mejoran la experiencia para usuarios multiidioma. Pueden implementarse antes de v1.0 o en v1.0.1.
+**Beneficio:** Claridad para mantenedores.
+**Esfuerzo:** ~5 minutos.
 
 ---
 
-## Mejoras de Exporters (2026-01-18)
+### Fase 2: v1.1 (Robustez y Código Limpio)
 
-Análisis de la arquitectura de exporters. El código está bien estructurado pero hay oportunidades de mejora.
+Mejoras de robustez que previenen bugs edge-case.
 
-### ✅ Lo que está excelente
+#### 2.1 Helper `replace` con escape de regex
 
-| Aspecto | Comentario |
-|---------|------------|
-| Arquitectura | Patrón Template Method con `BaseExporter` → `MultiFileExporter` → exporters concretos |
-| Reutilización | `exporter-utils.ts` centraliza funciones comunes sin duplicación |
-| Type Safety | Validación con Zod, interfaces bien definidas |
-| Error handling | Uso de `neverthrow` Result types consistente |
-| Factory Pattern | Registry dinámico que permite registrar nuevos exporters |
+**Archivo:** `templates/helpers.ts:97`
 
-### 💡 Mejoras propuestas
+**Problema:** El helper `replace` usa el primer argumento como RegExp sin escapar caracteres especiales. Si el usuario pasa `"."`, reemplaza cualquier carácter.
 
-| Prioridad | Mejora | Esfuerzo | Descripción |
-|-----------|--------|----------|-------------|
-| **Media** | Eliminar estado mutable en `JoplinExporter` | Medio | `this.ctx` podría causar state leaks si se reutiliza la instancia. Pasar contexto como parámetro. |
-| **Baja** | Fallback de author en `HtmlExporter` | 5 min | Línea 169 no usa `DEFAULT_UNKNOWN_AUTHOR` como otros exporters |
-| **Baja** | Extraer constantes de emojis | 10 min | Emojis en `html.exporter.ts:186-191` deberían estar en `shared/constants.ts` |
-| **Baja** | Validación centralizada de clippings vacíos | 10 min | Mover check a `BaseExporter.export()` para consistencia |
-| **Muy Baja** | Documentar CSP incompatibility | 2 min | JavaScript inline no es CSP-compliant, añadir nota en JSDoc |
-
-### 🔧 Detalles técnicos
-
-#### 1. Estado mutable en JoplinExporter
-
+**Implementación:**
 ```typescript
-// Actual (joplin.exporter.ts:171)
-private ctx: JoplinExportContext | null = null;
+// Antes
+Handlebars.registerHelper('replace', (str, find, replace) => {
+  return str.replace(new RegExp(find, 'g'), replace);
+});
 
-// Propuesto: pasar ctx como parámetro
-protected override async doExport(...): Promise<ExportResult> {
-  const ctx = this.createContext(options);
-  const preambleFiles = await this.exportPreamble(clippings, options, ctx);
-  const bookFiles = await this.processBook(bookClippings, options, engine, ctx);
-}
+// Después
+Handlebars.registerHelper('replace', (str, find, replace) => {
+  const escaped = find.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return str.replace(new RegExp(escaped, 'g'), replace);
+});
 ```
 
-#### 2. Author fallback faltante
+**Beneficio:** Evita comportamiento inesperado con caracteres especiales regex.
+**Esfuerzo:** ~10 minutos.
 
+#### 2.2 Author fallback en HtmlExporter
+
+**Archivo:** `exporters/formats/html.exporter.ts:169`
+
+**Problema:** No usa `DEFAULT_UNKNOWN_AUTHOR` como otros exporters.
+
+**Implementación:**
 ```typescript
-// Actual (html.exporter.ts:169)
+// Antes
 <p class="book-author">by ${this.escapeHtml(first.author)}</p>
 
-// Propuesto
-<p class="book-author">by ${this.escapeHtml(first.author || this.DEFAULT_UNKNOWN_AUTHOR)}</p>
+// Después
+<p class="book-author">by ${this.escapeHtml(first.author || DEFAULTS.UNKNOWN_AUTHOR)}</p>
 ```
 
-> **Decisión**: Ninguna de estas mejoras es crítica para v1.0. Son mejoras de robustez que pueden implementarse en v1.1 o posteriores.
+**Beneficio:** Consistencia con otros exporters.
+**Esfuerzo:** ~5 minutos.
 
----
+#### 2.3 IDs determinísticos en importers
 
-## Mejoras de Importers (2026-01-18)
+**Archivo:** `importers/shared/importer-utils.ts:21`
 
-Análisis de la arquitectura de importers. Código muy bien estructurado con excelente UX de errores.
+**Problema:** `generateImportId` usa `Date.now()`, lo que genera IDs diferentes cada vez que se importa el mismo archivo.
 
-### ✅ Lo que está excelente
-
-| Aspecto | Comentario |
-|---------|------------|
-| Arquitectura | Misma estructura que exporters: `BaseImporter` → importers concretos |
-| Factory Pattern | Registry dinámico con default importer (`TxtImporter`) |
-| Fuzzy matching | Headers CSV con Levenshtein (≤2) para tolerar typos |
-| Sugerencias | `"Did you mean 'highlight'?"` en errores de validación |
-| Multi-formato JSON | Soporta `{ clippings: [] }`, `{ books: {} }`, y `[]` |
-| Modularidad TXT | Parser dividido en: tokenizer → language-detector → parser → text-cleaner |
-| Multi-idioma | Detección automática de 10+ idiomas |
-
-### 💡 Mejoras propuestas
-
-| Prioridad | Mejora | Esfuerzo | Descripción |
-|-----------|--------|----------|-------------|
-| **Baja** | IDs determinísticos en `generateImportId` | 15 min | Usar hash del contenido en lugar de `Date.now()` para idempotencia |
-| **Muy Baja** | Cachear resultado de `detectLanguage` | 10 min | Evitar recálculo si se llama múltiples veces |
-
-### 🔧 Detalles técnicos
-
-#### 1. IDs no determinísticos
-
+**Implementación:**
 ```typescript
-// Actual (importer-utils.ts:21)
+// Antes
 export function generateImportId(index: number): string {
   return `imp_${Date.now().toString(36)}_${index.toString(36)}`;
 }
 
-// Propuesto: hash del contenido para idempotencia
+// Después
+import { sha256Sync } from '#utils/security/hashing.js';
+
 export function generateImportId(content: string, index: number): string {
-  const hash = sha256Sync(content).slice(0, 8);
+  const hash = sha256Sync(`${content}|${index}`).slice(0, 8);
   return `imp_${hash}_${index.toString(36)}`;
 }
 ```
 
-**Impacto**: Permitiría re-importar el mismo archivo y obtener los mismos IDs, útil para deduplicación.
+**Beneficio:** Re-importar el mismo archivo genera los mismos IDs = deduplicación consistente.
+**Esfuerzo:** ~15 minutos.
+**Breaking:** Sí, cambio de firma. Actualizar callers.
 
-> **Decisión**: Los importers están **mejor logrados** que los exporters en términos de UX de errores. No hay mejoras urgentes.
+#### 2.4 Estado inmutable en JoplinExporter
 
----
+**Archivo:** `exporters/formats/joplin.exporter.ts:171`
 
-## Revisión Transversal (2026-01-18)
+**Problema:** `this.ctx` es estado mutable que puede causar leaks si se reutiliza la instancia.
 
-Análisis general del proyecto: naming, exports, dependencias y tests.
+**Implementación:**
+```typescript
+// Antes
+private ctx: JoplinExportContext | null = null;
 
-### ✅ Revisión completada
+async doExport(...) {
+  this.ctx = this.createContext(options);
+  // usa this.ctx en métodos privados
+}
 
-| Área | Estado | Observaciones |
-|------|--------|---------------|
-| **Naming** | ✅ Impecable | Clases (PascalCase), funciones (camelCase), archivos (kebab-case) |
-| **Exports** | ✅ Bien organizado | `src/index.ts` con 184 líneas, secciones claras |
-| **Tests** | ✅ 818 tests | 8 carpetas organizadas, 58 unit tests |
+// Después
+// Eliminar this.ctx
+// Pasar ctx como parámetro a todos los métodos
 
-### 🔧 Cambios realizados (2026-01-18)
-
-| Cambio | Estado | Descripción |
-|--------|--------|-------------|
-| ~~Eliminar `@types/handlebars`~~ | ✅ Hecho | Deprecated - Handlebars tiene tipos bundled |
-| ~~Eliminar `@types/jszip`~~ | ✅ Hecho | Deprecated - JSZip tiene tipos bundled |
-| ~~Actualizar `zod`~~ | ✅ Hecho | 4.3.4 → 4.3.5 (bugfixes menores) |
-| ~~Actualizar `vite`~~ | ✅ Hecho | 6.4.1 → 7.3.1 (major update para GUI) |
-
-### 💡 Pendiente para futuro
-
-| Prioridad | Item | Descripción |
-|-----------|------|-------------|
-| **Info** | Monitorear estabilidad Vite 7 | Verificar que no haya regresiones en el workbench |
-
----
-
-## Análisis de Templates y Domain (2026-01-18)
-
-Revisión del sistema de templates (Handlebars) y la lógica de dominio.
-
-### ✅ Templates - Estado excelente
-
-| Archivo | Líneas | Descripción |
-|---------|--------|-------------|
-| `engine.ts` | 446 | Motor Handlebars con Factory, cache, validación |
-| `presets.ts` | 519 | 8 presets (default, minimal, obsidian, joplin, notion, academic, compact, verbose) |
-| `helpers.ts` | 276 | 30+ helpers organizados por categoría |
-| `types.ts` | 100+ | Contextos tipados (ClippingContext, BookContext, ExportContext) |
-
-**Puntos fuertes:**
-- Factory con cache (`TemplateEngineFactory`)
-- Helper `opt` para opciones dinámicas en templates
-- Validación de custom templates con `validateTemplate()`
-
-### ✅ Domain - Estado excelente
-
-| Módulo | Descripción |
-|--------|-------------|
-| `rules.ts` | Constantes de negocio centralizadas |
-| `analytics/` | `calculateStats()`, `groupByBook()` |
-| `core/` | IDs determinísticos (SHA-256), Jaccard similarity |
-| `parsing/` | Tags, sanitizers, dates, 11 idiomas |
-
-**Puntos fuertes:**
-- IDs idempotentes con `generateClippingId()`
-- Lógica de negocio separada de infraestructura
-- Tag extraction con validación anti-oraciones
-
-### 💡 Observaciones menores
-
-| Prioridad | Observación | Ubicación |
-|-----------|-------------|-----------|
-| **Muy Baja** | Helper `replace` usa RegExp sin escape de caracteres especiales | `helpers.ts:97` |
-| **Info** | `presets.ts` tiene 519 líneas, podría separarse en archivos por preset | No urgente |
-
-> **Decisión**: Ambos módulos están muy bien estructurados. No hay mejoras necesarias para v1.0.
-
----
-
-## Planes de Mejora Documentados (2026-01-18)
-
-Análisis exhaustivo del código con planes de acción detallados en `/docs/`.
-
-### Plan 2.1: Consolidación de Archivos
-
-> Documentación completa: [docs/2.1 Plan de Consolidación.md](docs/2.1%20Plan%20de%20Consolidación.md)
-
-Merge de archivos pequeños para reducir fragmentación:
-
-| Fase | Origen | Destino | Riesgo | Archivos Eliminados |
-|------|--------|---------|--------|---------------------|
-| 1.1 | `core/limits.ts` | `domain/rules.ts` | 🟢 Bajo | 1 |
-| 1.2 | `importers/shared/constants.ts` | `domain/rules.ts` | 🟢 Bajo | 1 |
-| 2.1 | `utils/text/patterns.ts` | `utils/text/normalizers.ts` | 🟢 Bajo | 1 |
-| 2.2 | `utils/text/counting.ts` | `utils/text/normalizers.ts` | 🟢 Bajo | 1 |
-| 2.3 | `types/geo.ts` | `utils/geo/index.ts` | 🟢 Bajo | 1 |
-| 3.1 | `AuthorNormalizer` (clase muerta) | Eliminar | 🟡 Medio | 1 |
-
-**Resultado**: -6 archivos, ~163 líneas recuperadas.
-
-### Plan 2.2: Eliminación de Abstracciones
-
-> Documentación completa: [docs/2.2 Plan de Eliminación de Abstracciones.md](docs/2.2%20Plan%20de%20Eliminación%20de%20Abstracciones.md)
-
-Simplificación de abstracciones innecesarias:
-
-| Elemento | Tipo | Acción | Riesgo |
-|----------|------|--------|--------|
-| `AuthorNormalizer` | Clase static-only | Convertir a funciones exportadas | 🟢 Bajo |
-| `TemplateEngineFactory` | Factory/Cache | Simplificar a función con closure | 🟡 Medio |
-
-**Abstracciones a mantener** (justificadas):
-- `ImporterFactory`, `ExporterFactory` (extensibles)
-- `BaseImporter`, `BaseExporter` (herencia correcta)
-- `FileSystem`, `Logger` (DI para testing)
-
-### Plan 2.3: Simplificación de Código
-
-> Documentación completa: [docs/2.3 Plan de Simplificación de Código.md](docs/2.3%20Plan%20de%20Simplificación%20de%20Código.md)
-
-Refactorización de funciones complejas:
-
-| Función | Archivo | Líneas | Prioridad | Acción |
-|---------|---------|--------|-----------|--------|
-| `CsvImporter.doImport()` | csv.importer.ts | 272 | 🔴 Alta | Extraer helpers |
-| `JoplinExporter.processBook()` | joplin.exporter.ts | 141 | 🟡 Media | Separar autor/notas |
-| `JsonImporter.doImport()` | json.importer.ts | 135 | 🟡 Media | Extraer validación |
-| `parseString()` | parser.ts | 137 | ✅ OK | **No refactorizar** |
-
-**Estrategia**: Extraer helpers internos sin crear archivos nuevos.
-
-### Orden de Ejecución Recomendado
-
-```
-1. Plan 2.1: Consolidación (Fase 1 → Fase 2 → Fase 3)
-2. Plan 2.2: Abstracciones (AuthorNormalizer → TemplateEngineFactory)
-3. Plan 2.3: Simplificación (CsvImporter → JsonImporter → JoplinExporter)
+async doExport(...) {
+  const ctx = this.createContext(options);
+  const preamble = await this.exportPreamble(clippings, options, ctx);
+  const books = await this.processBooks(clippings, options, ctx);
+}
 ```
 
-> **Decisión**: Estas mejoras son de **prioridad baja** (v1.1+). El código actual es funcional y well-tested. Son mejoras de mantenibilidad que no afectan funcionalidad.
+**Beneficio:** Thread-safe, sin state leaks.
+**Esfuerzo:** ~30 minutos (muchos métodos que actualizar).
+
+#### 2.5 Reusar ClippingTypeSchema en CSV
+
+**Archivo:** `importers/formats/csv.importer.ts:48`
+
+**Problema:** Define `z.enum(["highlight", "note", ...])` inline en lugar de reusar `ClippingTypeSchema`.
+
+**Implementación:**
+```typescript
+// Antes
+type: z.enum(["highlight", "note", "bookmark", "clip", "article"]).optional()
+
+// Después
+import { ClippingTypeSchema } from '#schemas/clipping.schema.js';
+type: ClippingTypeSchema.optional()
+```
+
+**Beneficio:** Single source of truth para tipos de clipping.
+**Esfuerzo:** ~5 minutos.
+
+#### 2.6 Evaluar duplicación ESLint + Biome
+
+**Archivos:** `eslint.config.mjs`, `biome.json`
+
+**Problema:** Ambos linters están configurados, posible duplicación de reglas.
+
+**Investigación necesaria:**
+1. Listar reglas activas en ambos
+2. Identificar overlaps
+3. Decidir: ¿eliminar ESLint o configurar reglas complementarias?
+
+**Recomendación:** Biome es más rápido y completo. Considerar migrar completamente a Biome y eliminar ESLint.
+
+**Esfuerzo:** ~30 minutos investigación + ~15 minutos cambio.
 
 ---
 
-## Análisis de Complejidad (2026-01-18)
+### Fase 3: v1.2 (Consolidación)
 
-> Documentación completa: [docs/1.4 Análisis de Complejidad Ciclomática.md](docs/1.4%20Análisis%20de%20Complejidad%20Ciclomática.md)
+Reducción de archivos y simplificación de estructura.
 
-### Funciones con mayor complejidad
+#### 3.1 Merge `limits.ts` → `rules.ts`
 
-| Función | Archivo | Líneas | Nivel Anidamiento |
-|---------|---------|--------|-------------------|
-| `CsvImporter.doImport()` | csv.importer.ts | 272 | 🔴 4 niveles |
-| `JoplinExporter.processBook()` | joplin.exporter.ts | 141 | 🟡 3 niveles |
-| `parseString()` | parser.ts | 137 | 🟡 3 niveles |
+**Archivos:** `core/limits.ts` → `domain/rules.ts`
 
-### Archivos monolíticos (>300 líneas)
+**Implementación:**
+1. Mover constantes de `limits.ts` a sección nueva en `rules.ts`
+2. Actualizar imports en todo el proyecto
+3. Eliminar `limits.ts`
+4. Actualizar barrel exports
 
-| Archivo | Líneas | Estado |
-|---------|--------|--------|
-| `joplin.exporter.ts` | 514 | 🟡 Podría extraer tipos |
-| `templates/presets.ts` | 519 | ✅ OK (datos) |
-| `csv.importer.ts` | 388 | 🟡 Podría extraer schema |
+**Esfuerzo:** ~10 minutos.
 
-**Dependencias circulares**: ✅ Ninguna detectada
+#### 3.2 Merge `importers/constants.ts` → `rules.ts`
 
----
+**Archivos:** `importers/shared/constants.ts` → `domain/rules.ts`
 
-## Archivos Zombies Identificados (2026-01-18)
+**Implementación:** Misma que 3.1.
 
-> Documentación completa: [docs/1.2 Detección de Archivos Zombies.md](docs/1.2%20Detección%20de%20Archivos%20Zombies.md)
+**Esfuerzo:** ~10 minutos.
 
-| Categoría | Archivos | Estado |
-|-----------|----------|--------|
-| **Alto impacto** | `core/limits.ts`, `importers/shared/constants.ts` | Consolidar en `domain/rules.ts` |
-| **Medio impacto** | `utils/text/counting.ts`, `utils/text/patterns.ts` | Merge en `normalizers.ts` |
-| **API sin uso interno** | `utils/geo/index.ts` (203 líneas) | Mantener (API pública) |
+#### 3.3 Merge utils de texto
 
-**Archivos consolidables**: 6  
-**Líneas recuperables**: ~110  
-**Nivel de contaminación**: BAJO
+**Archivos:** `utils/text/patterns.ts` + `utils/text/counting.ts` → `utils/text/normalizers.ts`
 
----
+**Implementación:**
+1. Mover funciones a `normalizers.ts`
+2. Actualizar imports
+3. Eliminar archivos originales
 
-## Sugerencias Adicionales (2026-01-18)
+**Esfuerzo:** ~15 minutos.
 
-Mejoras identificadas durante el análisis exhaustivo del proyecto.
+#### 3.4 Eliminar `AuthorNormalizer`
 
-### 🔴 Quick Wins (Alta Prioridad)
+**Problema:** Clase con métodos estáticos que no se usa internamente (solo API pública).
 
-| Área | Sugerencia | Archivo | Esfuerzo |
-|------|------------|---------|----------|
-| **Unicode en tags** | Cambiar `/^[a-zA-Z...]/.test(tag)` a `/^\p{L}/u.test(tag)` para soportar tags en ruso, chino, japonés | `domain/parsing/tags.ts:191` | 5 min |
-| **Sentence detection multiidioma** | Añadir palabras en español/portugués al filtro (`el`, `la`, `es`, `de`, `que`, `um`, `uma`) | `domain/parsing/tags.ts:202` | 10 min |
+**Implementación:**
+1. Verificar si hay uso externo documentado
+2. Si no: eliminar clase, convertir a funciones exportadas
+3. Si sí: mantener como deprecated o alias
 
-> **Impacto**: Mejora significativa para usuarios multiidioma (11 idiomas soportados).
+**Esfuerzo:** ~10 minutos.
 
-### 🟡 Prioridad Media
+#### 3.5 Refactorizar `CsvImporter.doImport()`
 
-| Área | Sugerencia | Archivo | Esfuerzo |
-|------|------------|---------|----------|
-| **Documentar `LOCATIONS_PER_PAGE`** | El valor `16` necesita comentario explicando origen | `domain/core/locations.ts:21` | 5 min |
-| **HTML template separado** | El HTML está inline; podría ir a archivo `.html` | `exporters/formats/html.exporter.ts` | 30 min |
-| **Evaluar linters** | ESLint + Biome: posible duplicación | `eslint.config.mjs`, `biome.json` | 15 min |
-| **Turbo.json** | ¿Necesario para monorepo de 1 package? | `turbo.json` | 5 min |
+**Archivo:** `importers/formats/csv.importer.ts`
 
-### 🟢 Baja Prioridad (Nice to have)
+**Problema:** Función de 272 líneas con 4 niveles de anidamiento.
 
-| Área | Sugerencia | Archivo | Descripción |
-|------|------------|---------|-------------|
-| **Helper `replace` sin escape** | RegExp sin escapar caracteres especiales | `templates/helpers.ts:97` | Bug potencial |
-| **Author fallback en HTML** | No usa `DEFAULT_UNKNOWN_AUTHOR` | `html.exporter.ts:169` | Inconsistencia |
-| **Emojis hardcoded** | Podrían estar en constantes compartidas | `html.exporter.ts:186-191` | Mantenibilidad |
-| **CSP incompatibility** | JavaScript inline no es CSP-compliant | `html.exporter.ts` | Documentar limitación |
+**Implementación:**
+```typescript
+// Extraer helpers internos
+private parseHeaders(row: string[]): HeaderMap { ... }
+private validateRow(row: string[], headers: HeaderMap): ValidationResult { ... }
+private buildClipping(row: string[], headers: HeaderMap): Clipping { ... }
 
-### ⚠️ Observaciones de Arquitectura
+async doImport(content: string): Promise<ImportResult> {
+  const rows = this.parseCSV(content);
+  const headers = this.parseHeaders(rows[0]);
 
-| Observación | Estado |
-|-------------|--------|
-| `ARCHITECTURE.md` muy largo (1,518 líneas) | Podría dividirse en `/docs` |
-| `index.ts` con 60+ exports | Necesario para biblioteca npm |
-| 30 subdirectorios para 100 archivos | Ratio ~3.3 archivos/carpeta, aceptable |
+  return rows.slice(1)
+    .map(row => this.validateRow(row, headers))
+    .filter(r => r.isValid)
+    .map(r => this.buildClipping(r.row, headers));
+}
+```
 
-> **Decisión**: Las quick wins (Unicode y multiidioma) deberían implementarse antes de v1.0. El resto son mejoras para v1.1+.
+**Beneficio:** Legibilidad, testabilidad de partes.
+**Esfuerzo:** ~45 minutos.
 
 ---
 
-## Not Planned
+### Fase 4: v1.3+ (Bajo Valor / Opcional)
 
-### Descartado
+Mejoras estéticas que no justifican esfuerzo inmediato.
+
+| Mejora | Razón de baja prioridad |
+|--------|-------------------------|
+| Extraer case transformer | Duplicación funciona, cambio estético |
+| Extraer emojis a constantes | Solo afecta HTML exporter |
+| Separar HTML template | Funciona bien inline |
+| Cache `detectLanguage` | No hay evidencia de problema de performance |
+| Unificar tipos con `z.infer` | Tipos actuales funcionan, riesgo de breaking changes |
+| Simplificar `TemplateEngineFactory` | Factory pattern es apropiado aquí |
+
+---
+
+## Not Planned (Descartado)
+
+### Descartado para v1.x
 
 | Item | Razón |
 |------|-------|
+| Dividir `presets.ts` (519 líneas) | Es un archivo de datos, la longitud es aceptable |
+| Dividir archivos largos de parser | Código funcional, refactor estético no justifica riesgo |
 | TypeDoc API Documentation | README de 800+ líneas es suficiente |
 | VitePress Documentation Site | Over-engineering |
 | Architecture Decision Records | ARCHITECTURE.md basta |
 | Browser Entry Point separado | El actual funciona en browser |
-| Refactorizar archivos largos | Código funciona, refactor estético no justifica riesgo |
 | Monorepo Structure | Complejidad no justificada |
-| CLI / CLI Suggestions | Usuarios crean wrappers, fuera de scope |
+| CLI | Usuarios crean wrappers, fuera de scope |
 
 ### Descartado Permanentemente
 
 | Item | Razón |
 |------|-------|
-| PDF Export | Requiere librería pesada |
-| Readwise Sync | API propietaria |
-| Highlight Colors | Kindle no exporta colores |
-| Streaming Architecture | Caso raro (50MB+) |
+| PDF Export | Requiere librería pesada (~500KB) |
+| Readwise Sync | API propietaria, scope creep |
+| Highlight Colors | Kindle no exporta colores en `My Clippings.txt` |
+| Streaming Architecture | Caso raro (archivos >50MB) |
 | Plugin System | Eliminado - over-engineering |
-| Notion/Kobo/Apple Books | APIs propietarias |
+| Notion/Kobo/Apple Books | APIs propietarias, diferentes formatos |
 
 ---
 
@@ -513,6 +394,26 @@ Mejoras identificadas durante el análisis exhaustivo del proyecto.
 | Documentación | ✅ README 800+ líneas |
 | Error handling | ✅ neverthrow |
 | Dependencies | ✅ 7 runtime |
+
+---
+
+## Resumen Ejecutivo
+
+### Para v1.0 (Inmediato)
+- **3 quick wins** que mejoran experiencia multiidioma (~20 min total)
+
+### Para v1.1 (Próxima release menor)
+- **6 mejoras de robustez** que previenen bugs edge-case (~2 horas)
+
+### Para v1.2 (Futuro)
+- **5 consolidaciones** que reducen archivos y complejidad (~1.5 horas)
+
+### Para v1.3+ (Opcional)
+- **6 mejoras cosméticas** de bajo valor que pueden ignorarse
+
+### Total estimado: ~5 horas de trabajo opcional
+
+> **Recomendación:** Implementar Fase 1 antes de v1.0. Las fases 2-4 pueden hacerse incrementalmente en releases menores.
 
 ---
 

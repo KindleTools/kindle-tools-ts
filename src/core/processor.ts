@@ -151,7 +151,14 @@ export function processClippings(clippings: Clipping[], options?: ProcessOptions
 
   // Step 5: Extract tags from notes (optional, default: false)
   if (options?.extractTags) {
-    const tagResult = extractTagsFromLinkedNotes(result, options.tagCase);
+    const tagOptions: {
+      tagCase?: typeof options.tagCase;
+      separators?: typeof options.tagSeparators;
+    } = {};
+    if (options.tagCase) tagOptions.tagCase = options.tagCase;
+    if (options.tagSeparators) tagOptions.separators = options.tagSeparators;
+
+    const tagResult = extractTagsFromLinkedNotes(result, tagOptions);
     result = tagResult.clippings;
     tagsExtracted = tagResult.extractedCount;
   }

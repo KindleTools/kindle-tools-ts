@@ -30,6 +30,26 @@ export interface TagExtractionOptions {
    * - 'lowercase': Convert to lowercase
    */
   tagCase?: TagCase;
+
+  /**
+   * Custom separators for splitting tags.
+   * Can be a string (each character is a separator) or a RegExp.
+   *
+   * @default /[,;.\n\r]+/ (comma, semicolon, period, newline)
+   *
+   * @example
+   * // Use only commas
+   * { separators: "," }
+   *
+   * @example
+   * // Use slash as separator
+   * { separators: "/" }
+   *
+   * @example
+   * // Use regex for multiple separators
+   * { separators: /[,;|]+/ }
+   */
+  separators?: string | RegExp;
 }
 
 /**
@@ -47,10 +67,28 @@ export interface TagExtractionResult {
 }
 
 /**
- * Separators used to split notes into potential tags.
+ * Default separators used to split notes into potential tags.
  * Supports comma, semicolon, period, and newline separators.
  */
-const TAG_SEPARATORS = /[,;.\n\r]+/;
+const DEFAULT_TAG_SEPARATORS = /[,;.\n\r]+/;
+
+/**
+ * Convert a separator option to a RegExp.
+ * - undefined → default separators
+ * - string → create character class from each character
+ * - RegExp → use as-is
+ */
+function toSeparatorRegex(separators: string | RegExp | undefined): RegExp {
+  if (separators === undefined) {
+    return DEFAULT_TAG_SEPARATORS;
+  }
+  if (separators instanceof RegExp) {
+    return separators;
+  }
+  // Escape special regex characters and create character class
+  const escaped = separators.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(`[${escaped}]+`);
+}
 
 /**
  * Maximum length for a single tag.
@@ -96,9 +134,10 @@ export function extractTagsFromNote(
 
   const trimmed = noteContent.trim();
   const tagCase = options.tagCase ?? "uppercase";
+  const separators = toSeparatorRegex(options.separators);
 
   // Split by separators
-  const parts = trimmed.split(TAG_SEPARATORS);
+  const parts = trimmed.split(separators);
 
   // Process each part as a potential tag
   const tags: string[] = [];
@@ -187,19 +226,16 @@ function isValidTag(tag: string): boolean {
     return false;
   }
 
-  // Must start with a letter
-  if (!/^[a-zA-ZáéíóúñüàèìòùâêîôûäëïöçÁÉÍÓÚÑÜÀÈÌÒÙÂÊÎÔÛÄËÏÖÇ]/.test(tag)) {
+  // Must start with a letter (any Unicode letter, supports all 11 languages)
+  if (!/^\p{L}/u.test(tag)) {
     return false;
   }
 
   // Reject if too many internal spaces (likely a sentence fragment)
+  // This is the only heuristic needed - users explicitly enable extractTags,
+  // so we trust their notes are tags. We only filter very long phrases.
   const spaceCount = (tag.match(/ /g) || []).length;
   if (spaceCount > 3) {
-    return false;
-  }
-
-  // Reject if contains typical sentence patterns
-  if (/\b(the|is|are|was|were|have|has|will|would|could|should|does|did)\b/i.test(tag)) {
     return false;
   }
 
@@ -222,7 +258,10 @@ export function looksLikeTagNote(noteContent: string): boolean {
   const trimmed = noteContent.trim();
 
   // Short notes with separators are likely tags
-  if (trimmed.length < PROCESSING_THRESHOLDS.TAG_NOTE_MAX_LENGTH && TAG_SEPARATORS.test(trimmed)) {
+  if (
+    trimmed.length < PROCESSING_THRESHOLDS.TAG_NOTE_MAX_LENGTH &&
+    DEFAULT_TAG_SEPARATORS.test(trimmed)
+  ) {
     return true;
   }
 

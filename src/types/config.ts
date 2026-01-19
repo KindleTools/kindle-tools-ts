@@ -47,6 +47,22 @@ export interface ParseOptions {
    */
   tagCase?: "original" | "uppercase" | "lowercase";
 
+  /**
+   * Custom separators for splitting tags.
+   * Can be a string (each character is a separator) or a RegExp.
+   * Only applies when extractTags is enabled.
+   * Default: /[,;.\n\r]+/ (comma, semicolon, period, newline)
+   *
+   * @example
+   * // Use only commas
+   * { tagSeparators: "," }
+   *
+   * @example
+   * // Use slash as separator
+   * { tagSeparators: "/" }
+   */
+  tagSeparators?: string | RegExp;
+
   /** Merge overlapping/extended highlights. Default: true */
   mergeOverlapping?: boolean;
 

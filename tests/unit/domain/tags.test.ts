@@ -54,10 +54,17 @@ describe("tag-extractor", () => {
       expect(result.tags).toEqual(["AB", "ABC"]);
     });
 
-    it("should reject sentence fragments", () => {
-      const result = extractTagsFromNote("This is a sentence, tag1");
-      // "This is a sentence" contains "is" and "a" - likely a sentence
+    it("should reject long phrases with many spaces", () => {
+      const result = extractTagsFromNote("This is a very long sentence, tag1");
+      // "This is a very long sentence" has >3 spaces, so it's rejected
+      // "This is a sentence" (3 spaces) would be accepted as a valid tag
       expect(result.tags).toEqual(["TAG1"]);
+    });
+
+    it("should accept phrases with up to 3 spaces as tags", () => {
+      const result = extractTagsFromNote("The Lean Startup, tag1");
+      // "The Lean Startup" has 2 spaces - valid tag (user explicitly enabled extractTags)
+      expect(result.tags).toEqual(["THE LEAN STARTUP", "TAG1"]);
     });
 
     it("should handle empty input", () => {
@@ -71,6 +78,22 @@ describe("tag-extractor", () => {
       const result = extractTagsFromNote("   ");
       expect(result.tags).toEqual([]);
       expect(result.hasTags).toBe(false);
+    });
+
+    it("should use custom string separator", () => {
+      const result = extractTagsFromNote("tag1/tag2/tag3", { separators: "/" });
+      expect(result.tags).toEqual(["TAG1", "TAG2", "TAG3"]);
+    });
+
+    it("should use custom regex separator", () => {
+      const result = extractTagsFromNote("tag1|tag2|tag3", { separators: /\|+/ });
+      expect(result.tags).toEqual(["TAG1", "TAG2", "TAG3"]);
+    });
+
+    it("should not split on default separators when custom is provided", () => {
+      // With custom separator "/", commas should NOT split
+      const result = extractTagsFromNote("tag1, tag2/tag3", { separators: "/" });
+      expect(result.tags).toEqual(["TAG1, TAG2", "TAG3"]);
     });
   });
 
