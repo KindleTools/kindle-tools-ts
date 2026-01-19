@@ -12,7 +12,20 @@
 
 Las mejoras documentadas en este roadmap son **opcionales** y pueden implementarse en releases menores futuras (v1.1, v1.2, etc.).
 
-### Cambios Recientes (v1.0)
+### Cambios Recientes
+
+#### v1.1 (Robustez)
+
+| Cambio | Descripción |
+|--------|-------------|
+| ✅ Helper `replace` escape regex | Caracteres especiales se tratan como literales |
+| ✅ Author fallback HtmlExporter | Usa `DEFAULT_UNKNOWN_AUTHOR` consistentemente |
+| ✅ IDs determinísticos importers | `generateImportId` usa hash en lugar de `Date.now()` |
+| ✅ Estado inmutable JoplinExporter | `ctx` se pasa como parámetro, no como estado |
+| ✅ Reusar `ClippingTypeSchema` | CSV importer usa schema compartido |
+| ✅ Evaluar ESLint + Biome | Evaluado: mantener ambos (ESLint solo para neverthrow) |
+
+#### v1.0 (Feature Complete)
 
 | Cambio | Descripción |
 |--------|-------------|
@@ -44,13 +57,13 @@ Clasificación de todas las mejoras identificadas por **Beneficio**, **Dificulta
 | 2 | Separadores personalizables (`tagSeparators`) | Alto | Fácil | Alto | ✅ | v1.0 |
 | 3 | Simplificación validación tags | Medio | Fácil | Medio | ✅ | v1.0 |
 | 4 | Documentar `LOCATIONS_PER_PAGE` | Medio | Fácil | Bajo | ✅ | v1.0 |
-| **FASE 2 - ROBUSTEZ (v1.1)** ||||||
-| 5 | Helper `replace` escape regex | Medio | Fácil | Medio | 🟡 | v1.1 |
-| 6 | Author fallback HtmlExporter | Medio | Fácil | Bajo | 🟡 | v1.1 |
-| 7 | IDs determinísticos importers | Alto | Media | Alto | 🟡 | v1.1 |
-| 8 | Estado inmutable JoplinExporter | Alto | Media | Medio | 🟡 | v1.1 |
-| 9 | Reusar `ClippingTypeSchema` CSV | Medio | Fácil | Medio | 🟡 | v1.1 |
-| 10 | Evaluar ESLint + Biome duplicación | Medio | Fácil | Medio | 🟡 | v1.1 |
+| **FASE 2 - COMPLETADA** ||||||
+| 5 | Helper `replace` escape regex | Medio | Fácil | Medio | ✅ | v1.1 |
+| 6 | Author fallback HtmlExporter | Medio | Fácil | Bajo | ✅ | v1.1 |
+| 7 | IDs determinísticos importers | Alto | Media | Alto | ✅ | v1.1 |
+| 8 | Estado inmutable JoplinExporter | Alto | Media | Medio | ✅ | v1.1 |
+| 9 | Reusar `ClippingTypeSchema` CSV | Medio | Fácil | Medio | ✅ | v1.1 |
+| 10 | Evaluar ESLint + Biome duplicación | Medio | Fácil | Medio | ✅ | v1.1 |
 | **FASE 3 - CONSOLIDACIÓN (v1.2)** ||||||
 | 11 | Refactorizar `CsvImporter.doImport()` | Medio | Media | Medio | 🟢 | v1.2 |
 | 12 | Merge `limits.ts` → `rules.ts` | Medio | Fácil | Bajo | 🟢 | v1.2 |
@@ -124,7 +137,7 @@ parseString(content, {
 
 ---
 
-### Fase 2: v1.1 (Robustez y Código Limpio)
+### Fase 2: v1.1 ✅ COMPLETADA
 
 Mejoras de robustez que previenen bugs edge-case.
 
@@ -403,9 +416,9 @@ Mejoras estéticas que no justifican esfuerzo inmediato.
 - Simplificación de validación de tags
 - Documentación de `LOCATIONS_PER_PAGE`
 
-### 🟡 Fase 2: v1.1 (Próxima)
+### ✅ Fase 2: v1.1 (COMPLETADA)
 - **6 mejoras de robustez** que previenen bugs edge-case
-- Items 2.1-2.6: escape regex, author fallback, IDs determinísticos, estado inmutable, DRY schemas, linter cleanup
+- Items 2.1-2.6: escape regex, author fallback, IDs determinísticos, estado inmutable, DRY schemas, linter evaluado
 
 ### 🟢 Fase 3: v1.2 (Futuro)
 - **4 consolidaciones** que reducen archivos y complejidad
@@ -423,4 +436,4 @@ Mejoras estéticas que no justifican esfuerzo inmediato.
 
 ---
 
-*Actualizado: 2026-01-19 | **v1.0 Feature Complete***
+*Actualizado: 2026-01-19 | **v1.1 Robustez Complete***
