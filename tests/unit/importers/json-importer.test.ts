@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ImportResult } from "#errors";
+
 import { JsonImporter } from "#importers/formats/json.importer.js";
 
 describe("JsonImporter", () => {

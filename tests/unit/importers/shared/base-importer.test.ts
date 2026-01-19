@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { type ImportResult, importSuccess } from "#errors";
+import type { ImportResult } from "#errors";
 import { BaseImporter } from "#importers/shared/base-importer.js";
 
 class TestBrokenImporter extends BaseImporter {

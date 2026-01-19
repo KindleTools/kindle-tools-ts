@@ -1,5 +1,4 @@
-import * as fs from "fs";
-import * as path from "path";
+import * as path from "node:path";
 import { describe, expect, it } from "vitest";
 import { parse } from "../../src/importers/formats/txt/parser.js";
 import { loadFixture } from "../helpers/fixtures.js";

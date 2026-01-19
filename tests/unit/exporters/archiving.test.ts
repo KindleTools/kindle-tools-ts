@@ -1,5 +1,5 @@
 import JSZip from "jszip";
-import { ok } from "neverthrow";
+
 import { describe, expect, it } from "vitest";
 import { BaseExporter } from "../../../src/exporters/shared/base-exporter.js";
 import type { Clipping } from "../../../src/types/clipping.js";
@@ -9,7 +9,7 @@ class MockExporter extends BaseExporter {
   name = "mock-exporter";
   extension = ".txt";
 
-  protected async doExport(clippings: Clipping[], options: any) {
+  protected async doExport(_clippings: Clipping[], options: any) {
     console.log("MockExporter.doExport called with options:", options);
     return this.success("Mock Content", [
       { path: "file1.txt", content: "Content 1" },
@@ -22,7 +22,7 @@ class SingleFileMockExporter extends BaseExporter {
   name = "single-exporter";
   extension = ".txt";
 
-  protected async doExport(clippings: Clipping[], options: any) {
+  protected async doExport(_clippings: Clipping[], _options: any) {
     // correctly returns output without files array
     return this.success("Single Content");
   }
@@ -39,7 +39,7 @@ describe("BaseExporter Archiving", () => {
     }
 
     expect(result.value.files).toHaveLength(1);
-    expect(result.value.files![0].path).toBe("export.zip");
+    expect(result.value.files?.[0].path).toBe("export.zip");
 
     const zipContent = result.value.output;
     const loadedZip = await JSZip.loadAsync(zipContent);
@@ -72,6 +72,6 @@ describe("BaseExporter Archiving", () => {
     if (result.isErr()) throw result.error;
 
     // Filename in the files array should reflect the title
-    expect(result.value.files![0].path).toBe("My Archive.zip");
+    expect(result.value.files?.[0].path).toBe("My Archive.zip");
   });
 });

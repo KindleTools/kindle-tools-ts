@@ -1,15 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
-  ConfigErrorCodes,
-  ExportErrorCodes,
-  FileSystemErrorCodes,
-  ImportErrorCodes,
   isConfigError,
   isExportError,
   isFileSystemError,
   isImportError,
   isValidationError,
-  ValidationErrorCodes,
 } from "#errors/codes.js";
 import { formatErrorDetail, formatUserMessage, getErrorCode } from "#errors/formatting.js";
 import type { AppError } from "#errors/types.js";

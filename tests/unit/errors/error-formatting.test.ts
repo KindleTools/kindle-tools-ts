@@ -2,7 +2,7 @@
  * Tests for error handling utilities.
  */
 
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import type { AppError, ExportError, ImportError } from "#errors";
 import { formatErrorDetail, formatUserMessage, getErrorCode } from "#errors";
 

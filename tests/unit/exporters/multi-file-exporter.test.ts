@@ -5,7 +5,7 @@ import {
   MultiFileExporter,
   type MultiFileExporterOptions,
 } from "#exporters/shared/multi-file-exporter.js"; // Ensure type export exists
-import type { TemplateEngine, TemplatePreset } from "#templates/index.js";
+import type { TemplateEngine } from "#templates/index.js";
 
 // Concrete implementation for testing
 class TestMultiFileExporter extends MultiFileExporter {
@@ -14,8 +14,8 @@ class TestMultiFileExporter extends MultiFileExporter {
 
   protected async processBook(
     clippings: Clipping[],
-    options: MultiFileExporterOptions,
-    engine: TemplateEngine,
+    _options: MultiFileExporterOptions,
+    _engine: TemplateEngine,
   ): Promise<ExportedFile[]> {
     return clippings.map((c) => ({
       path: `${c.title}.txt`,

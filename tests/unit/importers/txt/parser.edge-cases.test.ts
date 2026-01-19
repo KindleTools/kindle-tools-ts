@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { parseString } from "#importers/formats/txt/parser.js";
 import { MAX_VALIDATION_ERRORS } from "#importers/shared/constants.js";
 
@@ -11,7 +11,7 @@ describe("TxtParser Edge Cases", () => {
     "==========",
   ].join("\n");
 
-  const createContent = (blocks: number) => Array(blocks).fill(validBlock).join("\n");
+  const _createContent = (blocks: number) => Array(blocks).fill(validBlock).join("\n");
 
   it("should stop parsing when MAX_VALIDATION_ERRORS is reached", async () => {
     // Create a block that causes a warning (unparseable metadata)
@@ -59,7 +59,7 @@ describe("TxtParser Edge Cases", () => {
     });
 
     it("should filter by minimum content length (ignoring bookmarks)", async () => {
-      const result = await parseString(mixedContent, { minContentLength: 10 });
+      const _result = await parseString(mixedContent, { minContentLength: 10 });
       // "Short content" is 13 chars, wait.
       // "Short content" is 13 chars.
       // Let's make a really short one.
@@ -94,7 +94,7 @@ describe("TxtParser Edge Cases", () => {
 
     it("should trigger processing when removeDuplicates is true", async () => {
       // Just verify it runs without error and returns result
-      const content = validBlock + "\n" + validBlock;
+      const content = `${validBlock}\n${validBlock}`;
       const result = await parseString(content, { removeDuplicates: true });
       expect(result.stats.duplicatesRemoved).toBeGreaterThan(0);
     });
@@ -139,7 +139,7 @@ describe("TxtParser Edge Cases", () => {
       ].join("\n");
       // cleanText removes hyphenation.
 
-      const result = await parseString(block);
+      const _result = await parseString(block);
       // Depending on logic, hyphen- ation might become hyphenation or hyphen - ation.
       // Let's rely on standard sanitizer logic which we assume is covered, but we want the FLAG check.
       // If cleanText returns wasCleaned=true, we get the flag.

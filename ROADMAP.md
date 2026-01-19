@@ -364,6 +364,329 @@ Mejoras estéticas que no justifican esfuerzo inmediato.
 
 ---
 
+### Fase 5: v2.0 (Unificación Types → Zod)
+
+Migración completa para usar Zod como única fuente de verdad para todos los tipos.
+
+#### Contexto y Motivación
+
+Actualmente el proyecto tiene **duplicación** entre:
+- `src/types/` — Interfaces TypeScript manuales con JSDoc
+- `src/schemas/` — Zod schemas con `z.infer<>`
+
+**Beneficios de unificar:**
+1. **Single Source of Truth** — Un solo lugar para definir estructura de datos
+2. **Sincronización automática** — Cambios en schema actualizan el tipo automáticamente
+3. **Validación runtime + compile-time** — Seguridad completa
+
+**Inventario actual:**
+
+| Tipo | `types/` | `schemas/` | Duplicado |
+|------|----------|------------|-----------|
+| `ClippingType` | ✅ | ✅ | Sí |
+| `SupportedLanguage` | ✅ | ✅ | Sí |
+| `ClippingLocation` | ✅ | ✅ | Sí |
+| `Clipping` | ✅ (177 líneas) | ✅ `ClippingStrictSchema` | Sí |
+| `ParseOptions` | ✅ (128 líneas) | ✅ `ParseOptionsSchema` | Sí |
+| `GeoLocation` | ✅ | ✅ `GeoLocationSchema` | Sí |
+| `RawClipping` | ✅ | ❌ | No |
+| `ParseWarning` | ✅ | ❌ | No |
+| `ParseResult` | ✅ | ❌ | No |
+| `ClippingsStats` | ✅ | ❌ | No |
+| `BookStats` | ✅ | ❌ | No |
+| `LanguagePatterns` | ✅ | ❌ | No |
+
+---
+
+#### Paso 1: Crear Schemas Faltantes (~1.5h)
+
+**Archivo nuevo:** `src/schemas/stats.schema.ts`
+
+```typescript
+// BookStatsSchema
+export const BookStatsSchema = z.object({
+  title: z.string(),
+  author: z.string(),
+  highlights: z.number(),
+  notes: z.number(),
+  bookmarks: z.number(),
+  wordCount: z.number(),
+  dateRange: z.object({
+    earliest: z.date().nullable(),
+    latest: z.date().nullable(),
+  }),
+});
+export type BookStats = z.infer<typeof BookStatsSchema>;
+
+// ClippingsStatsSchema
+export const ClippingsStatsSchema = z.object({
+  total: z.number(),
+  totalHighlights: z.number(),
+  // ... resto de campos
+  booksList: z.array(BookStatsSchema),
+});
+export type ClippingsStats = z.infer<typeof ClippingsStatsSchema>;
+```
+
+**Archivo nuevo:** `src/schemas/result.schema.ts`
+
+```typescript
+// ParseWarningSchema
+export const ParseWarningSchema = z.object({
+  type: z.enum(["date_parse_failed", "unknown_format", "encoding_issue", "empty_content", "unknown_type"]),
+  message: z.string(),
+  blockIndex: z.number(),
+  raw: z.string().optional(),
+});
+export type ParseWarning = z.infer<typeof ParseWarningSchema>;
+
+// ParseResultSchema (referencia ClippingsStatsSchema)
+export const ParseResultSchema = z.object({
+  clippings: z.array(ClippingStrictSchema),
+  stats: ClippingsStatsSchema,
+  warnings: z.array(ParseWarningSchema),
+  meta: z.object({
+    fileSize: z.number(),
+    parseTime: z.number(),
+    detectedLanguage: SupportedLanguageSchema,
+    totalBlocks: z.number(),
+    parsedBlocks: z.number(),
+  }),
+});
+export type ParseResult = z.infer<typeof ParseResultSchema>;
+```
+
+**Archivo nuevo:** `src/schemas/language.schema.ts`
+
+```typescript
+// LanguagePatternsSchema
+export const LanguagePatternsSchema = z.object({
+  addedOn: z.string(),
+  highlight: z.string(),
+  note: z.string(),
+  bookmark: z.string(),
+  clip: z.string(),
+  page: z.string(),
+  location: z.string(),
+  dateFormats: z.array(z.string()),
+});
+export type LanguagePatterns = z.infer<typeof LanguagePatternsSchema>;
+```
+
+**Archivo modificar:** `src/schemas/clipping.schema.ts`
+
+```typescript
+// RawClippingSchema (nuevo, no existía)
+export const RawClippingSchema = z.object({
+  titleLine: z.string(),
+  metadataLine: z.string(),
+  contentLines: z.array(z.string()),
+  blockIndex: z.number(),
+});
+export type RawClipping = z.infer<typeof RawClippingSchema>;
+```
+
+---
+
+#### Paso 2: Migrar JSDoc a `.describe()` (~1h)
+
+**Problema:** `z.infer<>` pierde los comentarios JSDoc que son muy útiles para developers.
+
+**Solución:** Usar `.describe()` de Zod para documentación inline.
+
+```typescript
+// Antes (types/clipping.ts)
+export interface Clipping {
+  /** Unique deterministic ID (12 alphanumeric characters) */
+  id: string;
+  
+  /** Clean, normalized book title */
+  title: string;
+}
+
+// Después (schemas/clipping.schema.ts)
+export const ClippingStrictSchema = z.object({
+  id: z.string()
+    .min(1)
+    .describe("Unique deterministic ID (12 alphanumeric characters)"),
+  
+  title: z.string()
+    .min(1)
+    .describe("Clean, normalized book title"),
+});
+```
+
+**Archivos a migrar JSDoc:**
+
+| Archivo | Campos con JSDoc | Esfuerzo |
+|---------|------------------|----------|
+| `clipping.schema.ts` | ~30 campos | 20 min |
+| `config.schema.ts` | ~20 campos | 15 min |
+| `stats.schema.ts` (nuevo) | ~15 campos | 10 min |
+| `result.schema.ts` (nuevo) | ~10 campos | 10 min |
+
+---
+
+#### Paso 3: Eliminar Tipos Duplicados de `types/` (~30min)
+
+**Archivos a eliminar completamente:**
+
+| Archivo | Razón |
+|---------|-------|
+| `types/clipping.ts` | Reemplazado por `z.infer<ClippingStrictSchema>` |
+| `types/geo.ts` | Reemplazado por `z.infer<GeoLocationSchema>` |
+| `types/language.ts` | Reemplazado por schemas |
+| `types/stats.ts` | Reemplazado por `stats.schema.ts` |
+
+**Archivos a modificar:**
+
+| Archivo | Cambio |
+|---------|--------|
+| `types/config.ts` | Eliminar `ParseOptions`, mantener solo `ProcessOptions` y `ParseWarning` |
+| `types/index.ts` | Re-exportar desde schemas |
+
+---
+
+#### Paso 4: Actualizar Barrel Exports (~30min)
+
+**Modificar `types/index.ts`:**
+
+```typescript
+// Re-export all types from schemas (Single Source of Truth)
+export type {
+  Clipping,
+  ClippingType,
+  ClippingLocation,
+  ClippingSource,
+  SuspiciousReason,
+  RawClipping,
+} from "#schemas/clipping.schema.js";
+
+export type {
+  ParseOptions,
+  TagCase,
+  GeoLocation,
+} from "#schemas/config.schema.js";
+
+export type {
+  BookStats,
+  ClippingsStats,
+} from "#schemas/stats.schema.js";
+
+export type {
+  ParseResult,
+  ParseWarning,
+} from "#schemas/result.schema.js";
+
+export type {
+  LanguagePatterns,
+  SupportedLanguage,
+} from "#schemas/language.schema.js";
+
+// Keep ProcessOptions here (extends ParseOptions)
+export interface ProcessOptions extends ParseOptions {
+  detectedLanguage: SupportedLanguage;
+}
+```
+
+---
+
+#### Paso 5: Actualizar Imports en Todo el Proyecto (~1h)
+
+**Cambios necesarios:**
+
+```typescript
+// Antes
+import type { Clipping } from "#types/clipping.js";
+import type { ParseOptions } from "#types/config.js";
+
+// Después (opción A: importar de types que re-exporta)
+import type { Clipping, ParseOptions } from "#types/index.js";
+
+// Después (opción B: importar directamente de schemas)
+import type { Clipping } from "#schemas/clipping.schema.js";
+```
+
+**Archivos afectados (~50+):**
+- `src/core/**/*.ts`
+- `src/importers/**/*.ts`
+- `src/exporters/**/*.ts`
+- `src/domain/**/*.ts`
+- `tests/**/*.ts`
+
+**Estrategia:** Usar Find & Replace global con regex:
+```regex
+from "#types/clipping\.js"  →  from "#types/index.js"
+from "#types/config\.js"    →  from "#types/index.js"
+```
+
+---
+
+#### Paso 6: Actualizar Documentación (~30min)
+
+**Archivos a actualizar:**
+
+| Archivo | Cambio |
+|---------|--------|
+| `ARCHITECTURE.md` | Actualizar diagrama de proyecto, eliminar mención a `types/` separado |
+| `README.md` | Verificar que ejemplos de código sigan funcionando |
+| `CONTRIBUTING.md` | Añadir nota sobre usar schemas como fuente de verdad |
+
+---
+
+#### Paso 7: Tests y Verificación (~1h)
+
+```bash
+# 1. Verificar que compila
+npm run build
+
+# 2. Verificar tipos
+npm run typecheck
+
+# 3. Ejecutar todos los tests
+npm test
+
+# 4. Verificar lint
+npm run lint
+
+# 5. Verificar que exports públicos funcionan
+node -e "const kt = require('./dist/cjs/index.cjs'); console.log(Object.keys(kt));"
+```
+
+---
+
+#### Checklist Final
+
+- [ ] Crear `schemas/stats.schema.ts`
+- [ ] Crear `schemas/result.schema.ts`
+- [ ] Crear `schemas/language.schema.ts`
+- [ ] Añadir `RawClippingSchema` a `clipping.schema.ts`
+- [ ] Migrar todos los JSDoc a `.describe()`
+- [ ] Eliminar archivos de `types/` redundantes
+- [ ] Actualizar `types/index.ts` para re-exportar
+- [ ] Actualizar imports en todo el proyecto
+- [ ] Actualizar `ARCHITECTURE.md`
+- [ ] Ejecutar build + tests + lint
+- [ ] Bump version a v2.0.0 (breaking change)
+- [ ] Actualizar CHANGELOG.md
+
+---
+
+#### Tiempo Estimado Total
+
+| Paso | Tiempo |
+|------|--------|
+| 1. Crear schemas faltantes | 1.5h |
+| 2. Migrar JSDoc a .describe() | 1h |
+| 3. Eliminar tipos duplicados | 30min |
+| 4. Actualizar barrel exports | 30min |
+| 5. Actualizar imports | 1h |
+| 6. Actualizar documentación | 30min |
+| 7. Tests y verificación | 1h |
+| **Total** | **~6 horas** |
+
+---
+
 ## Not Planned (Descartado)
 
 ### Descartado para v1.x
@@ -427,6 +750,12 @@ Mejoras estéticas que no justifican esfuerzo inmediato.
 ### ⚪ Fase 4: v1.3+ (Opcional)
 - **3 mejoras cosméticas** de bajo valor que pueden ignorarse
 
+### 🔵 Fase 5: v2.0 (Unificación Types → Zod)
+- **Migración completa** para usar Zod como única fuente de verdad
+- Eliminar duplicación entre `types/` y `schemas/`
+- Breaking change: nueva versión major
+- Tiempo estimado: ~6 horas
+
 ---
 
 ## Referencias
@@ -436,4 +765,4 @@ Mejoras estéticas que no justifican esfuerzo inmediato.
 
 ---
 
-*Actualizado: 2026-01-19 | **v1.1 Robustez Complete***
+*Actualizado: 2026-01-19 | **Fase 5 añadida***

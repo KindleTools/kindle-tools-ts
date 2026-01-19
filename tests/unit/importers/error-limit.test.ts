@@ -1,7 +1,5 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { CsvImporter } from "../../../src/importers/formats/csv.importer.js";
-import { JsonImporter } from "../../../src/importers/formats/json.importer.js";
-import * as shared from "../../../src/importers/shared/index.js";
 
 describe("Importer Memory Safety Limits", () => {
   it("CsvImporter stops validation after 100 errors", async () => {

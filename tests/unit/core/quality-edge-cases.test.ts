@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { flagFuzzyDuplicates, flagSuspiciousHighlights } from "#core/processing/quality.js";
-import { SUSPICIOUS_HIGHLIGHT_THRESHOLDS } from "#domain/rules.js";
+
 import { createClipping } from "../../fixtures/clipping.js"; // Relative import from tests/unit/core
 
 describe("Quality Processing Edge Cases", () => {
@@ -46,7 +46,7 @@ describe("Quality Processing Edge Cases", () => {
     it("should skip checks for long content", () => {
       const longContent = "A".repeat(200); // Definitely > SHORT_LENGTH
       // Start with lowercase to triggering fragment check if length check wasn't there
-      const c = createClipping({ content: "long content " + longContent });
+      const c = createClipping({ content: `long content ${longContent}` });
       const result = flagSuspiciousHighlights([c]);
       expect(result.flaggedCount).toBe(0);
     });
