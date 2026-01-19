@@ -6,11 +6,20 @@
 
 ---
 
-## Estado Actual (2026-01-18)
+## Estado Actual (2026-01-19)
 
 **v1.0 Feature Complete.** El proyecto está listo para release.
 
 Las mejoras documentadas en este roadmap son **opcionales** y pueden implementarse en releases menores futuras (v1.1, v1.2, etc.).
+
+### Cambios Recientes (v1.0)
+
+| Cambio | Descripción |
+|--------|-------------|
+| ✅ Regex Unicode para tags | `\p{L}` acepta cualquier letra (ruso, chino, japonés, etc.) |
+| ✅ Separadores personalizables | Nueva opción `tagSeparators` en `ParseOptions` |
+| ✅ Simplificación de validación | Eliminado filtro de palabras, solo >3 espacios |
+| ✅ Documentación `LOCATIONS_PER_PAGE` | Origen de la heurística documentado |
 
 ---
 
@@ -30,99 +39,88 @@ Clasificación de todas las mejoras identificadas por **Beneficio**, **Dificulta
 
 | # | Mejora | Beneficio | Dificultad | Impacto | Prioridad | Fase |
 |---|--------|:---------:|:----------:|:-------:|:---------:|:----:|
-| **QUICK WINS - Multiidioma** ||||||
+| **FASE 1 - COMPLETADA** ||||||
 | 1 | Regex Unicode para tags | Alto | Fácil | Alto | ✅ | v1.0 |
-| 2 | ~~Sentence detection ES/PT~~ | ~~Alto~~ | ~~Fácil~~ | ~~Alto~~ | ❌ | Descartado |
-| 3 | Documentar `LOCATIONS_PER_PAGE` | Medio | Fácil | Bajo | ✅ | v1.0 |
-| **ROBUSTEZ** ||||||
-| 4 | Helper `replace` escape regex | Medio | Fácil | Medio | 🟡 | v1.1 |
-| 5 | Author fallback HtmlExporter | Medio | Fácil | Bajo | 🟡 | v1.1 |
-| 6 | Validación clippings vacíos en Base | Medio | Fácil | Medio | 🟡 | v1.1 |
+| 2 | Separadores personalizables (`tagSeparators`) | Alto | Fácil | Alto | ✅ | v1.0 |
+| 3 | Simplificación validación tags | Medio | Fácil | Medio | ✅ | v1.0 |
+| 4 | Documentar `LOCATIONS_PER_PAGE` | Medio | Fácil | Bajo | ✅ | v1.0 |
+| **FASE 2 - ROBUSTEZ (v1.1)** ||||||
+| 5 | Helper `replace` escape regex | Medio | Fácil | Medio | 🟡 | v1.1 |
+| 6 | Author fallback HtmlExporter | Medio | Fácil | Bajo | 🟡 | v1.1 |
 | 7 | IDs determinísticos importers | Alto | Media | Alto | 🟡 | v1.1 |
-| **CÓDIGO LIMPIO** ||||||
-| 8 | Reusar `ClippingTypeSchema` CSV | Medio | Fácil | Medio | 🟡 | v1.1 |
-| 9 | Estado inmutable JoplinExporter | Alto | Media | Medio | 🟡 | v1.1 |
-| 10 | Refactorizar `CsvImporter.doImport()` | Medio | Media | Medio | 🟡 | v1.2 |
-| **CONSOLIDACIÓN** ||||||
-| 11 | Merge `limits.ts` → `rules.ts` | Medio | Fácil | Bajo | 🟢 | v1.2 |
-| 12 | Merge `importers/constants.ts` → `rules.ts` | Medio | Fácil | Bajo | 🟢 | v1.2 |
-| 13 | Merge `patterns.ts` + `counting.ts` → `normalizers.ts` | Bajo | Fácil | Bajo | 🟢 | v1.2 |
+| 8 | Estado inmutable JoplinExporter | Alto | Media | Medio | 🟡 | v1.1 |
+| 9 | Reusar `ClippingTypeSchema` CSV | Medio | Fácil | Medio | 🟡 | v1.1 |
+| 10 | Evaluar ESLint + Biome duplicación | Medio | Fácil | Medio | 🟡 | v1.1 |
+| **FASE 3 - CONSOLIDACIÓN (v1.2)** ||||||
+| 11 | Refactorizar `CsvImporter.doImport()` | Medio | Media | Medio | 🟢 | v1.2 |
+| 12 | Merge `limits.ts` → `rules.ts` | Medio | Fácil | Bajo | 🟢 | v1.2 |
+| 13 | Merge `importers/constants.ts` → `rules.ts` | Medio | Fácil | Bajo | 🟢 | v1.2 |
 | 14 | Eliminar `AuthorNormalizer` muerto | Medio | Fácil | Bajo | 🟢 | v1.2 |
-| **TOOLING** ||||||
-| 15 | Evaluar ESLint + Biome duplicación | Medio | Fácil | Medio | 🟡 | v1.1 |
-| 16 | Revisar necesidad `turbo.json` | Bajo | Fácil | Bajo | 🟢 | v1.2 |
-| **BAJO VALOR** ||||||
-| 17 | Extraer case transformer | Bajo | Fácil | Bajo | 🟢 | v1.3+ |
-| 18 | Extraer emojis a constantes | Bajo | Fácil | Bajo | 🟢 | v1.3+ |
-| 19 | Separar HTML template | Bajo | Media | Bajo | 🟢 | v1.3+ |
-| 20 | Cache `detectLanguage` | Bajo | Fácil | Bajo | 🟢 | v1.3+ |
-| 21 | Unificar tipos con `z.infer` | Bajo | Media | Bajo | 🟢 | v1.3+ |
-| 22 | Simplificar `TemplateEngineFactory` | Bajo | Media | Bajo | 🟢 | v1.3+ |
-| 23 | Dividir `presets.ts` | Bajo | Media | Bajo | 🟢 | Never |
-| 24 | Documentar CSP incompatibility | Bajo | Fácil | Bajo | 🟢 | v1.1 |
+| **FASE 4 - BAJO VALOR (v1.3+)** ||||||
+| 15 | Extraer emojis a constantes | Bajo | Fácil | Bajo | 🟢 | v1.3+ |
+| 16 | Separar HTML template | Bajo | Media | Bajo | 🟢 | v1.3+ |
+| 17 | Unificar tipos con `z.infer` | Bajo | Media | Bajo | 🟢 | v1.3+ |
 
 ---
 
 ## Plan de Acción
 
-### Fase 1: v1.0 Release (Quick Wins)
+### Fase 1: v1.0 Release ✅ COMPLETADA
 
-Mejoras de alta prioridad que mejoran experiencia multiidioma.
-
-#### 1.1 Regex Unicode para tags
+#### 1.1 ✅ Regex Unicode para tags
 
 **Archivo:** `domain/parsing/tags.ts:191`
 
-**Problema:** La validación de tags solo acepta alfabeto latino + acentos europeos. Tags en ruso, chino, japonés, coreano (idiomas ya soportados) son rechazados.
+**Cambio:** `\p{L}` acepta cualquier letra Unicode (cirílico, CJK, etc.)
 
-**Implementación:**
 ```typescript
-// Antes (solo latín)
+// Antes
 if (!/^[a-zA-ZáéíóúñüàèìòùâêîôûäëïöçÁÉÍÓÚÑÜÀÈÌÒÙÂÊÎÔÛÄËÏÖÇ]/.test(tag))
 
-// Después (cualquier letra Unicode)
+// Después
 if (!/^\p{L}/u.test(tag))
 ```
 
-**Beneficio:** Soporta tags en todos los idiomas del sistema (11).
-**Esfuerzo:** ~5 minutos.
-**Tests:** Añadir casos para tags en cirílico, CJK.
+#### 1.2 ✅ Separadores personalizables (NUEVA FEATURE)
 
-#### ~~1.2 Sentence detection~~ (DESCARTADO)
+**Archivos:** `domain/parsing/tags.ts`, `types/config.ts`, `core/processor.ts`
 
-**Se eliminó el filtro de palabras completamente** (incluyendo el de inglés).
+**Cambio:** Nueva opción `tagSeparators` permite al usuario definir sus propios separadores.
 
-**Razón:** El usuario activa `extractTags: true` explícitamente, indicando que sus notas son tags. Palabras comunes como "the", "de", "el" aparecen en tags legítimos ("The Lean Startup", "arte de vivir"). El filtro de >3 espacios es suficiente para rechazar oraciones largas.
-
-**Cambio realizado:** Se eliminó el regex de palabras, dejando solo:
-- Longitud válida (2-50 caracteres)
-- Empieza con letra Unicode
-- Máximo 3 espacios internos
-
-#### 1.3 Documentar `LOCATIONS_PER_PAGE`
-
-**Archivo:** `domain/core/locations.ts:21`
-
-**Problema:** El valor `16` es una heurística conocida pero sin documentación de origen.
-
-**Implementación:**
 ```typescript
-/**
- * Kindle locations per page estimate.
- *
- * This is a widely-accepted heuristic based on:
- * - Average Kindle page ≈ 256 words
- * - Average location ≈ 16 words (128 bytes)
- * - Therefore: ~16 locations per page
- *
- * Source: Community consensus from Kindle forums and reverse engineering.
- * Accuracy varies by book formatting and font size settings.
- */
-export const LOCATIONS_PER_PAGE = 16;
+// Uso
+parseString(content, {
+  extractTags: true,
+  tagSeparators: "/",  // Solo slash como separador
+});
+
+// O con regex
+parseString(content, {
+  extractTags: true,
+  tagSeparators: /[,;|]+/,  // Coma, punto y coma, o pipe
+});
 ```
 
-**Beneficio:** Claridad para mantenedores.
-**Esfuerzo:** ~5 minutos.
+**Default:** `/[,;.\n\r]+/` (coma, punto y coma, punto, newline)
+
+#### 1.3 ✅ Simplificación de validación de tags
+
+**Archivo:** `domain/parsing/tags.ts`
+
+**Cambio:** Eliminado el filtro de palabras ("the", "is", etc.) que causaba falsos negativos.
+
+**Validación actual (más simple y confiable):**
+- Longitud: 2-50 caracteres
+- Empieza con letra Unicode (`\p{L}`)
+- Máximo 3 espacios internos
+
+**Razón:** El usuario activa `extractTags: true` explícitamente = confiar en que sus notas son tags.
+
+#### 1.4 ✅ Documentar `LOCATIONS_PER_PAGE`
+
+**Archivo:** `domain/core/locations.ts:12-27`
+
+**Cambio:** Documentación completa del origen de la heurística (128 bytes/location, ~16 locations/página).
 
 ---
 
@@ -399,21 +397,22 @@ Mejoras estéticas que no justifican esfuerzo inmediato.
 
 ## Resumen Ejecutivo
 
-### Para v1.0 (Inmediato)
-- **3 quick wins** que mejoran experiencia multiidioma (~20 min total)
+### ✅ Fase 1: v1.0 (COMPLETADA)
+- Regex Unicode para tags (`\p{L}`)
+- Nueva opción `tagSeparators` para separadores personalizables
+- Simplificación de validación de tags
+- Documentación de `LOCATIONS_PER_PAGE`
 
-### Para v1.1 (Próxima release menor)
-- **6 mejoras de robustez** que previenen bugs edge-case (~2 horas)
+### 🟡 Fase 2: v1.1 (Próxima)
+- **6 mejoras de robustez** que previenen bugs edge-case
+- Items 2.1-2.6: escape regex, author fallback, IDs determinísticos, estado inmutable, DRY schemas, linter cleanup
 
-### Para v1.2 (Futuro)
-- **5 consolidaciones** que reducen archivos y complejidad (~1.5 horas)
+### 🟢 Fase 3: v1.2 (Futuro)
+- **4 consolidaciones** que reducen archivos y complejidad
+- Items 3.1-3.4: merge constantes, refactor CsvImporter, eliminar código muerto
 
-### Para v1.3+ (Opcional)
-- **6 mejoras cosméticas** de bajo valor que pueden ignorarse
-
-### Total estimado: ~5 horas de trabajo opcional
-
-> **Recomendación:** Implementar Fase 1 antes de v1.0. Las fases 2-4 pueden hacerse incrementalmente en releases menores.
+### ⚪ Fase 4: v1.3+ (Opcional)
+- **3 mejoras cosméticas** de bajo valor que pueden ignorarse
 
 ---
 
@@ -424,4 +423,4 @@ Mejoras estéticas que no justifican esfuerzo inmediato.
 
 ---
 
-*Actualizado: 2026-01-18 | **v1.0 Feature Complete***
+*Actualizado: 2026-01-19 | **v1.0 Feature Complete***
