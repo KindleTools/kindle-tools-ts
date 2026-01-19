@@ -161,19 +161,19 @@ export class JsonImporter extends BaseImporter {
       itemsToProcess = rawJson;
     } else if (typeof rawJson === "object" && rawJson !== null) {
       // Loose check for object format
-      const obj = rawJson as Record<string, unknown>;
-      if (Array.isArray(obj["clippings"])) {
-        itemsToProcess = obj["clippings"];
-      } else if (typeof obj["books"] === "object" && obj["books"] !== null) {
+      const obj = rawJson as { clippings?: unknown; books?: unknown; [key: string]: unknown };
+      if (Array.isArray(obj.clippings)) {
+        itemsToProcess = obj.clippings;
+      } else if (typeof obj.books === "object" && obj.books !== null) {
         // Flatten books object
-        const books = obj["books"] as Record<string, unknown>;
+        const books = obj.books as Record<string, unknown>;
         for (const [bookTitle, bookClippings] of Object.entries(books)) {
           if (Array.isArray(bookClippings)) {
             // Enrich with book title if missing
-            const enriched = bookClippings.map((c) => {
+            const enriched = (bookClippings as unknown[]).map((c) => {
               if (typeof c === "object" && c !== null) {
-                const clippingObj = c as Record<string, unknown>;
-                return { ...clippingObj, title: clippingObj["title"] ?? bookTitle };
+                const clippingObj = c as { title?: unknown; [key: string]: unknown };
+                return { ...clippingObj, title: clippingObj.title ?? bookTitle };
               }
               return c;
             });
@@ -226,7 +226,7 @@ export class JsonImporter extends BaseImporter {
             item !== null &&
             "type" in item
           ) {
-            const invalidType = (item as Record<string, unknown>)["type"];
+            const invalidType = (item as { type?: unknown; [key: string]: unknown }).type;
             if (typeof invalidType === "string") {
               const validTypes = ClippingTypeSchema.options;
               const suggestion = closest(invalidType, [...validTypes]);

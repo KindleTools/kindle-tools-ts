@@ -106,7 +106,8 @@ export class ObsidianExporter extends MultiFileExporter {
     options: ObsidianExporterOptions,
     engine: TemplateEngine,
   ): ExportedFile[] {
-    const first = clippings[0]!;
+    const first = clippings[0];
+    if (!first) throw new Error("Unexpected empty clippings array");
     const templateOptions = this.toTemplateOptions(options);
     const context = engine.toBookContext(clippings, templateOptions);
 
@@ -148,7 +149,8 @@ export class ObsidianExporter extends MultiFileExporter {
     options: ObsidianExporterOptions,
     engine: TemplateEngine,
   ): ExportedFile[] {
-    const first = clippings[0]!;
+    const first = clippings[0];
+    if (!first) throw new Error("Unexpected empty clippings array");
     const files: ExportedFile[] = [];
 
     const folderStructure = options.folderStructure;
@@ -173,7 +175,7 @@ export class ObsidianExporter extends MultiFileExporter {
       case "by-author":
         bookFolder = `${baseFolder}/${safeAuthor}`;
         break;
-      case "by-author-book":
+      // case "by-author-book":
       default:
         bookFolder = `${baseFolder}/${safeAuthor}/${safeBookTitle}`;
         break;

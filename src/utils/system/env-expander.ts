@@ -42,11 +42,11 @@ export function expandEnvVars<T>(target: T): T {
   }
 
   if (target !== null && typeof target === "object") {
-    const result: any = {};
+    const result: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(target)) {
       result[key] = expandEnvVars(value);
     }
-    return result;
+    return result as T;
   }
 
   return target;

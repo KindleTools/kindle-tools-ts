@@ -36,9 +36,12 @@ export type { CustomTemplates, TemplateOptions, TemplateType } from "./types.js"
 // Template Engine Factory
 // ============================================================================
 
-export class TemplateEngineFactory {
-  private static instances = new Map<string, TemplateEngine>();
+const factoryInstances = new Map<string, TemplateEngine>();
 
+/**
+ * Factory for creating/caching TemplateEngine instances.
+ */
+export const TemplateEngineFactory = {
   /**
    * Get a TemplateEngine instance from cache or create a new one.
    *
@@ -50,11 +53,11 @@ export class TemplateEngineFactory {
    * @param config - Template preset name or custom templates object
    * @returns Cached or new TemplateEngine instance
    */
-  static getEngine(config: TemplatePreset | CustomTemplates = "default"): TemplateEngine {
+  getEngine(config: TemplatePreset | CustomTemplates = "default"): TemplateEngine {
     // If config is a string (preset name), resolve it to templates first
     // This ensures that "default" and getTemplatePreset("default") map to the same key
     let key: string;
-    let templates: CustomTemplates;
+    let templates: CustomTemplates | undefined;
 
     if (typeof config === "string") {
       // It's a preset name
@@ -68,7 +71,7 @@ export class TemplateEngineFactory {
       templates = config;
     }
 
-    if (!TemplateEngineFactory.instances.has(key)) {
+    if (!factoryInstances.has(key)) {
       if (typeof config === "string") {
         const collection = getTemplatePreset(config);
         // Convert collection to CustomTemplates
@@ -78,19 +81,29 @@ export class TemplateEngineFactory {
           export: collection.export,
         };
       }
-      TemplateEngineFactory.instances.set(key, new TemplateEngine(templates!));
+
+      if (!templates) {
+        throw new Error(`Failed to resolve templates for config: ${config}`);
+      }
+
+      factoryInstances.set(key, new TemplateEngine(templates));
     }
 
-    return TemplateEngineFactory.instances.get(key)!;
-  }
+    const instance = factoryInstances.get(key);
+    if (!instance) {
+      throw new Error(`Failed to retrieve TemplateEngine instance for key: ${key}`);
+    }
+
+    return instance;
+  },
 
   /**
    * Clear the template engine cache.
    */
-  static clearCache(): void {
-    TemplateEngineFactory.instances.clear();
-  }
-}
+  clearCache(): void {
+    factoryInstances.clear();
+  },
+};
 
 // ============================================================================
 // Template Engine Class

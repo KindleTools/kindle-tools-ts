@@ -97,29 +97,23 @@ const defaultLogger: Logger = {
   debug: (message, context) => {
     // Only log debug in development or if explicitly enabled
     if (getEnv("NODE_ENV") === "development" || getEnv("DEBUG")) {
-      // biome-ignore lint/suspicious/noConsole: Logger implementation
       console.debug("[DEBUG]", message, context ? JSON.stringify(context, null, 2) : "");
     }
   },
   info: (message, context) => {
-    // biome-ignore lint/suspicious/noConsole: Logger implementation
     console.info("[INFO]", message, context ? JSON.stringify(context) : "");
   },
   error: (entry) => {
     if (getEnv("NODE_ENV") === "development") {
-      // biome-ignore lint/suspicious/noConsole: Logger implementation
       console.error("[ERROR]", JSON.stringify(entry, null, 2));
     } else {
-      // biome-ignore lint/suspicious/noConsole: Logger implementation
       console.error(JSON.stringify(entry));
     }
   },
   warn: (entry) => {
     if (getEnv("NODE_ENV") === "development") {
-      // biome-ignore lint/suspicious/noConsole: Logger implementation
       console.warn("[WARN]", JSON.stringify(entry, null, 2));
     } else {
-      // biome-ignore lint/suspicious/noConsole: Logger implementation
       console.warn(JSON.stringify(entry));
     }
   },

@@ -141,7 +141,7 @@ parseString(content, {
 
 Mejoras de robustez que previenen bugs edge-case.
 
-#### 2.1 Helper `replace` con escape de regex
+#### 2.1 ✅ Helper `replace` con escape de regex
 
 **Archivo:** `templates/helpers.ts:97`
 
@@ -164,7 +164,7 @@ Handlebars.registerHelper('replace', (str, find, replace) => {
 **Beneficio:** Evita comportamiento inesperado con caracteres especiales regex.
 **Esfuerzo:** ~10 minutos.
 
-#### 2.2 Author fallback en HtmlExporter
+#### 2.2 ✅ Author fallback en HtmlExporter
 
 **Archivo:** `exporters/formats/html.exporter.ts:169`
 
@@ -182,7 +182,7 @@ Handlebars.registerHelper('replace', (str, find, replace) => {
 **Beneficio:** Consistencia con otros exporters.
 **Esfuerzo:** ~5 minutos.
 
-#### 2.3 IDs determinísticos en importers
+#### 2.3 ✅ IDs determinísticos en importers
 
 **Archivo:** `importers/shared/importer-utils.ts:21`
 
@@ -208,7 +208,7 @@ export function generateImportId(content: string, index: number): string {
 **Esfuerzo:** ~15 minutos.
 **Breaking:** Sí, cambio de firma. Actualizar callers.
 
-#### 2.4 Estado inmutable en JoplinExporter
+#### 2.4 ✅ Estado inmutable en JoplinExporter
 
 **Archivo:** `exporters/formats/joplin.exporter.ts:171`
 
@@ -238,7 +238,7 @@ async doExport(...) {
 **Beneficio:** Thread-safe, sin state leaks.
 **Esfuerzo:** ~30 minutos (muchos métodos que actualizar).
 
-#### 2.5 Reusar ClippingTypeSchema en CSV
+#### 2.5 ✅ Reusar ClippingTypeSchema en CSV
 
 **Archivo:** `importers/formats/csv.importer.ts:48`
 
@@ -257,7 +257,7 @@ type: ClippingTypeSchema.optional()
 **Beneficio:** Single source of truth para tipos de clipping.
 **Esfuerzo:** ~5 minutos.
 
-#### 2.6 Evaluar duplicación ESLint + Biome
+#### 2.6 ✅ Evaluar duplicación ESLint + Biome
 
 **Archivos:** `eslint.config.mjs`, `biome.json`
 

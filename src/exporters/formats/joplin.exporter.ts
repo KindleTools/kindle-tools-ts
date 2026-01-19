@@ -407,7 +407,8 @@ export class JoplinExporter extends MultiFileExporter {
     ctx: JoplinExportContext,
   ): ExportedFile[] {
     const files: ExportedFile[] = [];
-    const first = clippings[0]!;
+    const first = clippings[0];
+    if (!first) return [];
 
     // Generate note ID based on book title for determinism
     const noteId = this.generateId("book-note", `${first.author}/${first.title}`);

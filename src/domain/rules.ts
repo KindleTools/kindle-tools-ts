@@ -21,11 +21,7 @@ export const ANALYSIS_THRESHOLDS = {
 /**
  * Thresholds for suspicious highlight detection.
  */
-export const SUSPICIOUS_HIGHLIGHT_THRESHOLDS: {
-  readonly GARBAGE_LENGTH: 5;
-  readonly SHORT_LENGTH: 75;
-  readonly VALID_ENDINGS: RegExp;
-} = {
+export const SUSPICIOUS_HIGHLIGHT_THRESHOLDS = {
   /** Highlights shorter than this are likely garbage */
   GARBAGE_LENGTH: 5,
 
@@ -39,10 +35,7 @@ export const SUSPICIOUS_HIGHLIGHT_THRESHOLDS: {
 /**
  * Common file patterns used in Kindle ecosystem.
  */
-export const COMMON_PATTERNS: {
-  readonly SIDELOAD_EXTENSIONS: RegExp;
-  readonly EBOK_SUFFIX: RegExp;
-} = {
+export const COMMON_PATTERNS = {
   /** Sideloaded book extensions (matches anywhere in title) */
   SIDELOAD_EXTENSIONS: /\.(pdf|epub|mobi|azw3?|txt|doc|docx|html|fb2|rtf)/i,
 

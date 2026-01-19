@@ -244,128 +244,7 @@ export class CsvImporter extends BaseImporter {
         continue; // Skip empty rows
       }
 
-      try {
-        // Build row object from columns
-        const getValue = (column: string): string => {
-          const idx = colIndex[column];
-          return idx !== undefined ? (row[idx] ?? "") : "";
-        };
-
-        const rowData = {
-          id: getValue("id"),
-          title: getValue("title"),
-          author: getValue("author"),
-          type: getValue("type") as CsvRow["type"],
-          page: getValue("page"),
-          location: getValue("location"),
-          date: getValue("date"),
-          content: getValue("content"),
-          wordcount: getValue("wordcount"),
-          tags: getValue("tags"),
-        };
-
-        // Validate row data with Zod
-        const validatedRow = CsvRowSchema.safeParse(rowData);
-
-        if (!validatedRow.success) {
-          validatedRow.error.issues.forEach((issue) => {
-            const field = issue.path.join(".") || "unknown";
-            const suggestion = getSuggestion(field, (rowData as any)[field]);
-
-            // Add to structured errors
-            errors.push({
-              row: rowIdx + 1,
-              field,
-              message: issue.message,
-              ...(suggestion ? { suggestion } : {}),
-            });
-
-            // Add to warnings for legacy support
-            warnings.push(
-              `Row ${rowIdx + 1} field '${field}' invalid: ${issue.message}${suggestion ? ` (${suggestion})` : ""}`,
-            );
-          });
-          continue;
-        }
-
-        const data = validatedRow.data;
-
-        const id = data.id || generateImportId(data.content || "", rowIdx);
-        const title = data.title || "Unknown";
-        const author = data.author || "Unknown";
-        const type = (data.type || "highlight") as ClippingType;
-        const pageStr = data.page;
-        const page = pageStr ? Number.parseInt(pageStr, 10) : null;
-        const location = parseLocationString(data.location ?? "");
-        const dateStr = data.date ?? "";
-
-        // Manual date validation for suggestion
-        const date = dateStr ? new Date(dateStr) : null;
-        if (dateStr && isNaN(date?.getTime() ?? NaN)) {
-          const suggestion = getSuggestion("date", dateStr);
-          errors.push({
-            row: rowIdx + 1,
-            field: "date",
-            message: "Invalid date format",
-            ...(suggestion ? { suggestion } : {}),
-          });
-          warnings.push(
-            `Row ${rowIdx + 1} invalid date: ${dateStr}${suggestion ? ` (${suggestion})` : ""}`,
-          );
-          continue; // Skip this row
-        }
-
-        const content = data.content ?? "";
-        const wordCountStr = data.wordcount;
-        const wordCount = wordCountStr
-          ? Number.parseInt(wordCountStr, 10)
-          : content.split(/\s+/).filter(Boolean).length;
-        const tagsStr = data.tags;
-        const tags = tagsStr
-          ? tagsStr
-              .split(/[;,]/)
-              .map((t) => t.trim())
-              .filter(Boolean)
-          : undefined;
-
-        // Build base clipping with required fields
-        const clipping: Clipping = {
-          id,
-          title,
-          titleRaw: title,
-          author,
-          authorRaw: author,
-          content,
-          contentRaw: content,
-          type,
-          page,
-          location,
-          date,
-          dateRaw: dateStr,
-          isLimitReached: false,
-          isEmpty: content.trim().length === 0,
-          language: "en",
-          source: "kindle",
-          wordCount,
-          charCount: content.length,
-          blockIndex: rowIdx - 1,
-        };
-
-        // Add tags only if they have values
-        if (tags !== undefined && tags.length > 0) {
-          clipping.tags = tags;
-        }
-
-        clippings.push(clipping);
-      } catch (e) {
-        const message = e instanceof Error ? e.message : String(e);
-        errors.push({
-          row: rowIdx + 1,
-          field: "row",
-          message: `Unexpected parse error: ${message}`,
-        });
-        warnings.push(`Row ${rowIdx + 1} parse error: ${message}`);
-      }
+      this.processRow(row, rowIdx, colIndex, warnings, errors, clippings);
     }
 
     if (clippings.length === 0) {
@@ -384,5 +263,144 @@ export class CsvImporter extends BaseImporter {
     });
 
     return this.success(clippings, warnings);
+  }
+
+  /**
+   * Process a single CSV row.
+   */
+  private processRow(
+    row: string[],
+    rowIdx: number,
+    colIndex: Record<string, number>,
+    warnings: string[],
+    errors: ImportErrorDetail[],
+    clippings: Clipping[],
+  ): void {
+    try {
+      // Build row object from columns
+      const getValue = (column: string): string => {
+        const idx = colIndex[column];
+        return idx !== undefined ? (row[idx] ?? "") : "";
+      };
+
+      const rowData = {
+        id: getValue("id"),
+        title: getValue("title"),
+        author: getValue("author"),
+        type: getValue("type") as CsvRow["type"],
+        page: getValue("page"),
+        location: getValue("location"),
+        date: getValue("date"),
+        content: getValue("content"),
+        wordcount: getValue("wordcount"),
+        tags: getValue("tags"),
+      };
+
+      // Validate row data with Zod
+      const validatedRow = CsvRowSchema.safeParse(rowData);
+
+      if (!validatedRow.success) {
+        validatedRow.error.issues.forEach((issue) => {
+          const field = issue.path.join(".") || "unknown";
+          // Use type assertion to Record<string, unknown> to avoid 'any'
+          const rowDataRecord = rowData as Record<string, unknown>;
+          const suggestion = getSuggestion(field, rowDataRecord[field]);
+
+          // Add to structured errors
+          errors.push({
+            row: rowIdx + 1,
+            field,
+            message: issue.message,
+            ...(suggestion ? { suggestion } : {}),
+          });
+
+          // Add to warnings for legacy support
+          warnings.push(
+            `Row ${rowIdx + 1} field '${field}' invalid: ${issue.message}${suggestion ? ` (${suggestion})` : ""}`,
+          );
+        });
+        return;
+      }
+
+      const data = validatedRow.data;
+
+      const id = data.id || generateImportId(data.content || "", rowIdx);
+      const title = data.title || "Unknown";
+      const author = data.author || "Unknown";
+      const type = (data.type || "highlight") as ClippingType;
+      const pageStr = data.page;
+      const page = pageStr ? Number.parseInt(pageStr, 10) : null;
+      const location = parseLocationString(data.location ?? "");
+      const dateStr = data.date ?? "";
+
+      // Manual date validation for suggestion
+      const date = dateStr ? new Date(dateStr) : null;
+      // Fixed: Use Number.isNaN instead of global isNaN
+      if (dateStr && Number.isNaN(date?.getTime() ?? NaN)) {
+        const suggestion = getSuggestion("date", dateStr);
+        errors.push({
+          row: rowIdx + 1,
+          field: "date",
+          message: "Invalid date format",
+          ...(suggestion ? { suggestion } : {}),
+        });
+        warnings.push(
+          `Row ${rowIdx + 1} invalid date: ${dateStr}${suggestion ? ` (${suggestion})` : ""}`,
+        );
+        return; // Skip this row
+      }
+
+      const content = data.content ?? "";
+      const wordCountStr = data.wordcount;
+      const wordCount = wordCountStr
+        ? Number.parseInt(wordCountStr, 10)
+        : content.split(/\s+/).filter(Boolean).length;
+      const tagsStr = data.tags;
+      const tags = tagsStr
+        ? tagsStr
+            .split(/[;,]/)
+            .map((t) => t.trim())
+            .filter(Boolean)
+            .sort()
+        : undefined;
+
+      // Build base clipping with required fields
+      const clipping: Clipping = {
+        id,
+        title,
+        titleRaw: title,
+        author,
+        authorRaw: author,
+        content,
+        contentRaw: content,
+        type,
+        page,
+        location,
+        date,
+        dateRaw: dateStr,
+        isLimitReached: false,
+        isEmpty: content.trim().length === 0,
+        language: "en",
+        source: "kindle",
+        wordCount,
+        charCount: content.length,
+        blockIndex: rowIdx - 1,
+      };
+
+      // Add tags only if they have values
+      if (tags !== undefined && tags.length > 0) {
+        clipping.tags = tags;
+      }
+
+      clippings.push(clipping);
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e);
+      errors.push({
+        row: rowIdx + 1,
+        field: "row",
+        message: `Unexpected parse error: ${message}`,
+      });
+      warnings.push(`Row ${rowIdx + 1} parse error: ${message}`);
+    }
   }
 }
