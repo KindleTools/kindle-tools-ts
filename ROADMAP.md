@@ -14,6 +14,16 @@ Las mejoras documentadas en este roadmap son **opcionales** y pueden implementar
 
 ### Cambios Recientes
 
+#### v1.2 (Consolidación)
+
+| Cambio | Descripción |
+|--------|-------------|
+| ✅ Merge `limits.ts` → `rules.ts` | `SYSTEM_LIMITS.MAX_FILENAME_LENGTH` consolidado |
+| ✅ Merge `constants.ts` → `rules.ts` | `SYSTEM_LIMITS.MAX_VALIDATION_ERRORS` consolidado |
+| ✅ Merge utils texto → `normalizers.ts` | Patterns + counting functions en un solo archivo |
+| ✅ Eliminar clase `AuthorNormalizer` | Mantener solo funciones standalone |
+| ✅ Refactorizar `CsvImporter` | Extraer `parseHeaders()` y `buildColumnIndex()` |
+
 #### v1.1 (Robustez)
 
 | Cambio | Descripción |
@@ -64,15 +74,16 @@ Clasificación de todas las mejoras identificadas por **Beneficio**, **Dificulta
 | 8 | Estado inmutable JoplinExporter | Alto | Media | Medio | ✅ | v1.1 |
 | 9 | Reusar `ClippingTypeSchema` CSV | Medio | Fácil | Medio | ✅ | v1.1 |
 | 10 | Evaluar ESLint + Biome duplicación | Medio | Fácil | Medio | ✅ | v1.1 |
-| **FASE 3 - CONSOLIDACIÓN (v1.2)** ||||||
-| 11 | Refactorizar `CsvImporter.doImport()` | Medio | Media | Medio | 🟢 | v1.2 |
-| 12 | Merge `limits.ts` → `rules.ts` | Medio | Fácil | Bajo | 🟢 | v1.2 |
-| 13 | Merge `importers/constants.ts` → `rules.ts` | Medio | Fácil | Bajo | 🟢 | v1.2 |
-| 14 | Eliminar `AuthorNormalizer` muerto | Medio | Fácil | Bajo | 🟢 | v1.2 |
+| **FASE 3 - COMPLETADA** ||||||
+| 11 | Refactorizar `CsvImporter.doImport()` | Medio | Media | Medio | ✅ | v1.2 |
+| 12 | Merge `limits.ts` → `rules.ts` | Medio | Fácil | Bajo | ✅ | v1.2 |
+| 13 | Merge `importers/constants.ts` → `rules.ts` | Medio | Fácil | Bajo | ✅ | v1.2 |
+| 14 | Merge utils texto → `normalizers.ts` | Medio | Fácil | Bajo | ✅ | v1.2 |
+| 15 | Eliminar `AuthorNormalizer` muerto | Medio | Fácil | Bajo | ✅ | v1.2 |
 | **FASE 4 - BAJO VALOR (v1.3+)** ||||||
-| 15 | Extraer emojis a constantes | Bajo | Fácil | Bajo | 🟢 | v1.3+ |
-| 16 | Separar HTML template | Bajo | Media | Bajo | 🟢 | v1.3+ |
-| 17 | Unificar tipos con `z.infer` | Bajo | Media | Bajo | 🟢 | v1.3+ |
+| 16 | Extraer emojis a constantes | Bajo | Fácil | Bajo | 🟢 | v1.3+ |
+| 17 | Separar HTML template | Bajo | Media | Bajo | 🟢 | v1.3+ |
+| 18 | Unificar tipos con `z.infer` | Bajo | Media | Bajo | 🟢 | v1.3+ |
 
 ---
 
@@ -274,7 +285,7 @@ type: ClippingTypeSchema.optional()
 
 ---
 
-### Fase 3: v1.2 (Consolidación)
+### Fase 3: v1.2 ✅ COMPLETADA
 
 Reducción de archivos y simplificación de estructura.
 
@@ -743,9 +754,9 @@ node -e "const kt = require('./dist/cjs/index.cjs'); console.log(Object.keys(kt)
 - **6 mejoras de robustez** que previenen bugs edge-case
 - Items 2.1-2.6: escape regex, author fallback, IDs determinísticos, estado inmutable, DRY schemas, linter evaluado
 
-### 🟢 Fase 3: v1.2 (Futuro)
-- **4 consolidaciones** que reducen archivos y complejidad
-- Items 3.1-3.4: merge constantes, refactor CsvImporter, eliminar código muerto
+### ✅ Fase 3: v1.2 (COMPLETADA)
+- **5 consolidaciones** que reducen archivos y complejidad
+- Items 3.1-3.5: merge constantes, merge utils texto, eliminar clase AuthorNormalizer, refactor CsvImporter
 
 ### ⚪ Fase 4: v1.3+ (Opcional)
 - **3 mejoras cosméticas** de bajo valor que pueden ignorarse
@@ -765,4 +776,4 @@ node -e "const kt = require('./dist/cjs/index.cjs'); console.log(Object.keys(kt)
 
 ---
 
-*Actualizado: 2026-01-19 | **Fase 5 añadida***
+*Actualizado: 2026-01-19 | **v1.2 Consolidación Complete***
