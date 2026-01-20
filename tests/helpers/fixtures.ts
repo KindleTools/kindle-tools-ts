@@ -7,5 +7,5 @@ import path from "node:path";
  */
 export function loadFixture(filename: string): string {
   const filePath = path.resolve(__dirname, "../fixtures/clippings", filename);
-  return fs.readFileSync(filePath, "utf-8");
+  return fs.readFileSync(filePath, "utf-8").replace(/\r\n/g, "\n");
 }
