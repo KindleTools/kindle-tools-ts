@@ -12,8 +12,11 @@
 [![install size](https://packagephobia.com/badge?p=kindle-tools-ts)](https://packagephobia.com/result?p=kindle-tools-ts)
 [![license](https://img.shields.io/npm/l/kindle-tools-ts.svg?style=flat-square)](https://github.com/KindleTools/kindle-tools-ts/blob/main/LICENSE)
 [![Biome](https://img.shields.io/badge/Maintained%20with-Biome-60a5fa?style=flat-square&logo=biome)](https://biomejs.dev/)
+[![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-Website-blue.svg?style=flat-square&logo=github)](https://kindletools.github.io/kindle-tools-ts/)
 
 A robust TypeScript library to parse and process Amazon Kindle `My Clippings.txt` files with smart merging, deduplication, and multiple export formats.
+
+👉 **Live Demo / Docs:** https://kindletools.github.io/kindle-tools-ts/
 
 > **v1.0 - Feature Complete.** This library is stable and production-ready. Only accepting bug fixes.
 
