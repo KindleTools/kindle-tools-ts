@@ -142,6 +142,10 @@ export const ParseOptionsSchema = z.object({
     .describe("Link notes to their associated highlights"),
   extractTags: z.coerce.boolean().default(false).describe("Extract tags from notes"),
   tagCase: TagCaseSchema.default("uppercase").describe("Case transformation for extracted tags"),
+  tagSeparators: z
+    .union([z.string(), z.instanceof(RegExp)])
+    .optional()
+    .describe("Custom separators for splitting tags (string or RegExp)"),
   mergeOverlapping: z.coerce
     .boolean()
     .default(true)

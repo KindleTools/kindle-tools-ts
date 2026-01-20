@@ -5,7 +5,7 @@
  */
 
 import type { Clipping } from "#app-types/clipping.js";
-import type { BookStats, ClippingsStats } from "#app-types/stats.js";
+import type { BookStats, ClippingsStats } from "#schemas/stats.schema.js";
 
 /**
  * Calculate comprehensive statistics for clippings.

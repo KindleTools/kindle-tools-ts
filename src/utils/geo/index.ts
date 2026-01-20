@@ -6,7 +6,7 @@
  * @packageDocumentation
  */
 
-import type { GeoLocation } from "#app-types/geo.js";
+import type { GeoLocation } from "#schemas/config.schema.js";
 
 /**
  * Validate that a GeoLocation has valid coordinates.

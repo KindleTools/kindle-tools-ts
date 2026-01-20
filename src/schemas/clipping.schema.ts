@@ -308,6 +308,12 @@ export const ClippingStrictSchema = z.object({
  */
 export type ClippingStrict = z.infer<typeof ClippingStrictSchema>;
 
+/**
+ * Clipping type alias for backward compatibility.
+ * Use ClippingStrict for explicit strict typing.
+ */
+export type Clipping = ClippingStrict;
+
 // =============================================================================
 // Export Format Schemas
 // =============================================================================

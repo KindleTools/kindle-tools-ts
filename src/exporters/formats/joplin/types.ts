@@ -4,8 +4,8 @@
  * @packageDocumentation
  */
 
-import type { GeoLocation } from "#app-types/geo.js";
 import type { MultiFileExporterOptions } from "#exporters/shared/multi-file-exporter.js";
+import type { GeoLocation } from "#schemas/config.schema.js";
 
 // ============================================================================
 // Constants

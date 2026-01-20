@@ -178,7 +178,11 @@ export class JoplinExporter extends MultiFileExporter {
     const authorCase = options.authorCase;
     const estimatePages = options.estimatePages ?? true;
     const creator = options.creator ?? "";
-    const geoLocation = options.geoLocation ?? { latitude: 0, longitude: 0, altitude: 0 };
+    const geoLocation = {
+      latitude: options.geoLocation?.latitude ?? 0,
+      longitude: options.geoLocation?.longitude ?? 0,
+      altitude: options.geoLocation?.altitude ?? 0,
+    };
     const granularity = options.noteGranularity ?? "per-clipping";
 
     // Determine hierarchy

@@ -10,4 +10,6 @@
 export * from "./clipping.schema.js";
 export * from "./config.schema.js";
 export * from "./exporter.schema.js";
+export * from "./result.schema.js";
 export * from "./shared.schema.js";
+export * from "./stats.schema.js";

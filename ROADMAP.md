@@ -56,42 +56,34 @@ Archivo `joplin.exporter.ts` mantenido como re-export para compatibilidad.
 
 ---
 
-## v2.0 - Unificación Types → Zod (Breaking Change)
+### ✅ Unificación Types → Zod (Completado)
 
-Migración estructural para usar Zod como única fuente de verdad para tipos.
+**Implementado:** Zod es ahora la única fuente de verdad para tipos:
 
-### Motivación
+- **Schemas nuevos:** `stats.schema.ts`, `result.schema.ts`
+- **Tipos migrados:** `Clipping`, `ParseOptions`, `ParseResult`, `ParseWarning`, `BookStats`, `ClippingsStats`
+- **Re-exports:** `types/*.ts` ahora re-exportan desde schemas para compatibilidad
 
-Actualmente hay **duplicación** entre:
-- `src/types/` — Interfaces TypeScript con JSDoc
-- `src/schemas/` — Zod schemas
+```
+schemas/
+├── clipping.schema.ts  # ClippingType, Clipping, ClippingLocation, etc.
+├── config.schema.ts    # ParseOptions, GeoLocation, TagCase
+├── stats.schema.ts     # BookStats, ClippingsStats
+├── result.schema.ts    # ParseResult, ParseWarning
+└── index.ts            # Barrel export
 
-**Beneficios de unificar:**
-1. Single Source of Truth
+types/
+├── clipping.ts         # Re-export + RawClipping (interno)
+├── config.ts           # Re-export + ProcessOptions (extends ParseOptions)
+├── geo.ts              # Re-export
+├── stats.ts            # Re-export
+└── index.ts            # Barrel export
+```
+
+**Beneficios logrados:**
+1. Single Source of Truth - Cambios en schema actualizan tipos automáticamente
 2. Validación runtime + compile-time
-3. JSDoc se preserva con `.describe()`
-
-### Alcance
-
-| Tipo | Duplicado | Acción |
-|------|-----------|--------|
-| `Clipping` | Sí | Migrar a `z.infer<ClippingStrictSchema>` |
-| `ParseOptions` | Sí | Migrar a `z.infer<ParseOptionsSchema>` |
-| `ClippingsStats` | No | Crear schema nuevo |
-| `ParseResult` | No | Crear schema nuevo |
-| `ParseWarning` | No | Crear schema nuevo |
-
-### Pasos
-
-1. Crear schemas faltantes (`stats.schema.ts`, `result.schema.ts`)
-2. Migrar JSDoc a `.describe()` de Zod
-3. Eliminar tipos duplicados de `types/`
-4. Actualizar barrel exports en `types/index.ts`
-5. Actualizar imports en todo el proyecto (~50 archivos)
-6. Bump version a v2.0.0
-
-**Esfuerzo total:** ~6 horas.
-**Breaking:** Sí, cambio de imports para usuarios que importen de `#types/`.
+3. Documentación con `.describe()` de Zod
 
 ---
 
