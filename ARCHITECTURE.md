@@ -35,7 +35,6 @@ Technical overview of kindle-tools-ts for contributors and developers who want t
 kindle-tools-ts/
 ├── src/
 │   ├── core/                    # 🧠 Orchestration & System-wide logic
-│   │   ├── limits.ts            # System limits (file size, filename lengths)
 │   │   ├── processor.ts         # Main processing orchestrator (dedup, merge, link, quality)
 │   │   └── processing/          # Processing step implementations
 │   │       ├── deduplicator.ts  # Exact duplicate removal
@@ -48,7 +47,7 @@ kindle-tools-ts/
 │   │
 │   ├── domain/                  # 📦 Pure Business Logic (Entities & Rules)
 │   │   ├── index.ts             # Barrel export for all domain modules
-│   │   ├── rules.ts             # Business Rules (Thresholds, Heuristics, Regex)
+│   │   ├── rules.ts             # Business Rules + System Limits (consolidated)
 │   │   ├── analytics/           # Statistics & Aggregation
 │   │   │   └── stats.ts         # calculateStats(), groupByBook()
 │   │   ├── core/                # Core entities
@@ -68,21 +67,20 @@ kindle-tools-ts/
 │   │   │   ├── factory.ts       # ImporterFactory
 │   │   │   └── types.ts         # Importer interface
 │   │   ├── formats/             # Concrete implementations
-│   │   │   ├── txt/             # Kindle TXT parser
+│   │   │   ├── txt/             # Kindle TXT parser (well-modularized)
 │   │   │   │   ├── constants.ts # Parser constants
 │   │   │   │   ├── file-parser.ts # File reading wrapper
 │   │   │   │   ├── language-detector.ts # Auto language detection
-│   │   │   │   ├── parser.ts    # Main parser (13KB, ~450 lines)
+│   │   │   │   ├── parser.ts    # Main parser
 │   │   │   │   ├── text-cleaner.ts # PDF artifact cleaning
 │   │   │   │   └── tokenizer.ts # Block splitting
 │   │   │   ├── json.importer.ts # JSON re-import
-│   │   │   ├── csv.importer.ts  # CSV re-import
+│   │   │   ├── csv.importer.ts  # CSV re-import (fuzzy header matching)
 │   │   │   └── txt.importer.ts  # TXT importer wrapper
 │   │   └── shared/              # Base classes & utilities
-│   │       ├── base.ts          # BaseImporter class
-│   │       ├── builder.ts       # Clipping builder
-│   │       ├── location-parser.ts # Location string parsing
-│   │       └── utils.ts         # ID generation, toError
+│   │       ├── base-importer.ts # BaseImporter class
+│   │       ├── importer-utils.ts # ID generation, location parsing
+│   │       └── index.ts         # Barrel export
 │   │
 │   ├── exporters/               # 📤 Export Adapters
 │   │   ├── index.ts             # Barrel export
@@ -93,43 +91,41 @@ kindle-tools-ts/
 │   │   │   ├── csv.exporter.ts  # CSV with BOM, injection protection
 │   │   │   ├── html.exporter.ts # Standalone HTML with dark mode
 │   │   │   ├── html.styles.ts   # CSS for HTML export
-│   │   │   ├── joplin.exporter.ts # Joplin JEX archive (16KB, largest)
+│   │   │   ├── joplin.exporter.ts # Joplin JEX archive (largest exporter)
 │   │   │   ├── json.exporter.ts # JSON with optional grouping
 │   │   │   ├── markdown.exporter.ts # Markdown with templates
 │   │   │   └── obsidian.exporter.ts # Obsidian with YAML frontmatter
 │   │   └── shared/              # Base classes & utilities
-│   │       ├── base.ts          # BaseExporter class
+│   │       ├── base-exporter.ts # BaseExporter class
+│   │       ├── multi-file-exporter.ts # MultiFileExporter for Obsidian/Markdown
 │   │       ├── exporter-utils.ts # Shared exporter utilities
-│   │       ├── formatters.ts    # Date/text formatting
-│   │       └── grouping.ts      # Group by book/author
+│   │       └── index.ts         # Barrel export
 │   │
 │   ├── utils/                   # 🛠️ Generic, App-Agnostic Utilities
 │   │   ├── archive/             # Archive creation
-│   │   │   ├── index.ts         # Barrel export
-│   │   │   ├── tar.ts           # TAR creation (Joplin JEX)
-│   │   │   ├── jex.ts           # JEX-specific helpers
-│   │   │   └── zip.ts           # ZIP creation
+│   │   │   ├── archiver.ts      # Archiver interface
+│   │   │   ├── factory.ts       # ArchiverFactory
+│   │   │   ├── tar-archiver.ts  # TAR creation (Joplin JEX)
+│   │   │   └── zip-archiver.ts  # ZIP creation
 │   │   ├── fs/                  # File system helpers
-│   │   │   ├── index.ts         # Barrel export
-│   │   │   └── filename.ts      # Filename sanitization
+│   │   │   ├── tar.ts           # TAR utilities
+│   │   │   └── zip.ts           # ZIP utilities
 │   │   ├── geo/                 # Geographic utilities
 │   │   │   └── index.ts         # Location formatting
 │   │   ├── security/            # Security utilities
 │   │   │   ├── csv-sanitizer.ts # CSV injection protection
 │   │   │   ├── hashing.ts       # SHA-256 implementation
-│   │   │   └── xss.ts           # XSS protection for HTML
+│   │   │   └── index.ts         # Barrel export
 │   │   ├── system/              # System utilities
 │   │   │   ├── dates.ts         # Date formatting
-│   │   │   ├── encoding.ts      # BOM handling
-│   │   │   ├── errors.ts        # Error utilities (toError, Zod formatting)
-│   │   │   └── platform.ts      # Platform detection
-│   │   └── text/                # Text utilities
-│   │       ├── index.ts         # Barrel export
-│   │       ├── normalizers.ts   # Unicode NFC, whitespace
-│   │       ├── patterns.ts      # Common regex patterns
-│   │       ├── similarity.ts    # Jaccard similarity
+│   │   │   ├── env-expander.ts  # Environment variable expansion
+│   │   │   ├── errors.ts        # Error utilities
+│   │   │   └── performance.ts   # Performance measurement
+│   │   └── text/                # Text utilities (consolidated)
+│   │       ├── author-normalizer.ts # Author name comparison
 │   │       ├── encoding.ts      # Encoding detection
-│   │       └── truncators.ts    # Text truncation
+│   │       ├── normalizers.ts   # BOM, whitespace, patterns, word counting
+│   │       └── similarity.ts    # Jaccard similarity
 │   │
 │   ├── schemas/                 # 📋 Zod Validation Schemas
 │   │   ├── index.ts             # Barrel export
