@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="assets/icon.png" alt="Kindle Tools TS Logo" width="120" />
+</div>
+
 # kindle-tools-ts
 
 [![npm version](https://img.shields.io/npm/v/kindle-tools-ts.svg?style=flat-square)](https://www.npmjs.com/package/kindle-tools-ts)

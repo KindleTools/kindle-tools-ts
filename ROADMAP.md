@@ -101,6 +101,22 @@ await exporter.export(clippings, {
 
 ---
 
+### Mejoras Técnicas (Zod Next Steps)
+
+**Contexto:** Tras la migración a Zod (v2.0), existen oportunidades para aprovechar mejor la librería.
+
+1. **Validación de Configuración (Runtime)**
+   - **Idea:** Usar `ParseOptionsSchema.parse(input)` para validar inputs de usuario (CLI/GUI).
+   - **Beneficio:** Validación robusta y mensajes de error detallados gratis.
+
+2. **Transformadores para RegExp**
+   - **Idea:** Usar `z.preprocess()` o `transform()` en `ParseOptionsSchema` para convertir strings a RegExp automáticamente (útil para cargar config desde JSON).
+
+3. **Performance Check**
+   - **Idea:** Validar impacto de rendimiento si se usa `ClippingStrictSchema.parse()` en bucles masivos. Zod puede ser intensivo en CPU.
+
+---
+
 ## Descartado
 
 Ideas evaluadas que **no se implementarán** por bajo valor o complejidad injustificada.

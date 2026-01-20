@@ -4,7 +4,11 @@ import { defineConfig } from "vite";
 
 const Dirname = dirname(fileURLToPath(import.meta.url));
 
+// Base path for GitHub Pages
+const BASE_PATH = process.env.GITHUB_ACTIONS ? "/kindle-tools-ts/" : "/";
+
 export default defineConfig({
+  base: BASE_PATH,
   plugins: [],
 
   root: Dirname,
