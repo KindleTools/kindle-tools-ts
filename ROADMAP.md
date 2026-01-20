@@ -40,25 +40,19 @@ await exporter.export(clippings, {
 
 ---
 
-### Modularización JoplinExporter
+### ✅ Modularización JoplinExporter (Completado)
 
-**Problema:** `joplin.exporter.ts` tiene ~660 líneas con múltiples responsabilidades.
-
-**Propuesta:** Dividir en carpeta `formats/joplin/`:
+**Implementado:** JoplinExporter (662 líneas) dividido en carpeta `formats/joplin/`:
 
 ```
 exporters/formats/joplin/
-├── index.ts           # JoplinExporter (orquestador)
-├── context.ts         # JoplinExportContext
-├── entity-generators.ts # createBookNote, createClippingNote
-├── id-generator.ts    # generateId determinístico
-├── serializers.ts     # Conversión a formato JEX
-└── types.ts           # Interfaces internas
+├── index.ts           # JoplinExporter (orquestador, ~260 líneas)
+├── types.ts           # Interfaces + constantes (~140 líneas)
+├── serializers.ts     # serialize* functions (~95 líneas)
+├── note-builders.ts   # createBookNote, createClippingNotes (~210 líneas)
 ```
 
-**Beneficio:** Mejor mantenibilidad, sigue el patrón de `importers/formats/txt/`.
-**Esfuerzo:** ~2 horas.
-**Cuándo:** Si JoplinExporter crece o se añaden features.
+Archivo `joplin.exporter.ts` mantenido como re-export para compatibilidad.
 
 ---
 

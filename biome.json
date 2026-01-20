@@ -112,7 +112,7 @@
       }
     },
     {
-      "includes": ["src/exporters/formats/joplin.exporter.ts"],
+      "includes": ["src/exporters/formats/joplin.exporter.ts", "src/exporters/formats/joplin/**/*"],
       "linter": {
         "rules": {
           "style": {
