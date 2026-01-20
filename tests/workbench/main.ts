@@ -235,7 +235,9 @@ function getParseOptions(): ParseOptions {
     mergeNotes: elements.optMergeNotes.checked,
     mergeOverlapping: elements.optMergeOverlapping.checked,
     extractTags: elements.optExtractTags.checked,
-    ...(elements.optExtractTags.checked && { tagCase: elements.optTagCase.value as TagCase }),
+    tagCase: elements.optExtractTags.checked
+      ? (elements.optTagCase.value as TagCase)
+      : (undefined as unknown as TagCase),
     highlightsOnly: elements.optHighlightsOnly.checked,
     mergedOutput: elements.optMergedOutput.checked,
     removeUnlinkedNotes: elements.optRemoveUnlinkedNotes.checked,

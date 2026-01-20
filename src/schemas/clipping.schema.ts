@@ -253,54 +253,91 @@ export type ClippingImport = z.infer<typeof ClippingImportSchema>;
  * ```
  */
 export const ClippingStrictSchema = z.object({
-  // Required identification
-  id: z.string().min(1, { message: "ID is required" }),
+  // Identification
+  id: z
+    .string()
+    .min(1, { message: "ID is required" })
+    .describe("Unique deterministic ID (12 alphanumeric characters)"),
 
-  // Required book info
-  title: z.string().min(1, { message: "Title is required" }),
-  titleRaw: z.string(),
-  author: z.string().min(1, { message: "Author is required" }),
-  authorRaw: z.string(),
+  // Book and Author
+  title: z
+    .string()
+    .min(1, { message: "Title is required" })
+    .describe("Clean, normalized book title"),
+  titleRaw: z.string().describe("Original title as it appears in the file"),
+  author: z
+    .string()
+    .min(1, { message: "Author is required" })
+    .describe("Extracted and normalized author name"),
+  authorRaw: z.string().describe("Original author as it appears in the file"),
 
-  // Required content
-  content: z.string(),
-  contentRaw: z.string(),
+  // Content
+  content: z.string().describe("Clean, normalized content"),
+  contentRaw: z.string().describe("Original content as it appears in the file"),
 
-  // Required type
-  type: ClippingTypeSchema,
+  // Type
+  type: ClippingTypeSchema.describe("Type of clipping (highlight, note, bookmark, clip, article)"),
 
-  // Location (structured)
-  page: z.number().nullable(),
-  location: ClippingLocationObjectSchema,
+  // Location
+  page: z.number().nullable().describe("Page number (null if not available)"),
+  location: ClippingLocationObjectSchema.describe("Structured location information"),
 
   // Date
-  date: z.date().nullable(),
-  dateRaw: z.string(),
+  date: z.date().nullable().describe("Parsed date (null if parsing failed)"),
+  dateRaw: z.string().describe("Original date string from the file"),
 
   // Flags
-  isLimitReached: z.boolean(),
-  isEmpty: z.boolean(),
-  language: SupportedLanguageSchema,
-  source: ClippingSourceSchema,
+  isLimitReached: z.boolean().describe("True if DRM clipping limit was reached"),
+  isEmpty: z.boolean().describe("True if content is empty"),
+  language: SupportedLanguageSchema.describe("Detected language of this entry's metadata"),
+  source: ClippingSourceSchema.describe("Source of the book: Amazon Kindle or sideloaded"),
 
   // Statistics
-  wordCount: z.number().nonnegative(),
-  charCount: z.number().nonnegative(),
-  blockIndex: z.number(),
+  wordCount: z.number().nonnegative().describe("Number of words in content"),
+  charCount: z.number().nonnegative().describe("Number of characters in content"),
+  blockIndex: z.number().describe("Index of the original block in the file"),
 
-  // Optional linking
-  linkedNoteId: z.string().optional(),
-  linkedHighlightId: z.string().optional(),
-  note: z.string().optional(),
-  tags: z.array(z.string()).optional(),
+  // Linking
+  linkedNoteId: z
+    .string()
+    .optional()
+    .describe("ID of associated note (if this is a highlight with a note)"),
+  linkedHighlightId: z
+    .string()
+    .optional()
+    .describe("ID of associated highlight (if this is a note)"),
+  note: z.string().optional().describe("Content of linked note (if mergeNotes is enabled)"),
+  tags: z
+    .array(z.string())
+    .optional()
+    .describe("Tags extracted from linked note (if extractTags is enabled)"),
 
-  // Optional quality
-  isSuspiciousHighlight: z.boolean().optional(),
-  suspiciousReason: SuspiciousReasonSchema.optional(),
-  similarityScore: z.number().min(0).max(1).optional(),
-  possibleDuplicateOf: z.string().optional(),
-  titleWasCleaned: z.boolean().optional(),
-  contentWasCleaned: z.boolean().optional(),
+  // Quality Assessment
+  isSuspiciousHighlight: z
+    .boolean()
+    .optional()
+    .describe("True if highlight is suspected accidental or incomplete"),
+  suspiciousReason: SuspiciousReasonSchema.optional().describe(
+    "Reason: too_short, fragment, incomplete, exact_duplicate, overlapping",
+  ),
+  similarityScore: z
+    .number()
+    .min(0)
+    .max(1)
+    .optional()
+    .describe("Similarity score with another clipping (0-1)"),
+  possibleDuplicateOf: z
+    .string()
+    .optional()
+    .describe("ID of clipping this one may be a duplicate of"),
+  titleWasCleaned: z
+    .boolean()
+    .optional()
+    .describe("True if title was cleaned (edition markers removed)"),
+  contentWasCleaned: z
+    .boolean()
+    .optional()
+    .describe("True if content was cleaned (de-hyphenation, spacing fixes)"),
 });
 
 /**

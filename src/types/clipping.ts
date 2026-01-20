@@ -1,17 +1,28 @@
 /**
- * Internal clipping types.
+ * Clipping types.
  *
- * Public types are in schemas/clipping.schema.ts.
- * This file only contains internal types that don't need runtime validation.
+ * Re-exports from schemas for internal use.
+ * Public types are defined in schemas/clipping.schema.ts.
  *
  * @packageDocumentation
  */
 
+// Re-export types from schema for internal files that import from this path
+export type {
+  Clipping,
+  ClippingImport,
+  ClippingLocation,
+  ClippingSource,
+  ClippingStrict,
+  ClippingsExport,
+  ClippingType,
+  ImportedData,
+  SuspiciousReason,
+} from "#schemas/clipping.schema.js";
+
 /**
  * Raw clipping before processing.
- * Contains data directly extracted from the file.
- *
- * This is an internal type used between the tokenizer and parser.
+ * Internal type used between tokenizer and parser.
  */
 export interface RawClipping {
   /** Raw title line including author */
