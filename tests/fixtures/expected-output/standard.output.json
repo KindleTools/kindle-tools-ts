@@ -15,7 +15,7 @@
         "start": 100,
         "end": 110
       },
-      "date": "2023-12-31T23:00:00.000Z",
+      "date": "2024-01-01T00:00:00.000Z",
       "dateRaw": "Monday, January 1, 2024 12:00:00 AM",
       "isLimitReached": false,
       "isEmpty": false,
@@ -40,7 +40,7 @@
         "start": 120,
         "end": null
       },
-      "date": "2024-02-02T21:30:00.000Z",
+      "date": "2024-02-02T22:30:00.000Z",
       "dateRaw": "Tuesday, February 2, 2024 10:30:00 PM",
       "isLimitReached": false,
       "isEmpty": false,
@@ -65,7 +65,7 @@
         "start": 150,
         "end": 160
       },
-      "date": "2024-03-03T08:15:00.000Z",
+      "date": "2024-03-03T09:15:00.000Z",
       "dateRaw": "Wednesday, March 3, 2024 09:15:00 AM",
       "isLimitReached": false,
       "isEmpty": false,
@@ -90,7 +90,7 @@
         "start": 500,
         "end": 510
       },
-      "date": "2024-04-04T16:45:00.000Z",
+      "date": "2024-04-04T18:45:00.000Z",
       "dateRaw": "Thursday, April 4, 2024 06:45:00 PM",
       "isLimitReached": false,
       "isEmpty": false,
@@ -118,8 +118,8 @@
         "bookmarks": 0,
         "wordCount": 11,
         "dateRange": {
-          "earliest": "2023-12-31T23:00:00.000Z",
-          "latest": "2024-03-03T08:15:00.000Z"
+          "earliest": "2024-01-01T00:00:00.000Z",
+          "latest": "2024-03-03T09:15:00.000Z"
         }
       },
       {
@@ -130,8 +130,8 @@
         "bookmarks": 0,
         "wordCount": 16,
         "dateRange": {
-          "earliest": "2024-04-04T16:45:00.000Z",
-          "latest": "2024-04-04T16:45:00.000Z"
+          "earliest": "2024-04-04T18:45:00.000Z",
+          "latest": "2024-04-04T18:45:00.000Z"
         }
       },
       {
@@ -142,8 +142,8 @@
         "bookmarks": 0,
         "wordCount": 10,
         "dateRange": {
-          "earliest": "2024-02-02T21:30:00.000Z",
-          "latest": "2024-02-02T21:30:00.000Z"
+          "earliest": "2024-02-02T22:30:00.000Z",
+          "latest": "2024-02-02T22:30:00.000Z"
         }
       }
     ],
@@ -153,8 +153,8 @@
     "emptyRemoved": 0,
     "drmLimitReached": 0,
     "dateRange": {
-      "earliest": "2023-12-31T23:00:00.000Z",
-      "latest": "2024-04-04T16:45:00.000Z"
+      "earliest": "2024-01-01T00:00:00.000Z",
+      "latest": "2024-04-04T18:45:00.000Z"
     },
     "totalWords": 37,
     "avgWordsPerHighlight": 12,

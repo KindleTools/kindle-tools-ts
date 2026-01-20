@@ -9,6 +9,9 @@ export default defineConfig({
     // Test environment
     environment: "node",
 
+    // Global Setup (runs before workers)
+    globalSetup: ["./tests/global-setup.ts"],
+
     // Force UTC timezone for consistency
     env: {
       TZ: "UTC",
