@@ -9,6 +9,11 @@ export default defineConfig({
     // Test environment
     environment: "node",
 
+    // Force UTC timezone for consistency
+    env: {
+      TZ: "UTC",
+    },
+
     // Include patterns for test files
     include: ["tests/**/*.{test,spec,test-d}.{ts,js}", "src/**/*.{test,spec,test-d}.{ts,js}"],
 
